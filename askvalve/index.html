@@ -16,11 +16,26 @@
       margin: 0;
       background: #1b2838;
       display: flex;
-      justify-content: center;
-      align-items: center;
+      flex-direction: column;
+      justify-content: space-between;
       height: 100vh;
       overflow: hidden;
     }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      font-size: 96px;
+      font-weight: bold;
+      color: #C5C3C0;
+    }
+
+      header img {
+        height: 96px;
+        margin-left: 24px;
+      }
 
     #container {
       width: 90vw;
@@ -29,6 +44,7 @@
       flex-direction: row;
       align-items: center;
       gap: 24px;
+      margin: auto;
       opacity: 1;
       transition: opacity 0.5s ease-in-out;
     }
@@ -69,12 +85,43 @@
       line-height: 1.4;
       color: #ffffff;
     }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      padding: 24px 48px;
+    }
+
+    .speaker {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+      .speaker img {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #66c0f4;
+      }
+
+      .speaker span {
+        font-size: 48px;
+        color: #c7d5e0;
+        font-weight: bold;
+      }
   </style>
 </head>
 <body>
+  <header>
+    Ask
+    <img src="https://store.cloudflare.steamstatic.com/public/shared/images/header/logo_steam.svg?t=962016" alt="Steam Logo">
+  </header>
+
   <div id="container">
     <div id="qr">
-      <img id="qr-code" src="https://api.qrserver.com/v1/create-qr-code/?data=https://forms.gle/7gDs1GsBEpf3T58u8&size=300x300" alt="QR Code" />
+      <img id="qr-code" src="qr.png" alt="QR Code" />
       <span>Scan to ask</span>
     </div>
     <div id="meta">
@@ -82,6 +129,17 @@
       <div id="question"></div>
     </div>
   </div>
+
+  <footer>
+    <div class="speaker">
+      <img src="https://media.licdn.com/dms/image/v2/C5103AQHudTapo3SLNA/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1516260326094?e=1756944000&v=beta&t=FvTUr0RO42Un-n7J6Y1esockUBEx-LpzBv0rtuCU5G4" alt="Alden Kroll">
+      <span>Alden Kroll</span>
+    </div>
+    <div class="speaker">
+      <img src="https://media.licdn.com/dms/image/v2/C4D03AQF_wROejjkr3A/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1654098320101?e=1756944000&v=beta&t=M-s_Y93pQLkrnAgbI-PpkrdPaEEYaFvYeRyo1YOeshg" alt="Erik Peterson">
+      <span>Erik Peterson</span>
+    </div>
+  </footer>
 
   <script>
     let currentIndex = -1;

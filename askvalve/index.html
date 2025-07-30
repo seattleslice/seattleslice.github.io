@@ -1,0 +1,263 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Steam Q&A Display</title>
+  <link href="https://fonts.googleapis.com/css2?family=Motiva+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Motiva Sans', sans-serif;
+      color: #c7d5e0;
+    }
+
+    body {
+      margin: 0;
+      background: #1b2838;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #container {
+      width: 90vw;
+      max-width: 1200px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 24px;
+      opacity: 1;
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    #qr {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-right: 90px;
+    }
+
+      #qr img {
+        width: 300px;
+        height: 300px;
+      }
+
+      #qr span {
+        margin-top: 8px;
+        font-size: 36px;
+      }
+
+    #meta {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      flex: 1;
+    }
+
+    #name {
+      font-size: 48px;
+      font-weight: bold;
+      color: #66c0f4;
+    }
+
+    #question {
+      font-size: 56px;
+      line-height: 1.4;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="qr">
+      <img id="qr-code" src="https://api.qrserver.com/v1/create-qr-code/?data=https://forms.gle/7gDs1GsBEpf3T58u8&size=300x300" alt="QR Code" />
+      <span>Scan to ask</span>
+    </div>
+    <div id="meta">
+      <div id="name"></div>
+      <div id="question"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentIndex = -1;
+    let cache = [];
+    let history = [];
+    let rows = [];
+
+    async function fetchQuestions() {
+      await gsheetProcessor(
+        {
+          sheetId: "1vn95qBUKvF0MbIbg-IPv91Uqv8JkiHUhFRVz62aj3DI",
+          sheetName: "Form Responses 1",
+          sheetNumber: 1,
+          returnAllResults: true,
+          apiKey: "AIzaSyD4ZoTrXMfF7mhAMVNNiensNsWL5XC6Sqo",
+        },
+        (results) => {
+          var i = 0;
+          results.forEach((result) => {
+            rows[i] = {
+              time: result["Timestamp"],
+              name: result["Your Name"],
+              question: result["Your Question"]
+            };
+
+            i++;
+          }); // forEach
+        }); // results/gSheetProcessor
+      return rows;
+    }
+
+    function updateDisplay(entry) {
+      const container = document.getElementById('container');
+      container.style.opacity = 0;
+
+      setTimeout(() => {
+        console.log(entry.name);
+        document.getElementById('name').textContent = entry.name;
+        document.getElementById('question').textContent = entry.question;
+
+        container.style.opacity = 1;
+      }, 500);
+    }
+
+    async function nextQuestion() {
+      if (currentIndex < cache.length - 1) {
+        currentIndex++;
+        updateDisplay(cache[currentIndex]);
+        return;
+      }
+
+      const fresh = await fetchQuestions();
+      for (let entry of fresh) {
+        if (!cache.find(e => e.time === entry.time)) {
+          cache.push(entry);
+          currentIndex = cache.length - 1;
+          updateDisplay(entry);
+          return;
+        }
+      }
+    }
+
+    function previousQuestion() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        updateDisplay(cache[currentIndex]);
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') nextQuestion();
+      else if (e.key === 'ArrowLeft') previousQuestion();
+    });
+
+    function GSheetsapi({ apiKey, sheetId, sheetName, sheetNumber = 1 }) {
+      try {
+        const sheetNameStr = sheetName && sheetName !== '' ? encodeURIComponent(sheetName) : `Sheet${sheetNumber}`
+        const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetNameStr}?dateTimeRenderOption=FORMATTED_STRING&majorDimension=ROWS&valueRenderOption=FORMATTED_VALUE&key=${apiKey}`;
+
+        return fetch(sheetsUrl)
+          .then(response => {
+            if (!response.ok) {
+              console.log('there is an error in the gsheets response');
+              throw new Error('Error fetching GSheet');
+            }
+            return response.json();
+          })
+          .then(data => data)
+          .catch(err => {
+            throw new Error(
+              'Failed to fetch from GSheets API. Check your Sheet Id and the public availability of your GSheet.'
+            );
+          });
+      } catch (err) {
+        throw new Error(`General error when fetching GSheet: ${err}`);
+      }
+    };
+
+    function processGSheetResults(
+      JSONResponse,
+      returnAllResults,
+      filter,
+      filterOptions
+    ) {
+      const data = JSONResponse.values;
+      const startRow = 1;
+
+      let processedResults = [{}];
+      let colNames = {};
+
+      for (let i = 0; i < data.length; i++) {
+        // Rows
+        const thisRow = data[i];
+
+        for (let j = 0; j < thisRow.length; j++) {
+          // Columns/cells
+          const cellValue = thisRow[j];
+          const colNameToAdd = colNames[j]; // this will be undefined on the first pass
+
+          if (i < startRow) {
+            colNames[j] = cellValue;
+            continue; // skip the header row
+          }
+
+          if (typeof processedResults[i] === 'undefined') {
+            processedResults[i] = {};
+          }
+
+          if (typeof colNameToAdd !== 'undefined' && colNameToAdd.length > 0) {
+            processedResults[i][colNameToAdd] = cellValue;
+          }
+        }
+      }
+
+      // make sure we're only returning valid, filled data items
+      processedResults = processedResults.filter(
+        result => Object.keys(result).length
+      );
+
+      // if we're not filtering, then return all results
+      if (returnAllResults || !filter) {
+        return processedResults;
+      }
+
+      return filterResults(processedResults, filter, filterOptions);
+    }
+
+    function gsheetProcessor(options, callback, onError) {
+      const { apiKey, sheetId, sheetName, sheetNumber, returnAllResults, filter, filterOptions } = options
+
+      if (!options.apiKey || options.apiKey === undefined) {
+        throw new Error('Missing Sheets API key');
+      }
+
+      return GSheetsapi({
+        apiKey,
+        sheetId,
+        sheetName,
+        sheetNumber
+      })
+        .then(result => {
+          const filteredResults = processGSheetResults(
+            result,
+            returnAllResults || false,
+            filter || false,
+            filterOptions || {
+              operator: 'or',
+              matching: 'loose'
+            }
+          );
+
+          callback(filteredResults);
+        });
+    };
+
+    // Initial load
+    nextQuestion();</script>
+</body>
+</html>

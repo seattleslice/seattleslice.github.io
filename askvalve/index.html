@@ -33,9 +33,10 @@
       align-items: center;
       justify-content: center;
       padding: 24px;
-      font-size: 96px;
+      font-size: 48px;
       font-weight: bold;
       color: #C5C3C0;
+      font-weight: bolder;
     }
 
       header img {
@@ -121,7 +122,7 @@
 </head>
 <body>
   <header>
-    Ask
+    ASK
     <img src="https://store.cloudflare.steamstatic.com/public/shared/images/header/logo_steam.svg?t=962016" alt="Steam Logo">
   </header>
 
@@ -215,8 +216,11 @@
     }
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight') nextQuestion();
-      else if (e.key === 'ArrowLeft') previousQuestion();
+      if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === 'PageUp') {
+        nextQuestion();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageDown') {
+        previousQuestion();
+      }
     });
 
     function GSheetsapi({ apiKey, sheetId, sheetName, sheetNumber = 1 }) {

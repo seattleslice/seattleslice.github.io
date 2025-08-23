@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Conference Now-Showing Boards</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+
+  <!-- Offline font -->
+  <style>
+    @font-face {
+      font-family: 'Bungee';
+      src: url('Bungee-Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #1A347C; /* fill behind/around images */
+      overscroll-behavior: none;
+      user-select: none;
+    }
+
+    #wrap {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: #1A347C;
+    }
+
+    #slide {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;   /* show whole 16:9 image without stretching */
+      background: #1A347C;   /* ensures borders are filled with color */
+    }
+
+    /* ---- Clock styling ---- */
+    #clock {
+      position: fixed;
+      top: 2.5vh;    /* 2.5% of screen height */
+      right: 2.5vh;  /* 2.5% of screen height */
+      font-family: 'Bungee', sans-serif;
+      font-size: 4.72222vh;   /* 4.72222% of screen height */
+      line-height: 1;
+      color: #FAFD39;
+      pointer-events: none;
+    }
+    #clock::before {
+      content: attr(data-time);
+      position: absolute;
+      top: -0.37vh;   /* accent offset upward */
+      right: -0.37vh; /* accent offset rightward */
+      color: #B641FF;
+      font-family: inherit;
+      font-size: inherit;
+      line-height: inherit;
+      z-index: -1;
+    }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <img id="slide" alt="What's happening now" />
+  </div>
+  <div id="clock"></div>
+
+  <script>
+    // ---- Schedule (minutes since midnight) ----
+    const mm = (h, m) => h * 60 + m;
+    const SLOTS = [
+      [mm(0,0),   mm(9,0),   "1.png"],   // Before 9:00am
+      [mm(9,0),   mm(9,20),  "2.png"],
+      [mm(9,20),  mm(9,30),  "3.png"],
+      [mm(9,30),  mm(10,15), "4.png"],
+      [mm(10,15), mm(10,30), "5.png"],
+      [mm(10,30), mm(11,15), "6.png"],
+      [mm(11,15), mm(11,30), "7.png"],
+      [mm(11,30), mm(12,15), "8.png"],
+      [mm(12,15), mm(13,45), "9.png"],
+      [mm(13,45), mm(14,30), "10.png"],
+      [mm(14,30), mm(14,45), "11.png"],
+      [mm(14,45), mm(15,30), "12.png"],
+      [mm(15,30), mm(15,45), "13.png"],
+      [mm(15,45), mm(16,30), "14.png"],
+      [mm(16,30), mm(16,45), "15.png"],
+      [mm(16,45), mm(17,30), "16.png"],
+      [mm(17,30), mm(17,45), "17.png"],
+      [mm(17,45), mm(18,30), "18.png"],
+      [mm(18,30), mm(19,0),  "19.png"],
+      [mm(19,0),  mm(19,30), "20.png"],
+      [mm(19,30), mm(19,45), "21.png"],
+      [mm(19,45), mm(20,45), "22.png"],
+      [mm(20,45), mm(21,30), "23.png"],
+      [mm(21,30), mm(24,0),  "24.png"],  // After 9:30pm
+    ];
+
+    const slideEl = document.getElementById('slide');
+    const clockEl = document.getElementById('clock');
+    let shown = null;
+
+    function imageForNow(minutesNow) {
+      for (const [start, end, img] of SLOTS) {
+        if (minutesNow >= start && minutesNow < end) return img;
+      }
+      return SLOTS[SLOTS.length - 1][2];
+    }
+
+    function refresh() {
+      const now = new Date();
+      const mins = now.getHours() * 60 + now.getMinutes();
+      const src = imageForNow(mins);
+      if (src !== shown) {
+        slideEl.src = src;
+        shown = src;
+      }
+      // Update clock
+      clockEl.textContent = formatClock(now);
+      clockEl.setAttribute("data-time", clockEl.textContent);
+    }
+
+    function formatClock(d) {
+      let h = d.getHours();
+      let m = d.getMinutes();
+      const ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12;
+      if (h === 0) h = 12;
+      return h + ":" + String(m).padStart(2, '0') + " " + ampm;
+    }
+
+    // Align checks to exact 5s
+    function scheduleAlignedChecks() {
+      refresh();
+      const now = Date.now();
+      const msToNext5s = 5000 - (now % 5000);
+      setTimeout(function tick() {
+        refresh();
+        setTimeout(tick, 5000);
+      }, msToNext5s);
+    }
+
+    scheduleAlignedChecks();
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) refresh();
+    });
+  </script>
+</body>
+</html>

@@ -155,27 +155,46 @@
     let rows = [];
 
     async function fetchQuestions() {
-      await gsheetProcessor(
-        {
-          sheetId: "1vn95qBUKvF0MbIbg-IPv91Uqv8JkiHUhFRVz62aj3DI",
-          sheetName: "Form Responses 1",
-          sheetNumber: 1,
-          returnAllResults: true,
-          apiKey: "AIzaSyD4ZoTrXMfF7mhAMVNNiensNsWL5XC6Sqo",
-        },
-        (results) => {
-          var i = 0;
-          results.forEach((result) => {
-            rows[i] = {
-              time: result["Timestamp"],
-              name: result["Your Name"],
-              question: result["Your Question"]
-            };
+      async function callGsheetProcessor() {
+        return new Promise((resolve, reject) => {
+          gsheetProcessor(
+            {
+              sheetId: "1vn95qBUKvF0MbIbg-IPv91Uqv8JkiHUhFRVz62aj3DI",
+              sheetName: "Form Responses 1",
+              sheetNumber: 1,
+              returnAllResults: true,
+              apiKey: "AIzaSyD4ZoTrXMfF7mhAMVNNiensNsWL5XC6Sqo",
+            },
+            (results) => {
+              try {
+                const rows = [];
+                let i = 0;
+                results.forEach((result) => {
+                  rows[i] = {
+                    time: result["Timestamp"],
+                    name: result["Your Name"],
+                    question: result["Your Question"],
+                  };
+                  i++;
+                });
+                resolve(rows);
+              } catch (err) {
+                reject(err);
+              }
+            }
+          );
+        });
+      }
 
-            i++;
-          }); // forEach
-        }); // results/gSheetProcessor
-      return rows;
+      while (true) {
+        try {
+          const rows = await callGsheetProcessor();
+          return rows; // Success, exit loop
+        } catch (err) {
+          console.error("gsheetProcessor failed, retrying in 0.5s...", err);
+          await new Promise((res) => setTimeout(res, 500)); // wait 0.5s
+        }
+      }
     }
 
     function updateDisplay(entry) {

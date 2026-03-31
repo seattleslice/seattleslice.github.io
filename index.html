@@ -70,8 +70,24 @@
       top: 40px;
       left: 48px;
       z-index: 10;
+    }
+
+    .logo__text {
       display: flex;
       gap: 2px;
+    }
+
+    .logo__year {
+      display: block;
+      font-family: 'Bungee', cursive;
+      font-size: 48px;
+      line-height: 1;
+      color: #f5ee1d;
+      text-shadow: 2px -2px 0 #bb3efd, 0 2px 12px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transform: translateX(100vw);
+      animation: letterBounceIn 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      animation-delay: 0.9s;
     }
 
     .logo__letter {
@@ -90,7 +106,7 @@
       content: attr(data-letter);
       position: absolute;
       top: -4px;
-      left: 3px;
+      left: 4px;
       color: #bb3efd;
       z-index: -1;
       text-shadow: none;
@@ -198,6 +214,7 @@
       font-family: 'Bungee', cursive;
       font-size: 40px;
       color: #f5ee1d;
+      text-shadow: 2px -2px 0 #bb3efd;
       margin-bottom: 24px;
       line-height: 1.15;
     }
@@ -229,6 +246,7 @@
       font-family: 'Bungee', cursive;
       font-size: 48px;
       color: #f5ee1d;
+      text-shadow: 2px -2px 0 #bb3efd;
       margin-bottom: 12px;
     }
 
@@ -416,6 +434,9 @@
       .logo__letter {
         font-size: 102px;
       }
+      .logo__year {
+        font-size: 41px;
+      }
       .logo {
         top: 24px;
         left: 24px;
@@ -449,12 +470,15 @@
     <div class="hero__overlay"></div>
 
     <!-- Logo -->
-    <div class="logo" aria-label="SLICE">
-      <span class="logo__letter" data-letter="S">S</span>
-      <span class="logo__letter" data-letter="L">L</span>
-      <span class="logo__letter" data-letter="I">I</span>
-      <span class="logo__letter" data-letter="C">C</span>
-      <span class="logo__letter" data-letter="E">E</span>
+    <div class="logo" aria-label="SLICE 2026">
+      <div class="logo__text">
+        <span class="logo__letter" data-letter="S">S</span>
+        <span class="logo__letter" data-letter="L">L</span>
+        <span class="logo__letter" data-letter="I">I</span>
+        <span class="logo__letter" data-letter="C">C</span>
+        <span class="logo__letter" data-letter="E">E</span>
+      </div>
+      <span class="logo__year">2026</span>
     </div>
 
     <!-- Scroll Indicator -->

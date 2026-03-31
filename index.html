@@ -396,6 +396,8 @@
       height: 80px;
       border-radius: 50%;
       background: linear-gradient(135deg, #BB3EFD, #f5ee1d);
+      background-size: cover;
+      background-position: center;
       margin: 0 auto 16px;
     }
 
@@ -524,6 +526,8 @@
       height: 120px;
       border-radius: 50%;
       background: linear-gradient(135deg, #BB3EFD, #f5ee1d);
+      background-size: cover;
+      background-position: center;
       margin: 0 auto 20px;
       border: 3px solid #FFFB10;
     }
@@ -880,32 +884,35 @@
         <div class="speaker-card"
           data-name="Eric Barone"
           data-role="Creator of Stardew Valley"
+          data-image="https://i0.wp.com/seattleslice.org/wp-content/uploads/2025/06/eric-barrone-2-edited.png?resize=352%2C352&ssl=1"
           data-bio="Eric 'ConcernedApe' Barone is the sole developer behind Stardew Valley, one of the best-selling indie games of all time. He created every aspect of the game — code, art, music, writing, and design — over four years of solo development. His story is an inspiration to indie creators everywhere."
           data-twitter="ConcernedApe"
           data-website="https://www.stardewvalley.net">
-          <div class="speaker-card__avatar"></div>
+          <div class="speaker-card__avatar" style="background-image: url('https://i0.wp.com/seattleslice.org/wp-content/uploads/2025/06/eric-barrone-2-edited.png?resize=352%2C352&ssl=1')"></div>
           <div class="speaker-card__name">Eric Barone</div>
           <div class="speaker-card__role">Creator of Stardew Valley</div>
         </div>
         <div class="speaker-card"
           data-name="Kim Swift"
           data-role="Creator of Portal"
+          data-image="https://i0.wp.com/seattleslice.org/wp-content/uploads/2025/08/image-5.jpeg?w=800&ssl=1"
           data-bio="Kim Swift is a legendary game designer best known as the project lead on Portal at Valve. She started her career with Narbacular Drop, a student project that caught Valve's attention and became the foundation for Portal. She has since led design at major studios across the industry."
           data-twitter="kswiftie"
           data-website="https://en.wikipedia.org/wiki/Kim_Swift">
-          <div class="speaker-card__avatar"></div>
+          <div class="speaker-card__avatar" style="background-image: url('https://i0.wp.com/seattleslice.org/wp-content/uploads/2025/08/image-5.jpeg?w=800&ssl=1')"></div>
           <div class="speaker-card__name">Kim Swift</div>
           <div class="speaker-card__role">Creator of Portal</div>
         </div>
         <div class="speaker-card"
-          data-name="Andrew Marks"
-          data-role="Kickstarter Director of Product"
-          data-bio="Andrew Marks is the Director of Product at Kickstarter, where he works to empower creative projects and connect creators with their communities. With deep experience in the crowdfunding space, Andrew has helped shape the platform that has launched thousands of indie games and creative works."
-          data-twitter="kickstarter"
-          data-website="https://www.kickstarter.com">
-          <div class="speaker-card__avatar"></div>
-          <div class="speaker-card__name">Andrew Marks</div>
-          <div class="speaker-card__role">Kickstarter Director of Product</div>
+          data-name="Ed Fries"
+          data-role="Former VP of Game Publishing, Microsoft"
+          data-image="https://i0.wp.com/seattleslice.org/wp-content/uploads/2025/08/image-4.jpeg?w=500&ssl=1"
+          data-bio="Ed Fries is a pioneering game industry executive who served as Vice President of Game Publishing at Microsoft, where he led the creation of the original Xbox console. He joined Microsoft in 1986 and worked on Word and Excel before taking over the games division in 1995. He championed the acquisitions of Bungie, Ensemble Studios, and Rare, helping build Xbox into a major gaming platform. Since leaving Microsoft in 2004, he has been an advisor and investor across the gaming industry."
+          data-twitter=""
+          data-website="https://en.wikipedia.org/wiki/Ed_Fries">
+          <div class="speaker-card__avatar" style="background-image: url('https://i0.wp.com/seattleslice.org/wp-content/uploads/2025/08/image-4.jpeg?w=500&ssl=1')"></div>
+          <div class="speaker-card__name">Ed Fries</div>
+          <div class="speaker-card__role">Creator of the Xbox</div>
         </div>
       </div>
     </section>
@@ -1233,9 +1240,16 @@
         const bio = card.dataset.bio || '';
         const twitter = card.dataset.twitter || '';
         const website = card.dataset.website || '';
+        const image = card.dataset.image || '';
 
         nameEl.textContent = name;
         bioEl.textContent = bio;
+
+        if (image) {
+          avatarEl.style.backgroundImage = "url('" + image + "')";
+        } else {
+          avatarEl.style.backgroundImage = '';
+        }
 
         // Build socials
         socialsEl.innerHTML = '';

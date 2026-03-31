@@ -805,9 +805,9 @@
 
     .events-carousel__track {
       position: relative;
-      width: 380px;
-      height: 280px;
-      perspective: 800px;
+      width: 532px;
+      height: 381px;
+      perspective: 1120px;
     }
 
     .event-card {
@@ -818,13 +818,14 @@
       height: 100%;
       background: #002a63;
       border: 2px solid #1a4a8a;
-      border-radius: 16px;
-      padding: 40px 32px;
+      border-radius: 22px;
+      padding: 34px 34px 0;
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
+      overflow: hidden;
       transition: transform 0.45s cubic-bezier(0.4, 0.0, 0.2, 1),
                   opacity 0.45s cubic-bezier(0.4, 0.0, 0.2, 1),
                   border-color 0.3s;
@@ -843,67 +844,69 @@
 
     .event-card--stack-1 {
       opacity: 0.55;
-      transform: translateX(40px) scale(0.92) rotateY(-4deg);
+      transform: translateX(56px) scale(0.92) rotateY(-4deg);
       z-index: 9;
     }
 
     .event-card--stack-2 {
       opacity: 0.3;
-      transform: translateX(70px) scale(0.85) rotateY(-6deg);
+      transform: translateX(98px) scale(0.85) rotateY(-6deg);
       z-index: 8;
     }
 
     .event-card--stack-back-1 {
       opacity: 0.55;
-      transform: translateX(-40px) scale(0.92) rotateY(4deg);
+      transform: translateX(-56px) scale(0.92) rotateY(4deg);
       z-index: 9;
     }
 
     .event-card--stack-back-2 {
       opacity: 0.3;
-      transform: translateX(-70px) scale(0.85) rotateY(6deg);
+      transform: translateX(-98px) scale(0.85) rotateY(6deg);
       z-index: 8;
     }
 
     .event-card--exit-left {
       opacity: 0;
-      transform: translateX(-120px) scale(0.8);
+      transform: translateX(-168px) scale(0.8);
       z-index: 7;
     }
 
     .event-card--exit-right {
       opacity: 0;
-      transform: translateX(120px) scale(0.8);
+      transform: translateX(168px) scale(0.8);
       z-index: 7;
-    }
-
-    .event-card__icon {
-      font-size: 36px;
-      margin-bottom: 12px;
     }
 
     .event-card__title {
       font-family: 'Bungee', cursive;
-      font-size: 20px;
+      font-size: 34px;
       color: #f5ee1d;
-      margin-bottom: 12px;
+      margin-bottom: 11px;
     }
 
     .event-card__desc {
-      font-size: 15px;
+      font-size: 20px;
       color: #a0c4e8;
-      line-height: 1.6;
-      max-width: 320px;
+      line-height: 1.5;
+      max-width: 448px;
+    }
+
+    .event-card__img {
+      margin-top: auto;
+      width: calc(100% + 68px);
+      object-fit: contain;
+      border-radius: 0 0 20px 20px;
     }
 
     .events-carousel__arrow {
       background: none;
       border: 2px solid #1a4a8a;
       border-radius: 50%;
-      width: 52px;
-      height: 52px;
+      width: 73px;
+      height: 73px;
       color: #f5ee1d;
-      font-size: 22px;
+      font-size: 31px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -1010,34 +1013,37 @@
         gap: 12px;
       }
       .events-carousel__track {
-        width: 280px;
-        height: 260px;
+        width: 392px;
+        height: 336px;
       }
       .event-card {
-        padding: 28px 20px;
+        padding: 28px 22px 0;
       }
       .event-card__title {
-        font-size: 17px;
+        font-size: 24px;
       }
       .event-card__desc {
-        font-size: 13px;
+        font-size: 17px;
+      }
+      .event-card__img {
+        width: calc(100% + 44px);
       }
       .events-carousel__arrow {
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
+        width: 56px;
+        height: 56px;
+        font-size: 25px;
       }
       .event-card--stack-1 {
-        transform: translateX(28px) scale(0.93);
+        transform: translateX(39px) scale(0.93);
       }
       .event-card--stack-2 {
-        transform: translateX(50px) scale(0.87);
+        transform: translateX(70px) scale(0.87);
       }
       .event-card--stack-back-1 {
-        transform: translateX(-28px) scale(0.93);
+        transform: translateX(-39px) scale(0.93);
       }
       .event-card--stack-back-2 {
-        transform: translateX(-50px) scale(0.87);
+        transform: translateX(-70px) scale(0.87);
       }
     }
   </style>
@@ -1174,59 +1180,59 @@
         <button class="events-carousel__arrow events-carousel__arrow--left" aria-label="Previous event type">&#9664;</button>
         <div class="events-carousel__track">
           <div class="event-card" data-index="0">
-            <div class="event-card__icon">&#127908;</div>
             <div class="event-card__title">Panels</div>
             <div class="event-card__desc">Hear diverse perspectives as industry leaders debate the topics shaping gaming today.</div>
+            <img class="event-card__img" src="images/events/panels.jpg" alt="Panels" loading="lazy">
           </div>
           <div class="event-card" data-index="1">
-            <div class="event-card__icon">&#127891;</div>
             <div class="event-card__title">Lectures</div>
             <div class="event-card__desc">Deep dives from seasoned developers sharing hard-won lessons and bold ideas.</div>
+            <img class="event-card__img" src="images/events/lectures.jpg" alt="Lectures" loading="lazy">
           </div>
           <div class="event-card" data-index="2">
-            <div class="event-card__icon">&#128172;</div>
             <div class="event-card__title">Roundtables</div>
             <div class="event-card__desc">Intimate, candid discussions where every voice at the table matters.</div>
+            <img class="event-card__img" src="images/events/roundtables.jpg" alt="Roundtables" loading="lazy">
           </div>
           <div class="event-card" data-index="3">
-            <div class="event-card__icon">&#127908;</div>
             <div class="event-card__title">Micro-talks</div>
             <div class="event-card__desc">Quick, punchy presentations where speakers share big ideas in just a few minutes.</div>
+            <img class="event-card__img" src="images/events/microtalks.jpg" alt="Micro-talks" loading="lazy">
           </div>
           <div class="event-card" data-index="4">
-            <div class="event-card__icon">&#129309;</div>
             <div class="event-card__title">Networking</div>
             <div class="event-card__desc">Make the connections that turn into collaborations, jobs, and lifelong friendships.</div>
+            <img class="event-card__img" src="images/events/networking.jpg" alt="Networking" loading="lazy">
           </div>
           <div class="event-card" data-index="5">
-            <div class="event-card__icon">&#127918;</div>
             <div class="event-card__title">Bring Your Own Game</div>
             <div class="event-card__desc">Show off what you've been building and get real feedback from fellow devs.</div>
+            <img class="event-card__img" src="images/events/bringyourowngame.jpg" alt="Bring Your Own Game" loading="lazy">
           </div>
           <div class="event-card" data-index="6">
-            <div class="event-card__icon">&#128161;</div>
             <div class="event-card__title">Pitch Clinic</div>
             <div class="event-card__desc">Sharpen your pitch with expert coaching before you face publishers and investors.</div>
-          </div>
-          <div class="event-card" data-index="6">
-            <div class="event-card__icon">&#128142;</div>
-            <div class="event-card__title">Women in Games Luncheon</div>
-            <div class="event-card__desc">Celebrating and empowering the women driving our industry forward.</div>
+            <img class="event-card__img" src="images/events/pitchclinic.jpg" alt="Pitch Clinic" loading="lazy">
           </div>
           <div class="event-card" data-index="7">
-            <div class="event-card__icon">&#9889;</div>
-            <div class="event-card__title">Speed Networking</div>
-            <div class="event-card__desc">Fast-paced introductions that pack a full conference's worth of contacts into minutes.</div>
+            <div class="event-card__title">Women in Games Lunch</div>
+            <div class="event-card__desc">Celebrating and empowering the women driving our industry forward.</div>
+            <img class="event-card__img" src="images/events/womeningamesluncheon.jpg" alt="Women in Games Luncheon" loading="lazy">
           </div>
           <div class="event-card" data-index="8">
-            <div class="event-card__icon">&#9889;</div>
-            <div class="event-card__title">Vendors</div>
-            <div class="event-card__desc">Peruse the latest tools, hardware, and services from our sponsors.</div>
+            <div class="event-card__title">Speed Networking</div>
+            <div class="event-card__desc">Fast-paced introductions that pack a full conference's worth of contacts into minutes.</div>
+            <img class="event-card__img" src="images/events/speednetworking.jpg" alt="Speed Networking" loading="lazy">
           </div>
           <div class="event-card" data-index="9">
-            <div class="event-card__icon">&#127881;</div>
+            <div class="event-card__title">Vendors</div>
+            <div class="event-card__desc">Peruse the latest tools, hardware, and services from our sponsors.</div>
+            <img class="event-card__img" src="images/events/vendors.jpg" alt="Vendors" loading="lazy">
+          </div>
+          <div class="event-card" data-index="10">
             <div class="event-card__title">Afterparty</div>
             <div class="event-card__desc">Unwind, celebrate, and dance the night away with the SLICE community.</div>
+            <img class="event-card__img" src="images/events/afterparty.jpg" alt="Afterparty" loading="lazy">
           </div>
         </div>
         <button class="events-carousel__arrow events-carousel__arrow--right" aria-label="Next event type">&#9654;</button>

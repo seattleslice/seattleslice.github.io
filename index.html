@@ -429,6 +429,48 @@
       transform: translateY(0);
     }
 
+    /* ===================== ROBOT MASCOT ===================== */
+    .robot-mascot {
+      position: fixed;
+      bottom: -3%;
+      right: 0;
+      width: 20vw;
+      min-width: 140px;
+      max-width: 320px;
+      z-index: 50;
+      pointer-events: none;
+      transform: translateX(110%);
+      transition: transform 1.8s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .robot-mascot.entered {
+      /* Shift right by 277/2373 of element width to hide extra canvas padding */
+      transform: translateX(11.67%);
+    }
+
+    .robot-mascot__rig {
+      position: relative;
+      width: 100%;
+      /* Body pivots at (1444, 2099) on a 2373x2126 image */
+      transform-origin: 60.85% 98.7%;
+    }
+
+    .robot-mascot__body {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .robot-mascot__arm {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: auto;
+      /* Arm pivots at (807, 1577) on a 2373x2126 image */
+      transform-origin: 34.0% 74.2%;
+    }
+
     /* ===================== RESPONSIVE ===================== */
     @media (max-width: 768px) {
       .logo__letter {
@@ -592,6 +634,14 @@
 
   </div>
 
+  <!-- Robot Mascot -->
+  <div class="robot-mascot" id="robotMascot">
+    <div class="robot-mascot__rig" id="robotRig">
+      <img class="robot-mascot__body" src="images/robot/body.png" alt="" draggable="false">
+      <img class="robot-mascot__arm" id="robotArm" src="images/robot/arm.png" alt="" draggable="false">
+    </div>
+  </div>
+
   <script>
     // Show scroll indicator after 5 seconds
     setTimeout(() => {
@@ -610,6 +660,97 @@
     }, { threshold: 0.15 });
 
     revealEls.forEach(el => revealObserver.observe(el));
+
+    // ===================== ROBOT MASCOT ANIMATION =====================
+    const robotMascot = document.getElementById('robotMascot');
+    const robotRig = document.getElementById('robotRig');
+    const robotArm = document.getElementById('robotArm');
+
+    let robotAnimId = null;
+    let robotIdleId = null;
+    let robotAnimating = false;
+
+    // Slide the robot in after 1 second, already doing idle animation
+    setTimeout(() => {
+      robotMascot.classList.add('entered');
+      DoAnimation();
+    }, 1000);
+
+    // Gentle idle sway
+    function startIdleAnimation() {
+      let t = 0;
+      function idleTick() {
+        t += 0.02;
+        const bodyAngle = Math.sin(t * 0.7) * 1.5;
+        const armAngle = Math.sin(t * 1.1 + 0.5) * 3;
+        robotRig.style.transform = `rotate(${bodyAngle}deg)`;
+        robotArm.style.transform = `rotate(${armAngle}deg)`;
+        robotIdleId = requestAnimationFrame(idleTick);
+      }
+      idleTick();
+    }
+
+    function stopIdleAnimation() {
+      if (robotIdleId) {
+        cancelAnimationFrame(robotIdleId);
+        robotIdleId = null;
+      }
+    }
+
+    // Teaching animation — arm swings wider, body leans into the gesture
+    function DoAnimation() {
+      if (robotAnimating) return;
+      robotAnimating = true;
+      stopIdleAnimation();
+
+      const duration = 3000; // 3 seconds of teaching
+      const start = performance.now();
+
+      function animTick(now) {
+        const elapsed = now - start;
+        const p = elapsed / duration;
+
+        if (p >= 1) {
+          // Smoothly return to idle
+          robotRig.style.transform = 'rotate(0deg)';
+          robotArm.style.transform = 'rotate(0deg)';
+          robotAnimating = false;
+          startIdleAnimation();
+          return;
+        }
+
+        // Envelope: ramp up, sustain, ramp down
+        const envelope = Math.sin(p * Math.PI);
+
+        // Body rocks back and forth like leaning to point
+        const bodyAngle = envelope * Math.sin(p * Math.PI * 6) * 4;
+
+        // Arm swings more dramatically — pointing gesture
+        const armAngle = envelope * (Math.sin(p * Math.PI * 8) * 12 - 5);
+
+        robotRig.style.transform = `rotate(${bodyAngle}deg)`;
+        robotArm.style.transform = `rotate(${armAngle}deg)`;
+        robotAnimId = requestAnimationFrame(animTick);
+      }
+      robotAnimId = requestAnimationFrame(animTick);
+    }
+
+    // Trigger DoAnimation on scroll indicator click
+    document.getElementById('scrollIndicator').addEventListener('click', DoAnimation);
+
+    // Trigger DoAnimation on large scroll events
+    let lastScrollY = window.scrollY;
+    let scrollTimeout = null;
+    window.addEventListener('scroll', () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const delta = Math.abs(window.scrollY - lastScrollY);
+        if (delta > 400) {
+          DoAnimation();
+        }
+        lastScrollY = window.scrollY;
+      }, 150);
+    });
   </script>
 
 </body>

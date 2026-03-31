@@ -516,7 +516,7 @@
       min-width: 140px;
       max-width: 320px;
       z-index: 50;
-      pointer-events: none;
+      cursor: pointer;
       transform: translateX(110%);
       transition: transform 1.8s cubic-bezier(0.25, 1, 0.5, 1);
     }
@@ -826,8 +826,9 @@
       robotAnimId = requestAnimationFrame(animTick);
     }
 
-    // Trigger DoAnimation on scroll indicator click
+    // Trigger DoAnimation on scroll indicator click or clicking the robot
     document.getElementById('scrollIndicator').addEventListener('click', DoAnimation);
+    robotMascot.addEventListener('click', DoAnimation);
 
     // Trigger DoAnimation on large scroll events
     let lastScrollY = window.scrollY;

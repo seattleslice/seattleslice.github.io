@@ -792,6 +792,160 @@
       transform-origin: 34.0% 74.2%;
     }
 
+    /* ===================== EVENTS CAROUSEL ===================== */
+    .events-carousel {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 36px;
+      min-height: 320px;
+    }
+
+    .events-carousel__track {
+      position: relative;
+      width: 380px;
+      height: 280px;
+      perspective: 800px;
+    }
+
+    .event-card {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #002a63;
+      border: 2px solid #1a4a8a;
+      border-radius: 16px;
+      padding: 40px 32px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.45s cubic-bezier(0.4, 0.0, 0.2, 1),
+                  opacity 0.45s cubic-bezier(0.4, 0.0, 0.2, 1),
+                  border-color 0.3s;
+      will-change: transform, opacity;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .event-card--active {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+      z-index: 10;
+      pointer-events: auto;
+      border-color: #f5ee1d;
+    }
+
+    .event-card--stack-1 {
+      opacity: 0.55;
+      transform: translateX(40px) scale(0.92) rotateY(-4deg);
+      z-index: 9;
+    }
+
+    .event-card--stack-2 {
+      opacity: 0.3;
+      transform: translateX(70px) scale(0.85) rotateY(-6deg);
+      z-index: 8;
+    }
+
+    .event-card--stack-back-1 {
+      opacity: 0.55;
+      transform: translateX(-40px) scale(0.92) rotateY(4deg);
+      z-index: 9;
+    }
+
+    .event-card--stack-back-2 {
+      opacity: 0.3;
+      transform: translateX(-70px) scale(0.85) rotateY(6deg);
+      z-index: 8;
+    }
+
+    .event-card--exit-left {
+      opacity: 0;
+      transform: translateX(-120px) scale(0.8);
+      z-index: 7;
+    }
+
+    .event-card--exit-right {
+      opacity: 0;
+      transform: translateX(120px) scale(0.8);
+      z-index: 7;
+    }
+
+    .event-card__icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+    }
+
+    .event-card__title {
+      font-family: 'Bungee', cursive;
+      font-size: 20px;
+      color: #f5ee1d;
+      margin-bottom: 12px;
+    }
+
+    .event-card__desc {
+      font-size: 15px;
+      color: #a0c4e8;
+      line-height: 1.6;
+      max-width: 320px;
+    }
+
+    .events-carousel__arrow {
+      background: none;
+      border: 2px solid #1a4a8a;
+      border-radius: 50%;
+      width: 52px;
+      height: 52px;
+      color: #f5ee1d;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.25s, background 0.25s, transform 0.2s;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .events-carousel__arrow:hover {
+      border-color: #f5ee1d;
+      background: rgba(245, 238, 29, 0.1);
+      transform: scale(1.1);
+    }
+
+    .events-carousel__arrow:active {
+      transform: scale(0.95);
+    }
+
+    .events-carousel__dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    .events-carousel__dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #1a4a8a;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.3s;
+      padding: 0;
+    }
+
+    .events-carousel__dot--active {
+      background: #f5ee1d;
+      transform: scale(1.3);
+    }
+
     /* ===================== RESPONSIVE ===================== */
     @media (max-width: 768px) {
       .hero__video-bg {
@@ -851,6 +1005,39 @@
       }
       .ticket-card__price {
         font-size: 32px;
+      }
+      .events-carousel {
+        gap: 12px;
+      }
+      .events-carousel__track {
+        width: 280px;
+        height: 260px;
+      }
+      .event-card {
+        padding: 28px 20px;
+      }
+      .event-card__title {
+        font-size: 17px;
+      }
+      .event-card__desc {
+        font-size: 13px;
+      }
+      .events-carousel__arrow {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+      }
+      .event-card--stack-1 {
+        transform: translateX(28px) scale(0.93);
+      }
+      .event-card--stack-2 {
+        transform: translateX(50px) scale(0.87);
+      }
+      .event-card--stack-back-1 {
+        transform: translateX(-28px) scale(0.93);
+      }
+      .event-card--stack-back-2 {
+        transform: translateX(-50px) scale(0.87);
       }
     }
   </style>
@@ -975,6 +1162,66 @@
       <div style="text-align: center; margin-top: 2.5rem;">
         <a href="https://seattleslice.org/speakers/" class="btn btn--outline" target="_blank">Full Speakers List</a>
       </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- Event Types -->
+    <section class="section reveal" id="events">
+      <p class="section__eyebrow">What To Expect</p>
+      <h2 class="section__title">More Than A Conference</h2>
+      <div class="events-carousel">
+        <button class="events-carousel__arrow events-carousel__arrow--left" aria-label="Previous event type">&#9664;</button>
+        <div class="events-carousel__track">
+          <div class="event-card" data-index="0">
+            <div class="event-card__icon">&#127908;</div>
+            <div class="event-card__title">Panels</div>
+            <div class="event-card__desc">Hear diverse perspectives as industry leaders debate the topics shaping gaming today.</div>
+          </div>
+          <div class="event-card" data-index="1">
+            <div class="event-card__icon">&#127891;</div>
+            <div class="event-card__title">Lectures</div>
+            <div class="event-card__desc">Deep dives from seasoned developers sharing hard-won lessons and bold ideas.</div>
+          </div>
+          <div class="event-card" data-index="2">
+            <div class="event-card__icon">&#128172;</div>
+            <div class="event-card__title">Roundtables</div>
+            <div class="event-card__desc">Intimate, candid discussions where every voice at the table matters.</div>
+          </div>
+          <div class="event-card" data-index="3">
+            <div class="event-card__icon">&#129309;</div>
+            <div class="event-card__title">Networking</div>
+            <div class="event-card__desc">Make the connections that turn into collaborations, jobs, and lifelong friendships.</div>
+          </div>
+          <div class="event-card" data-index="4">
+            <div class="event-card__icon">&#127918;</div>
+            <div class="event-card__title">Bring Your Own Game</div>
+            <div class="event-card__desc">Show off what you've been building and get real feedback from fellow devs.</div>
+          </div>
+          <div class="event-card" data-index="5">
+            <div class="event-card__icon">&#128161;</div>
+            <div class="event-card__title">Pitch Clinic</div>
+            <div class="event-card__desc">Sharpen your pitch with expert coaching before you face publishers and investors.</div>
+          </div>
+          <div class="event-card" data-index="6">
+            <div class="event-card__icon">&#128142;</div>
+            <div class="event-card__title">Women in Games Luncheon</div>
+            <div class="event-card__desc">Celebrating and empowering the women driving our industry forward.</div>
+          </div>
+          <div class="event-card" data-index="7">
+            <div class="event-card__icon">&#9889;</div>
+            <div class="event-card__title">Speed Networking</div>
+            <div class="event-card__desc">Fast-paced introductions that pack a full conference's worth of contacts into minutes.</div>
+          </div>
+          <div class="event-card" data-index="8">
+            <div class="event-card__icon">&#127881;</div>
+            <div class="event-card__title">Afterparty</div>
+            <div class="event-card__desc">Unwind, celebrate, and dance the night away with the SLICE community.</div>
+          </div>
+        </div>
+        <button class="events-carousel__arrow events-carousel__arrow--right" aria-label="Next event type">&#9654;</button>
+      </div>
+      <div class="events-carousel__dots" id="events-dots"></div>
     </section>
 
     <div class="divider"></div>
@@ -1375,6 +1622,125 @@
           closeOverlay();
         }
       });
+    })();
+
+    // ===================== EVENTS CAROUSEL =====================
+    (function() {
+      const cards = Array.from(document.querySelectorAll('.event-card'));
+      const total = cards.length;
+      const dotsContainer = document.getElementById('events-dots');
+      const leftArrow = document.querySelector('.events-carousel__arrow--left');
+      const rightArrow = document.querySelector('.events-carousel__arrow--right');
+      let current = 0;
+      let animating = false;
+
+      // Build dots
+      for (let i = 0; i < total; i++) {
+        const dot = document.createElement('button');
+        dot.className = 'events-carousel__dot';
+        dot.setAttribute('aria-label', 'Go to event ' + (i + 1));
+        dot.addEventListener('click', () => {
+          if (animating || i === current) return;
+          const dir = i > current ? 1 : -1;
+          goTo(i, dir);
+        });
+        dotsContainer.appendChild(dot);
+      }
+
+      function mod(n, m) { return ((n % m) + m) % m; }
+
+      function positionCards() {
+        const stateClasses = [
+          'event-card--active', 'event-card--stack-1', 'event-card--stack-2',
+          'event-card--stack-back-1', 'event-card--stack-back-2',
+          'event-card--exit-left', 'event-card--exit-right'
+        ];
+        cards.forEach(c => stateClasses.forEach(s => c.classList.remove(s)));
+
+        cards[current].classList.add('event-card--active');
+        cards[mod(current + 1, total)].classList.add('event-card--stack-1');
+        cards[mod(current + 2, total)].classList.add('event-card--stack-2');
+        cards[mod(current - 1, total)].classList.add('event-card--stack-back-1');
+        cards[mod(current - 2, total)].classList.add('event-card--stack-back-2');
+
+        // Update dots
+        dotsContainer.querySelectorAll('.events-carousel__dot').forEach((dot, i) => {
+          dot.classList.toggle('events-carousel__dot--active', i === current);
+        });
+      }
+
+      function goTo(newIndex, direction) {
+        if (animating) return;
+        animating = true;
+
+        const stateClasses = [
+          'event-card--active', 'event-card--stack-1', 'event-card--stack-2',
+          'event-card--stack-back-1', 'event-card--stack-back-2',
+          'event-card--exit-left', 'event-card--exit-right'
+        ];
+
+        // Build final assignment map (cardIndex -> CSS class)
+        const assignments = new Map();
+        assignments.set(current, direction > 0 ? 'event-card--exit-left' : 'event-card--exit-right');
+        assignments.set(newIndex, 'event-card--active');
+        const stackSlots = [
+          [mod(newIndex + 1, total), 'event-card--stack-1'],
+          [mod(newIndex + 2, total), 'event-card--stack-2'],
+          [mod(newIndex - 1, total), 'event-card--stack-back-1'],
+          [mod(newIndex - 2, total), 'event-card--stack-back-2'],
+        ];
+        for (const [idx, cls] of stackSlots) {
+          if (!assignments.has(idx)) assignments.set(idx, cls);
+        }
+
+        // Clear and apply final positions directly (CSS transitions handle animation)
+        cards.forEach((c, i) => {
+          stateClasses.forEach(s => c.classList.remove(s));
+          if (assignments.has(i)) {
+            c.classList.add(assignments.get(i));
+            c.style.opacity = '';
+          } else {
+            c.style.opacity = '0';
+          }
+        });
+
+        current = newIndex;
+        dotsContainer.querySelectorAll('.events-carousel__dot').forEach((dot, i) => {
+          dot.classList.toggle('events-carousel__dot--active', i === current);
+        });
+
+        setTimeout(() => {
+          animating = false;
+          cards.forEach(c => { c.style.opacity = ''; });
+        }, 470);
+      }
+
+      leftArrow.addEventListener('click', () => {
+        if (animating) return;
+        goTo(mod(current - 1, total), -1);
+      });
+
+      rightArrow.addEventListener('click', () => {
+        if (animating) return;
+        goTo(mod(current + 1, total), 1);
+      });
+
+      // Keyboard support
+      document.addEventListener('keydown', (e) => {
+        const eventsSection = document.getElementById('events');
+        const rect = eventsSection.getBoundingClientRect();
+        const inView = rect.top < window.innerHeight && rect.bottom > 0;
+        if (!inView) return;
+
+        if (e.key === 'ArrowLeft') {
+          leftArrow.click();
+        } else if (e.key === 'ArrowRight') {
+          rightArrow.click();
+        }
+      });
+
+      // Initialize
+      positionCards();
     })();
   </script>
 

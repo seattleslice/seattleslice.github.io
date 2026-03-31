@@ -411,6 +411,170 @@
       color: #a0c4e8;
     }
 
+    .speaker-card {
+      cursor: pointer;
+    }
+
+    /* ===================== SPEAKER OVERLAY ===================== */
+    .speaker-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .speaker-overlay.active {
+      pointer-events: auto;
+      opacity: 1;
+    }
+
+    /* Blur backdrop */
+    .speaker-overlay::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      backdrop-filter: blur(0px);
+      background: rgba(0, 20, 50, 0);
+      transition: backdrop-filter 0.5s ease, background 0.5s ease;
+    }
+
+    .speaker-overlay.active::before {
+      backdrop-filter: blur(12px);
+      background: rgba(0, 20, 50, 0.6);
+    }
+
+    /* Yellow line that expands */
+    .speaker-overlay__line {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 0;
+      height: 3px;
+      background: #FFFB10;
+      z-index: 2;
+      transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: 0 0 20px rgba(255, 251, 16, 0.5);
+    }
+
+    .speaker-overlay.step-line .speaker-overlay__line {
+      width: min(600px, 90vw);
+    }
+
+    /* The panel — starts as a 3px line, expands to full height */
+    .speaker-overlay__panel {
+      position: relative;
+      z-index: 3;
+      background: #001a3d;
+      border: 2px solid #FFFB10;
+      border-radius: 16px;
+      width: min(520px, 90vw);
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 48px 36px 36px;
+      text-align: center;
+      transform: scaleY(0);
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+    }
+
+    .speaker-overlay.step-panel .speaker-overlay__panel {
+      transform: scaleY(1);
+      opacity: 1;
+    }
+
+    .speaker-overlay.step-panel .speaker-overlay__line {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    /* Close button */
+    .speaker-overlay__close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid #a0c4e8;
+      background: transparent;
+      color: #a0c4e8;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .speaker-overlay__close:hover {
+      border-color: #FFFB10;
+      color: #FFFB10;
+      background: rgba(255, 251, 16, 0.1);
+    }
+
+    /* Avatar */
+    .speaker-overlay__avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #BB3EFD, #f5ee1d);
+      margin: 0 auto 20px;
+      border: 3px solid #FFFB10;
+    }
+
+    /* Name */
+    .speaker-overlay__name {
+      font-family: 'Bungee', cursive;
+      font-size: 24px;
+      color: #f5ee1d;
+      text-shadow: 2px 2px 0 #BB3EFD;
+      margin-bottom: 12px;
+    }
+
+    /* Socials row */
+    .speaker-overlay__socials {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .speaker-overlay__socials a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(187, 62, 253, 0.2);
+      border: 1px solid #BB3EFD;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .speaker-overlay__socials a:hover {
+      background: rgba(187, 62, 253, 0.5);
+      transform: scale(1.1);
+    }
+
+    .speaker-overlay__socials a svg {
+      width: 18px;
+      height: 18px;
+      fill: #f5ee1d;
+    }
+
+    /* Bio */
+    .speaker-overlay__bio {
+      font-size: 15px;
+      line-height: 1.7;
+      color: #c0d8f0;
+    }
+
     /* ===================== TICKETS ===================== */
     .tickets-grid {
       display: grid;
@@ -713,17 +877,32 @@
       <p class="section__eyebrow">Featured Speakers</p>
       <h2 class="section__title">Learn From The Best</h2>
       <div class="speakers-grid">
-        <div class="speaker-card">
+        <div class="speaker-card"
+          data-name="Eric Barone"
+          data-role="Creator of Stardew Valley"
+          data-bio="Eric 'ConcernedApe' Barone is the sole developer behind Stardew Valley, one of the best-selling indie games of all time. He created every aspect of the game — code, art, music, writing, and design — over four years of solo development. His story is an inspiration to indie creators everywhere."
+          data-twitter="ConcernedApe"
+          data-website="https://www.stardewvalley.net">
           <div class="speaker-card__avatar"></div>
           <div class="speaker-card__name">Eric Barone</div>
           <div class="speaker-card__role">Creator of Stardew Valley</div>
         </div>
-        <div class="speaker-card">
+        <div class="speaker-card"
+          data-name="Kim Swift"
+          data-role="Creator of Portal"
+          data-bio="Kim Swift is a legendary game designer best known as the project lead on Portal at Valve. She started her career with Narbacular Drop, a student project that caught Valve's attention and became the foundation for Portal. She has since led design at major studios across the industry."
+          data-twitter="kswiftie"
+          data-website="https://en.wikipedia.org/wiki/Kim_Swift">
           <div class="speaker-card__avatar"></div>
           <div class="speaker-card__name">Kim Swift</div>
           <div class="speaker-card__role">Creator of Portal</div>
         </div>
-        <div class="speaker-card">
+        <div class="speaker-card"
+          data-name="Andrew Marks"
+          data-role="Kickstarter Director of Product"
+          data-bio="Andrew Marks is the Director of Product at Kickstarter, where he works to empower creative projects and connect creators with their communities. With deep experience in the crowdfunding space, Andrew has helped shape the platform that has launched thousands of indie games and creative works."
+          data-twitter="kickstarter"
+          data-website="https://www.kickstarter.com">
           <div class="speaker-card__avatar"></div>
           <div class="speaker-card__name">Andrew Marks</div>
           <div class="speaker-card__role">Kickstarter Director of Product</div>
@@ -787,6 +966,18 @@
   </div>
 
   <!-- Robot Mascot -->
+  <!-- Speaker Overlay -->
+  <div class="speaker-overlay" id="speakerOverlay">
+    <div class="speaker-overlay__line" id="speakerLine"></div>
+    <div class="speaker-overlay__panel" id="speakerPanel">
+      <button class="speaker-overlay__close" id="speakerClose" aria-label="Close">&times;</button>
+      <div class="speaker-overlay__avatar" id="speakerAvatar"></div>
+      <h2 class="speaker-overlay__name" id="speakerNameDisplay"></h2>
+      <div class="speaker-overlay__socials" id="speakerSocials"></div>
+      <p class="speaker-overlay__bio" id="speakerBio"></p>
+    </div>
+  </div>
+
   <div class="robot-mascot" id="robotMascot">
     <div class="robot-mascot__rig" id="robotRig">
       <img class="robot-mascot__body" src="images/robot/body.png" alt="" draggable="false">
@@ -1020,6 +1211,97 @@
         lastScrollY = window.scrollY;
       }, 150);
     });
+
+    // ===================== SPEAKER OVERLAY =====================
+    (function() {
+      const overlay = document.getElementById('speakerOverlay');
+      const line = document.getElementById('speakerLine');
+      const panel = document.getElementById('speakerPanel');
+      const closeBtn = document.getElementById('speakerClose');
+      const avatarEl = document.getElementById('speakerAvatar');
+      const nameEl = document.getElementById('speakerNameDisplay');
+      const socialsEl = document.getElementById('speakerSocials');
+      const bioEl = document.getElementById('speakerBio');
+
+      const SVG_ICONS = {
+        twitter: '<svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+        website: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>'
+      };
+
+      function openOverlay(card) {
+        const name = card.dataset.name;
+        const bio = card.dataset.bio || '';
+        const twitter = card.dataset.twitter || '';
+        const website = card.dataset.website || '';
+
+        nameEl.textContent = name;
+        bioEl.textContent = bio;
+
+        // Build socials
+        socialsEl.innerHTML = '';
+        if (twitter) {
+          const a = document.createElement('a');
+          a.href = 'https://x.com/' + twitter;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.title = '@' + twitter;
+          a.innerHTML = SVG_ICONS.twitter;
+          socialsEl.appendChild(a);
+        }
+        if (website) {
+          const a = document.createElement('a');
+          a.href = website;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.title = 'Website';
+          a.innerHTML = SVG_ICONS.website;
+          socialsEl.appendChild(a);
+        }
+
+        // Step 1: show overlay, activate blur, show line
+        overlay.classList.add('active');
+        requestAnimationFrame(() => {
+          overlay.classList.add('step-line');
+        });
+
+        // Step 2: after line expands, open panel
+        setTimeout(() => {
+          overlay.classList.add('step-panel');
+        }, 400);
+      }
+
+      function closeOverlay() {
+        overlay.classList.remove('step-panel');
+        setTimeout(() => {
+          overlay.classList.remove('step-line');
+          setTimeout(() => {
+            overlay.classList.remove('active');
+          }, 350);
+        }, 300);
+      }
+
+      // Attach click to all speaker cards
+      document.querySelectorAll('.speaker-card').forEach(card => {
+        card.addEventListener('click', () => openOverlay(card));
+      });
+
+      closeBtn.addEventListener('click', closeOverlay);
+
+      // Close on backdrop click
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay || e.target === overlay.querySelector('::before')) {
+          closeOverlay();
+        }
+      });
+
+      // Close on Escape or Backspace
+      document.addEventListener('keydown', (e) => {
+        if (overlay.classList.contains('active') && (e.key === 'Escape' || e.key === 'Backspace')) {
+          e.preventDefault();
+          closeOverlay();
+        }
+      });
+    })();
   </script>
 
 </body>

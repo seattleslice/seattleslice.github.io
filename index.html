@@ -935,7 +935,7 @@
         el.innerHTML = '<img src="' + src + '" alt="SLICE event photo" draggable="false">';
         container.appendChild(el);
 
-        const rotation = (2.5 + Math.random() * 10) * rotSign;
+        const rotation = (2.5 + Math.random() * 5.5) * rotSign;
         rotSign *= -1;
 
         items.push({
@@ -987,7 +987,7 @@
             item.spinProgress = 0;
             item.currentRotation = 0;
             rotSign *= -1;
-            item.rotation = (2.5 + Math.random() * 10) * rotSign;
+            item.rotation = (2.5 + Math.random() * 5.5) * rotSign;
             // Add catch-up: start further left, rush in
             item.catchUp = -300;
           }

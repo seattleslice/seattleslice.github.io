@@ -527,9 +527,10 @@
     .photo-marquee {
       position: relative;
       width: 100%;
-      height: 340px;
+      height: 300px;
       overflow: hidden;
-      margin-top: 12px;
+      margin-top: -70px;
+      margin-bottom: 20px;
     }
 
     .photo-marquee__item {
@@ -914,12 +915,17 @@
       }
 
       const PHOTO_W = 264;
-      const GAP = 50;
+      const SLOT = PHOTO_W + 50; // photo width + gap — the fixed distance between slot starts
       const BASE_SPEED = 0.6;
-      const ENTRY_SPEED = 3.5;
-      const EASE_FRAMES = 180;
       const SPIN_SPEED = 0.01;
 
+      // The marquee is a virtual conveyor belt. We track one global offset
+      // that advances at BASE_SPEED every frame. Each photo owns a fixed
+      // slot index on the belt, so the gap between any two adjacent photos
+      // is always exactly SLOT pixels. When a photo wraps, it keeps its
+      // slot — only its visual entrance (spin + catch-up) is different.
+
+      var beltOffset = 0; // increases each frame
       const items = [];
       let rotSign = Math.random() > 0.5 ? 1 : -1;
 
@@ -929,19 +935,20 @@
         el.innerHTML = '<img src="' + src + '" alt="SLICE event photo" draggable="false">';
         container.appendChild(el);
 
-        const rotation = (5 + Math.random() * 15) * rotSign;
+        const rotation = (2.5 + Math.random() * 10) * rotSign;
         rotSign *= -1;
 
         items.push({
           el: el,
-          x: i * (PHOTO_W + GAP),
+          slotIndex: i,
           rotation: rotation,
           currentRotation: rotation,
-          speed: BASE_SPEED,
           spinProgress: 1,
-          easeFrame: EASE_FRAMES,
+          catchUp: 0, // extra offset for the fast entry — starts negative, eases to 0
         });
       });
+
+      var totalSlots = photos.length;
 
       function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
       function easeOutBack(t) {
@@ -951,20 +958,39 @@
 
       function tick() {
         var cw = container.offsetWidth;
+        beltOffset += BASE_SPEED;
 
-        // Sort items by x so we can find the leftmost easily
-        items.sort(function(a, b) { return a.x - b.x; });
+        // The belt is a loop of totalSlots * SLOT pixels
+        var beltLen = totalSlots * SLOT;
 
         items.forEach(function(item) {
-          // Ease speed from entry to base
-          if (item.easeFrame < EASE_FRAMES) {
-            item.easeFrame++;
-            var t = item.easeFrame / EASE_FRAMES;
-            item.speed = ENTRY_SPEED + (BASE_SPEED - ENTRY_SPEED) * easeOutCubic(t);
+          // Slot position on the infinite belt, wrapped into view
+          var rawX = (item.slotIndex * SLOT - beltOffset % beltLen + beltLen) % beltLen;
+
+          // Shift so the belt wraps to off-screen left instead of at x=0
+          rawX -= PHOTO_W + 50;
+
+          // Catch-up: when a photo wraps to the left, catchUp is a large
+          // negative value that eases toward 0, making the photo rush in
+          if (item.catchUp < 0) {
+            item.catchUp *= 0.985; // exponential ease toward 0
+            if (item.catchUp > -0.5) item.catchUp = 0;
           }
 
-          // Move right
-          item.x += item.speed;
+          var displayX = rawX + item.catchUp;
+
+          // Detect wrap: if rawX just jumped to a low value (photo entering left)
+          // We detect this by checking if the photo is off-screen left and hasn't
+          // been initialized for catch-up yet
+          if (rawX < -(PHOTO_W + 20) && item.catchUp === 0 && item.spinProgress === 1) {
+            // Will naturally scroll into view — set up the spin
+            item.spinProgress = 0;
+            item.currentRotation = 0;
+            rotSign *= -1;
+            item.rotation = (2.5 + Math.random() * 10) * rotSign;
+            // Add catch-up: start further left, rush in
+            item.catchUp = -300;
+          }
 
           // Spin in to final rotation
           if (item.spinProgress < 1) {
@@ -972,27 +998,7 @@
             item.currentRotation = item.rotation * easeOutBack(item.spinProgress);
           }
 
-          // Wrap: when fully off the right edge, jump to well off-screen left
-          if (item.x > cw + PHOTO_W) {
-            // Find leftmost item (excluding this one)
-            var minX = Infinity;
-            items.forEach(function(o) { if (o !== item && o.x < minX) minX = o.x; });
-
-            // Place at least one full GAP+PHOTO_W to the left of the leftmost,
-            // AND always off-screen (whichever is further left)
-            var spacedX = minX - PHOTO_W - GAP;
-            var offScreenX = -(PHOTO_W + 40);
-            item.x = Math.min(spacedX, offScreenX);
-
-            item.speed = ENTRY_SPEED;
-            item.easeFrame = 0;
-            item.spinProgress = 0;
-            item.currentRotation = 0;
-            rotSign *= -1;
-            item.rotation = (5 + Math.random() * 15) * rotSign;
-          }
-
-          item.el.style.transform = 'translate(' + item.x.toFixed(1) + 'px, -50%) rotate(' + item.currentRotation.toFixed(2) + 'deg)';
+          item.el.style.transform = 'translate(' + displayX.toFixed(1) + 'px, -50%) rotate(' + item.currentRotation.toFixed(2) + 'deg)';
         });
 
         requestAnimationFrame(tick);

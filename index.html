@@ -776,15 +776,53 @@
 
     /* ===================== RESPONSIVE ===================== */
     @media (max-width: 768px) {
-      .logo__letter {
-        font-size: 102px;
+      .hero__video-bg {
+        display: none;
       }
-      .logo__year {
-        font-size: 41px;
+      .hero {
+        height: auto;
+        min-height: 220px;
+        padding-bottom: 24px;
+      }
+      .hero__overlay {
+        background: none;
       }
       .logo {
-        top: 24px;
-        left: 24px;
+        position: relative;
+        top: 20px;
+        left: 0;
+        text-align: center;
+        width: 100%;
+      }
+      .logo__text {
+        justify-content: center;
+      }
+      .logo__letter {
+        font-size: 52px;
+      }
+      .logo__year {
+        font-size: 22px;
+        text-align: center;
+      }
+      .logo-date {
+        position: relative;
+        top: 12px;
+        right: 0;
+        text-align: center;
+        width: 100%;
+      }
+      .logo-date__text {
+        justify-content: center;
+      }
+      .logo-date__letter {
+        font-size: 52px;
+      }
+      .logo-date__venue {
+        font-size: 22px;
+        text-align: center;
+      }
+      .scroll-indicator {
+        display: none;
       }
       .section__title {
         font-size: 28px;

@@ -1472,8 +1472,12 @@
           // Slot position on the infinite belt, wrapped into view
           var rawX = (item.slotIndex * SLOT - beltOffset % beltLen + beltLen) % beltLen;
 
-          // Shift so the belt wraps to off-screen left instead of at x=0
+          // Shift so the belt wraps to off-screen right (beyond viewport)
+          // then scrolls left into view. The extra 600px ensures photos start
+          // well off-screen even on ultra-wide / 4K displays.
           rawX -= PHOTO_W + 50;
+          var offScreenRight = cw + 600;
+          if (rawX > offScreenRight) rawX -= beltLen;
 
           // Catch-up: when a photo wraps to the left, catchUp is a large
           // negative value that eases toward 0, making the photo rush in

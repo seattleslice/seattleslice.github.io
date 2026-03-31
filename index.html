@@ -317,7 +317,7 @@
     /* ===================== TAGLINE BANNER ===================== */
     .tagline-banner {
       text-align: center;
-      padding: 100px 24px;
+      padding: 100px 24px 40px;
     }
 
     .tagline-banner__heading {
@@ -338,6 +338,35 @@
       font-size: 22px;
       color: #BB3EFD;
       margin-top: 20px;
+    }
+
+    .btn--vibrant {
+      display: inline-block;
+      margin-top: 32px;
+      padding: 16px 40px;
+      font-family: 'Bungee', cursive;
+      font-size: 24px;
+      color: #fff;
+      text-decoration: none;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #BB3EFD 0%, #f5ee1d 50%, #BB3EFD 100%);
+      background-size: 200% 200%;
+      animation: shimmer 3s ease-in-out infinite;
+      box-shadow: 0 4px 20px rgba(187, 62, 253, 0.5), 0 0 40px rgba(245, 238, 29, 0.2);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn--vibrant:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 8px 30px rgba(187, 62, 253, 0.6), 0 0 60px rgba(245, 238, 29, 0.3);
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
     /* ===================== SPEAKERS ===================== */
@@ -628,6 +657,7 @@
       <h1 class="tagline-banner__heading">Seattle Loves Indie Creators Expo</h1>
       <p class="tagline-banner__sub">A one-day B2B conference built to empower indie and AA game developers.</p>
       <p class="tagline-banner__date">September 2, 2026 &bull; McCaw Hall, Seattle</p>
+      <a href="https://www.youtube.com/playlist?list=PLyq96xsbO53FGty3FDp9P7PMKkDyvcLQS" target="_blank" class="btn--vibrant">Watch SLICE 2025 content</a>
     </div>
 
     <div class="divider"></div>

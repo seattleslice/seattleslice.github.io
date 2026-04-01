@@ -958,6 +958,47 @@
       transform: scale(1.3);
     }
 
+    /* ===================== DESKTOP MARQUEE ===================== */
+    @media (min-width: 769px) {
+      #events {
+        overflow: visible;
+      }
+      .events-carousel {
+        overflow: hidden;
+        width: 100vw;
+        position: relative;
+        left: 50%;
+        transform: translateX(-50%);
+        justify-content: flex-start;
+      }
+      .events-carousel__arrow {
+        display: none;
+      }
+      .events-carousel__dots {
+        display: none;
+      }
+      .events-carousel__track {
+        width: max-content;
+        height: auto;
+        perspective: none;
+        display: flex;
+        gap: 24px;
+      }
+      .events-carousel__track .event-card {
+        position: static;
+        opacity: 1;
+        transform: none;
+        width: 380px;
+        min-width: 380px;
+        height: 381px;
+        flex-shrink: 0;
+        pointer-events: auto;
+        border-color: #f5ee1d;
+        transition: none;
+        will-change: auto;
+      }
+    }
+
     /* ===================== RESPONSIVE ===================== */
     @media (max-width: 768px) {
       .hero__video-bg {
@@ -1647,6 +1688,34 @@
     (function() {
       const cards = Array.from(document.querySelectorAll('.event-card'));
       const total = cards.length;
+      const track = document.querySelector('.events-carousel__track');
+      const isDesktop = window.innerWidth > 768;
+
+      // Desktop: clone cards for seamless marquee loop, skip carousel
+      if (isDesktop) {
+        cards.forEach(card => {
+          const clone = card.cloneNode(true);
+          clone.removeAttribute('data-index');
+          track.appendChild(clone);
+        });
+        // Calculate exact width of one set (cards + gaps) for seamless loop
+        const gap = 24;
+        const oneSetWidth = total * 380 + total * gap;
+        track.style.animation = 'none';
+        // Create keyframes dynamically so the seam is pixel-perfect
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes events-marquee-rl {
+            from { transform: translateX(0); }
+            to { transform: translateX(-${oneSetWidth}px); }
+          }
+        `;
+        document.head.appendChild(style);
+        track.style.animation = 'events-marquee-rl 45s linear infinite';
+        return;
+      }
+
+      // Mobile: arrow-based carousel
       const dotsContainer = document.getElementById('events-dots');
       const leftArrow = document.querySelector('.events-carousel__arrow--left');
       const rightArrow = document.querySelector('.events-carousel__arrow--right');

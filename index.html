@@ -964,7 +964,8 @@
         overflow: visible;
       }
       .events-carousel {
-        overflow: hidden;
+        overflow-x: clip;
+        overflow-y: visible;
         width: 100vw;
         position: relative;
         left: 50%;
@@ -1691,22 +1692,29 @@
       const track = document.querySelector('.events-carousel__track');
       const isDesktop = window.innerWidth > 768;
 
-      // Desktop: clone cards for seamless JS-driven marquee
+      // Desktop: clone cards for seamless JS-driven marquee with arc path
       if (isDesktop) {
         cards.forEach(card => {
           const clone = card.cloneNode(true);
           clone.removeAttribute('data-index');
           track.appendChild(clone);
         });
+        const allCards = Array.from(track.querySelectorAll('.event-card'));
 
         const gap = 24;
-        const oneSetWidth = total * 380 + total * gap;
-        const fullSpeed = oneSetWidth / 45; // px per second (matches original 45s duration)
+        const cardWidth = 380;
+        const cardSpacing = cardWidth + gap;
+        const oneSetWidth = total * cardSpacing;
+        const fullSpeed = oneSetWidth / 45;
         let speed = fullSpeed;
         let targetSpeed = fullSpeed;
         let offset = 0;
         let lastTime = performance.now();
-        const easeRate = 1.8; // how fast speed transitions (per second, as a fraction)
+        const easeRate = 1.8;
+
+        // Arc path parameters
+        const maxY = 55;    // px vertical rise at edges
+        const maxRot = 7.5; // degrees counter-clockwise at edges
 
         const section = document.getElementById('events');
         section.addEventListener('mouseenter', () => { targetSpeed = 0; });
@@ -1715,16 +1723,28 @@
         function tick(now) {
           const dt = (now - lastTime) / 1000;
           lastTime = now;
-          // Ease speed toward target
           if (speed !== targetSpeed) {
             const diff = targetSpeed - speed;
             speed += diff * Math.min(1, easeRate * dt);
-            // Snap when very close
             if (Math.abs(speed - targetSpeed) < 0.5) speed = targetSpeed;
           }
           offset -= speed * dt;
           if (offset <= -oneSetWidth) offset += oneSetWidth;
           track.style.transform = 'translateX(' + offset + 'px)';
+
+          // Apply arc: each card gets translateY + rotate based on screen position
+          const vpW = window.innerWidth;
+          for (let i = 0; i < allCards.length; i++) {
+            const centerX = i * cardSpacing + cardWidth / 2 + offset;
+            // t: -1 at left edge, 0 at center, +1 at right edge
+            const t = Math.max(-1.5, Math.min(1.5, (centerX / vpW - 0.5) * 2));
+            // Vertical: cubic S-curve — higher on right, lower on left
+            const yOff = -(t * t * t) * maxY;
+            // Rotation: parabolic — counter-clockwise at both edges, level at center
+            const rot = -(t * t) * maxRot;
+            allCards[i].style.transform = 'translateY(' + yOff.toFixed(1) + 'px) rotate(' + rot.toFixed(2) + 'deg)';
+          }
+
           requestAnimationFrame(tick);
         }
         requestAnimationFrame(tick);

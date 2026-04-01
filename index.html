@@ -7,24 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lato:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/shared.css">
   <style>
-    *, *::before, *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      font-family: 'Lato', sans-serif;
-      background: #00367B;
-      color: #e0e0e0;
-      overflow-x: hidden;
-    }
-
     /* ===================== HERO SECTION ===================== */
     .hero {
       position: relative;
@@ -261,77 +245,6 @@
       50% { transform: rotate(45deg) translateY(10px); opacity: 0.5; }
     }
 
-    /* ===================== CONTENT SECTIONS ===================== */
-    .content {
-      position: relative;
-      z-index: 5;
-      background: #00367B url('images/bottomAnchor.png') no-repeat fixed left bottom;
-      background-size: 25% auto;
-    }
-
-    @supports (-webkit-touch-callout: none), (pointer: coarse) {
-      .content {
-        background-image: none;
-      }
-      .content::before {
-        content: '';
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        width: 25%;
-        height: 100vh;
-        background: url('images/bottomAnchor.png') no-repeat left bottom;
-        background-size: 100% auto;
-        z-index: 0;
-        pointer-events: none;
-      }
-    }
-
-    .section {
-      padding: 80px 24px;
-      max-width: 960px;
-      margin: 0 auto;
-    }
-
-    .section--full {
-      max-width: 100%;
-      padding: 0;
-    }
-
-    .section__eyebrow {
-      font-family: 'Bungee', cursive;
-      font-size: 14px;
-      color: #BB3EFD;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-
-    .section__title {
-      font-family: 'Bungee', cursive;
-      font-size: 40px;
-      color: #f5ee1d;
-      text-shadow: 2px -2px 0 #BB3EFD;
-      margin-bottom: 24px;
-      line-height: 1.15;
-    }
-
-    .section__text {
-      font-size: 18px;
-      line-height: 1.7;
-      color: #c0c0c0;
-      margin-bottom: 20px;
-    }
-
-    /* Divider */
-    .divider {
-      width: 100%;
-      max-width: 960px;
-      margin: 0 auto;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, #BB3EFD, #f5ee1d, #BB3EFD, transparent);
-    }
-
     /* ===================== TAGLINE BANNER ===================== */
     .tagline-banner {
       text-align: center;
@@ -356,245 +269,6 @@
       font-size: 22px;
       color: #BB3EFD;
       margin-top: 20px;
-    }
-
-    .btn--vibrant {
-      display: inline-block;
-      margin-top: 32px;
-      padding: 16px 40px;
-      font-family: 'Bungee', cursive;
-      font-size: 24px;
-      color: #fff;
-      text-decoration: none;
-      border: none;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #BB3EFD 0%, #f5ee1d 50%, #BB3EFD 100%);
-      background-size: 200% 200%;
-      animation: shimmer 3s ease-in-out infinite;
-      box-shadow: 0 4px 20px rgba(187, 62, 253, 0.5), 0 0 40px rgba(245, 238, 29, 0.2);
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .btn--vibrant:hover {
-      transform: translateY(-3px) scale(1.05);
-      box-shadow: 0 8px 30px rgba(187, 62, 253, 0.6), 0 0 60px rgba(245, 238, 29, 0.3);
-    }
-
-    @keyframes shimmer {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    /* ===================== SPEAKERS ===================== */
-    .speakers-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 28px;
-      margin-top: 36px;
-    }
-
-    .speaker-card {
-      background: #002a63;
-      border: 1px solid #1a4a8a;
-      border-radius: 12px;
-      padding: 28px 20px;
-      text-align: center;
-      transition: border-color 0.3s, transform 0.3s;
-    }
-
-    .speaker-card:hover {
-      border-color: #BB3EFD;
-      transform: translateY(-4px);
-    }
-
-    .speaker-card__avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #BB3EFD, #f5ee1d);
-      background-size: cover;
-      background-position: center;
-      margin: 0 auto 16px;
-    }
-
-    .speaker-card__name {
-      font-family: 'Bungee', cursive;
-      font-size: 16px;
-      color: #f5ee1d;
-      margin-bottom: 6px;
-    }
-
-    .speaker-card__role {
-      font-size: 14px;
-      color: #a0c4e8;
-    }
-
-    .speaker-card {
-      cursor: pointer;
-    }
-
-    /* ===================== SPEAKER OVERLAY ===================== */
-    .speaker-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      opacity: 0;
-    }
-
-    .speaker-overlay.active {
-      pointer-events: auto;
-      opacity: 1;
-    }
-
-    /* Blur backdrop */
-    .speaker-overlay::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      backdrop-filter: blur(0px);
-      background: rgba(0, 20, 50, 0);
-      transition: backdrop-filter 0.5s ease, background 0.5s ease;
-    }
-
-    .speaker-overlay.active::before {
-      backdrop-filter: blur(12px);
-      background: rgba(0, 20, 50, 0.6);
-    }
-
-    /* Yellow line that expands */
-    .speaker-overlay__line {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 0;
-      height: 3px;
-      background: #FFFB10;
-      z-index: 2;
-      transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-      box-shadow: 0 0 20px rgba(255, 251, 16, 0.5);
-    }
-
-    .speaker-overlay.step-line .speaker-overlay__line {
-      width: min(600px, 90vw);
-    }
-
-    /* The panel — starts as a 3px line, expands to full height */
-    .speaker-overlay__panel {
-      position: relative;
-      z-index: 3;
-      background: #001a3d;
-      border: 2px solid #FFFB10;
-      border-radius: 16px;
-      width: min(520px, 90vw);
-      max-height: 80vh;
-      overflow-y: auto;
-      padding: 48px 36px 36px;
-      text-align: center;
-      transform: scaleY(0);
-      opacity: 0;
-      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
-    }
-
-    .speaker-overlay.step-panel .speaker-overlay__panel {
-      transform: scaleY(1);
-      opacity: 1;
-    }
-
-    .speaker-overlay.step-panel .speaker-overlay__line {
-      opacity: 0;
-      transition: opacity 0.2s ease;
-    }
-
-    /* Close button */
-    .speaker-overlay__close {
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 2px solid #a0c4e8;
-      background: transparent;
-      color: #a0c4e8;
-      font-size: 20px;
-      line-height: 1;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: border-color 0.2s, color 0.2s, background 0.2s;
-    }
-
-    .speaker-overlay__close:hover {
-      border-color: #FFFB10;
-      color: #FFFB10;
-      background: rgba(255, 251, 16, 0.1);
-    }
-
-    /* Avatar */
-    .speaker-overlay__avatar {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #BB3EFD, #f5ee1d);
-      background-size: cover;
-      background-position: center;
-      margin: 0 auto 20px;
-      border: 3px solid #FFFB10;
-    }
-
-    /* Name */
-    .speaker-overlay__name {
-      font-family: 'Bungee', cursive;
-      font-size: 24px;
-      color: #f5ee1d;
-      text-shadow: 2px 2px 0 #BB3EFD;
-      margin-bottom: 12px;
-    }
-
-    /* Socials row */
-    .speaker-overlay__socials {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-
-    .speaker-overlay__socials a {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: rgba(187, 62, 253, 0.2);
-      border: 1px solid #BB3EFD;
-      transition: background 0.2s, transform 0.2s;
-    }
-
-    .speaker-overlay__socials a:hover {
-      background: rgba(187, 62, 253, 0.5);
-      transform: scale(1.1);
-    }
-
-    .speaker-overlay__socials a svg {
-      width: 18px;
-      height: 18px;
-      fill: #f5ee1d;
-    }
-
-    /* Bio */
-    .speaker-overlay__bio {
-      font-size: 15px;
-      line-height: 1.7;
-      color: #c0d8f0;
     }
 
     /* ===================== SAVE THE DATE ===================== */
@@ -648,34 +322,6 @@
       margin-bottom: 24px;
     }
 
-    .btn {
-      display: inline-block;
-      padding: 14px 36px;
-      font-family: 'Bungee', cursive;
-      font-size: 16px;
-      text-decoration: none;
-      border-radius: 8px;
-      transition: transform 0.2s, box-shadow 0.2s;
-      cursor: pointer;
-      border: none;
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(187, 62, 253, 0.4);
-    }
-
-    .btn--primary {
-      background: #f5ee1d;
-      color: #00367B;
-    }
-
-    .btn--outline {
-      background: transparent;
-      color: #f5ee1d;
-      border: 2px solid #f5ee1d;
-    }
-
     /* ===================== PARTNERS ===================== */
     .partners-row {
       display: flex;
@@ -702,31 +348,6 @@
     .after-party {
       text-align: center;
       padding: 100px 24px;
-    }
-
-    /* ===================== FOOTER ===================== */
-    footer {
-      text-align: center;
-      padding: 48px 24px;
-      color: #8ab4e0;
-      font-size: 18px;
-      line-height: 1.8;
-      max-width: 768px;
-      margin: 0 auto;
-    }
-
-    footer a {
-      color: #BB3EFD;
-      text-decoration: none;
-    }
-
-    footer .footer-detail {
-      font-size: 0.7em;
-      line-height: 1.4;
-    }
-
-    footer .footer-credit {
-      white-space: nowrap;
     }
 
     /* ===================== PHOTO MARQUEE ===================== */
@@ -756,60 +377,6 @@
       height: 100%;
       object-fit: cover;
       display: block;
-    }
-
-    /* ===================== SCROLL REVEAL ===================== */
-    .reveal {
-      opacity: 0;
-      transform: translateY(40px);
-      transition: opacity 0.7s ease, transform 0.7s ease;
-    }
-
-    .reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /* ===================== ROBOT MASCOT ===================== */
-    .robot-mascot {
-      position: fixed;
-      bottom: -3%;
-      right: 0;
-      width: 24vw;
-      min-width: 168px;
-      max-width: 384px;
-      z-index: 50;
-      cursor: pointer;
-      transform: translateX(110%);
-      transition: transform 1.8s cubic-bezier(0.25, 1, 0.5, 1);
-    }
-
-    .robot-mascot.entered {
-      /* Shift right by 277/2373 of element width to hide extra canvas padding */
-      transform: translateX(11.67%);
-    }
-
-    .robot-mascot__rig {
-      position: relative;
-      width: 100%;
-      /* Body pivots at (1444, 2099) on a 2373x2126 image */
-      transform-origin: 60.85% 98.7%;
-    }
-
-    .robot-mascot__body {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-
-    .robot-mascot__arm {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: auto;
-      /* Arm pivots at (807, 1577) on a 2373x2126 image */
-      transform-origin: 34.0% 74.2%;
     }
 
     /* ===================== EVENTS CAROUSEL ===================== */
@@ -1081,9 +648,6 @@
       .scroll-indicator {
         display: none;
       }
-      .section__title {
-        font-size: 28px;
-      }
       .tagline-banner__heading {
         font-size: 32px;
       }
@@ -1113,11 +677,6 @@
         width: 56px;
         height: 56px;
         font-size: 25px;
-      }
-      footer .footer-credits-line {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
       }
       .event-card--stack-1 {
         transform: translateX(39px) scale(0.93);
@@ -1392,102 +951,12 @@
     </div>
   </div>
 
+  <script src="js/shared.js"></script>
   <script>
     // Show scroll indicator after 5 seconds
     setTimeout(() => {
       document.getElementById('scrollIndicator').classList.add('visible');
     }, 5000);
-
-    // Scroll reveal for content sections
-    const revealEls = document.querySelectorAll('.reveal');
-    const revealObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          revealObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.15 });
-
-    revealEls.forEach(el => revealObserver.observe(el));
-
-    // ===================== ROBOT MASCOT ANIMATION =====================
-    const robotMascot = document.getElementById('robotMascot');
-    const robotRig = document.getElementById('robotRig');
-    const robotArm = document.getElementById('robotArm');
-
-    let robotAnimId = null;
-    let robotIdleId = null;
-    let robotAnimating = false;
-
-    // Slide the robot in after 1 second, already doing idle animation
-    setTimeout(() => {
-      robotMascot.classList.add('entered');
-      DoAnimation();
-    }, 1000);
-
-    // Gentle idle sway
-    function startIdleAnimation() {
-      let t = 0;
-      function idleTick() {
-        t += 0.02;
-        const bodyAngle = Math.sin(t * 0.7) * 1.5;
-        const armAngle = Math.sin(t * 1.1 + 0.5) * 3;
-        robotRig.style.transform = `rotate(${bodyAngle}deg)`;
-        robotArm.style.transform = `rotate(${armAngle}deg)`;
-        robotIdleId = requestAnimationFrame(idleTick);
-      }
-      idleTick();
-    }
-
-    function stopIdleAnimation() {
-      if (robotIdleId) {
-        cancelAnimationFrame(robotIdleId);
-        robotIdleId = null;
-      }
-    }
-
-    // Teaching animation — arm swings wider, body leans into the gesture
-    function DoAnimation() {
-      if (robotAnimating) return;
-      robotAnimating = true;
-      stopIdleAnimation();
-
-      const duration = 3000; // 3 seconds of teaching
-      const start = performance.now();
-
-      function animTick(now) {
-        const elapsed = now - start;
-        const p = elapsed / duration;
-
-        if (p >= 1) {
-          // Smoothly return to idle
-          robotRig.style.transform = 'rotate(0deg)';
-          robotArm.style.transform = 'rotate(0deg)';
-          robotAnimating = false;
-          startIdleAnimation();
-          return;
-        }
-
-        // Envelope: ramp up, sustain, ramp down
-        const envelope = Math.sin(p * Math.PI);
-
-        // Body rocks back and forth like leaning to point
-        const bodyAngle = envelope * Math.sin(p * Math.PI * 6) * 4;
-
-        // Arm swings more dramatically — pointing gesture
-        const armAngle = envelope * (Math.sin(p * Math.PI * 8) * 12 - 5);
-
-        robotRig.style.transform = `rotate(${bodyAngle}deg)`;
-        robotArm.style.transform = `rotate(${armAngle}deg)`;
-        robotAnimId = requestAnimationFrame(animTick);
-      }
-      robotAnimId = requestAnimationFrame(animTick);
-    }
-
-    // Trigger DoAnimation on scroll indicator click or clicking the robot
-    document.getElementById('scrollIndicator').addEventListener('click', DoAnimation);
-    robotMascot.addEventListener('click', DoAnimation);
 
     // ===================== PHOTO MARQUEE =====================
     (function() {
@@ -1595,118 +1064,6 @@
       }
 
       requestAnimationFrame(tick);
-    })();
-
-    // Trigger DoAnimation on large scroll events
-    let lastScrollY = window.scrollY;
-    let scrollTimeout = null;
-    window.addEventListener('scroll', () => {
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        const delta = Math.abs(window.scrollY - lastScrollY);
-        if (delta > 400) {
-          DoAnimation();
-        }
-        lastScrollY = window.scrollY;
-      }, 150);
-    });
-
-    // ===================== SPEAKER OVERLAY =====================
-    (function() {
-      const overlay = document.getElementById('speakerOverlay');
-      const line = document.getElementById('speakerLine');
-      const panel = document.getElementById('speakerPanel');
-      const closeBtn = document.getElementById('speakerClose');
-      const avatarEl = document.getElementById('speakerAvatar');
-      const nameEl = document.getElementById('speakerNameDisplay');
-      const socialsEl = document.getElementById('speakerSocials');
-      const bioEl = document.getElementById('speakerBio');
-
-      const SVG_ICONS = {
-        twitter: '<svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
-        website: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>'
-      };
-
-      function openOverlay(card) {
-        const name = card.dataset.name;
-        const bio = card.dataset.bio || '';
-        const twitter = card.dataset.twitter || '';
-        const website = card.dataset.website || '';
-        const image = card.dataset.image || '';
-
-        nameEl.textContent = name;
-        bioEl.textContent = bio;
-
-        if (image) {
-          avatarEl.style.backgroundImage = "url('" + image + "')";
-        } else {
-          avatarEl.style.backgroundImage = '';
-        }
-
-        // Build socials
-        socialsEl.innerHTML = '';
-        if (twitter) {
-          const a = document.createElement('a');
-          a.href = 'https://x.com/' + twitter;
-          a.target = '_blank';
-          a.rel = 'noopener noreferrer';
-          a.title = '@' + twitter;
-          a.innerHTML = SVG_ICONS.twitter;
-          socialsEl.appendChild(a);
-        }
-        if (website) {
-          const a = document.createElement('a');
-          a.href = website;
-          a.target = '_blank';
-          a.rel = 'noopener noreferrer';
-          a.title = 'Website';
-          a.innerHTML = SVG_ICONS.website;
-          socialsEl.appendChild(a);
-        }
-
-        // Step 1: show overlay, activate blur, show line
-        overlay.classList.add('active');
-        requestAnimationFrame(() => {
-          overlay.classList.add('step-line');
-        });
-
-        // Step 2: after line expands, open panel
-        setTimeout(() => {
-          overlay.classList.add('step-panel');
-        }, 400);
-      }
-
-      function closeOverlay() {
-        overlay.classList.remove('step-panel');
-        setTimeout(() => {
-          overlay.classList.remove('step-line');
-          setTimeout(() => {
-            overlay.classList.remove('active');
-          }, 350);
-        }, 300);
-      }
-
-      // Attach click to all speaker cards
-      document.querySelectorAll('.speaker-card').forEach(card => {
-        card.addEventListener('click', () => openOverlay(card));
-      });
-
-      closeBtn.addEventListener('click', closeOverlay);
-
-      // Close on backdrop click
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay || e.target === overlay.querySelector('::before')) {
-          closeOverlay();
-        }
-      });
-
-      // Close on Escape or Backspace
-      document.addEventListener('keydown', (e) => {
-        if (overlay.classList.contains('active') && (e.key === 'Escape' || e.key === 'Backspace')) {
-          e.preventDefault();
-          closeOverlay();
-        }
-      });
     })();
 
     // ===================== EVENTS CAROUSEL =====================

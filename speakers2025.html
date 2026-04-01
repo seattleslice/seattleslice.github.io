@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SLICE 2025 Speakers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lato:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/shared.css">
+  <style>
+    .page-header {
+      text-align: center;
+      padding: 60px 24px 20px;
+    }
+
+    .page-header__back {
+      display: inline-block;
+      font-family: 'Lato', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #a0c4e8;
+      text-decoration: none;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+      transition: color 0.2s;
+    }
+
+    .page-header__back:hover {
+      color: #f5ee1d;
+    }
+
+    .page-header__back::before {
+      content: '\2190';
+      margin-right: 8px;
+    }
+
+    .speakers-page-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 28px;
+      margin-top: 36px;
+      max-width: 960px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 0 24px 80px;
+    }
+
+    @media (max-width: 768px) {
+      .speakers-page-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="content">
+
+    <div class="page-header">
+      <a href="index.html" class="page-header__back">Back to Home</a>
+      <p class="section__eyebrow">SLICE 2025</p>
+      <h1 class="section__title">Featured Speakers</h1>
+      <p class="section__text" style="max-width: 640px; margin: 0 auto;">The incredible people who shared their knowledge and experience at the inaugural Seattle Loves Indie Creators Expo.</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="speakers-page-grid">
+
+      <div class="speaker-card"
+        data-name="Eric Barone"
+        data-role="Creator of Stardew Valley"
+        data-image="https://i0.wp.com/seattleslice.org/wp-content/uploads/2025/06/eric-barrone-2-edited.png?resize=352%2C352&ssl=1"
+        data-bio="Eric 'ConcernedApe' Barone is the sole developer behind Stardew Valley, one of the best-selling indie games of all time. He created every aspect of the game — code, art, music, writing, and design — over four years of solo development. His story is an inspiration to indie creators everywhere."
+        data-twitter="ConcernedApe"
+        data-website="https://www.stardewvalley.net">
+        <div class="speaker-card__avatar" style="background-image: url('https://i0.wp.com/seattleslice.org/wp-content/uploads/2025/06/eric-barrone-2-edited.png?resize=352%2C352&ssl=1')"></div>
+        <div class="speaker-card__name">Eric Barone</div>
+        <div class="speaker-card__role">Creator of Stardew Valley</div>
+      </div>
+
+      <div class="speaker-card"
+        data-name="Kim Swift"
+        data-role="Creator of Portal"
+        data-image="https://i0.wp.com/seattleslice.org/wp-content/uploads/2025/08/image-5.jpeg?w=800&ssl=1"
+        data-bio="Kim Swift is a legendary game designer best known as the project lead on Portal at Valve. She started her career with Narbacular Drop, a student project that caught Valve's attention and became the foundation for Portal. She has since led design at major studios across the industry."
+        data-twitter="kswiftie"
+        data-website="https://en.wikipedia.org/wiki/Kim_Swift">
+        <div class="speaker-card__avatar" style="background-image: url('https://i0.wp.com/seattleslice.org/wp-content/uploads/2025/08/image-5.jpeg?w=800&ssl=1')"></div>
+        <div class="speaker-card__name">Kim Swift</div>
+        <div class="speaker-card__role">Creator of Portal</div>
+      </div>
+
+      <div class="speaker-card"
+        data-name="Ed Fries"
+        data-role="Former VP of Game Publishing, Microsoft"
+        data-image="https://i0.wp.com/seattleslice.org/wp-content/uploads/2025/08/image-4.jpeg?w=500&ssl=1"
+        data-bio="Ed Fries is a pioneering game industry executive who served as Vice President of Game Publishing at Microsoft, where he led the creation of the original Xbox console. He joined Microsoft in 1986 and worked on Word and Excel before taking over the games division in 1995. He championed the acquisitions of Bungie, Ensemble Studios, and Rare, helping build Xbox into a major gaming platform. Since leaving Microsoft in 2004, he has been an advisor and investor across the gaming industry."
+        data-twitter=""
+        data-website="https://en.wikipedia.org/wiki/Ed_Fries">
+        <div class="speaker-card__avatar" style="background-image: url('https://i0.wp.com/seattleslice.org/wp-content/uploads/2025/08/image-4.jpeg?w=500&ssl=1')"></div>
+        <div class="speaker-card__name">Ed Fries</div>
+        <div class="speaker-card__role">Creator of the Xbox</div>
+      </div>
+
+    </div>
+
+    <div class="divider"></div>
+
+    <footer>
+      <p>An event by <a href="https://seattleindies.org" target="_blank">Seattle Indies</a></p>
+      <p><strong>Produced by:</strong> Tim Cullings, Ty Taylor, Olga Sheverieva</p>
+      <p class="footer-detail"><strong>With Advisors:</strong> Mitch Gitelman, Leah Hoyer, Mark DeLoura, Jon Kimmich, Renee Gittins, Larry Hryb, Jen MacLean, Erin Serletic, Rob Wheat, Jennifer Yi, Amanda Rose, Shannon Halberstadt</p>
+      <p class="footer-detail footer-credits-line"><span class="footer-credit"><strong>Artwork by:</strong> Emmy Toyonaga</span> &nbsp; &nbsp; &nbsp; <span class="footer-credit"><strong>Trailer by:</strong> Angel Mero</span></p>
+    </footer>
+
+  </div>
+
+  <!-- Speaker Overlay -->
+  <div class="speaker-overlay" id="speakerOverlay">
+    <div class="speaker-overlay__line" id="speakerLine"></div>
+    <div class="speaker-overlay__panel" id="speakerPanel">
+      <button class="speaker-overlay__close" id="speakerClose" aria-label="Close">&times;</button>
+      <div class="speaker-overlay__avatar" id="speakerAvatar"></div>
+      <h2 class="speaker-overlay__name" id="speakerNameDisplay"></h2>
+      <div class="speaker-overlay__socials" id="speakerSocials"></div>
+      <p class="speaker-overlay__bio" id="speakerBio"></p>
+    </div>
+  </div>
+
+  <!-- Robot Mascot -->
+  <div class="robot-mascot" id="robotMascot">
+    <div class="robot-mascot__rig" id="robotRig">
+      <img class="robot-mascot__body" src="images/robot/body.png" alt="" draggable="false">
+      <img class="robot-mascot__arm" id="robotArm" src="images/robot/arm.png" alt="" draggable="false">
+    </div>
+  </div>
+
+  <script src="js/shared.js"></script>
+</body>
+</html>

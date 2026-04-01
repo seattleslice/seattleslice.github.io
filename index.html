@@ -1691,27 +1691,43 @@
       const track = document.querySelector('.events-carousel__track');
       const isDesktop = window.innerWidth > 768;
 
-      // Desktop: clone cards for seamless marquee loop, skip carousel
+      // Desktop: clone cards for seamless JS-driven marquee
       if (isDesktop) {
         cards.forEach(card => {
           const clone = card.cloneNode(true);
           clone.removeAttribute('data-index');
           track.appendChild(clone);
         });
-        // Calculate exact width of one set (cards + gaps) for seamless loop
+
         const gap = 24;
         const oneSetWidth = total * 380 + total * gap;
-        track.style.animation = 'none';
-        // Create keyframes dynamically so the seam is pixel-perfect
-        const style = document.createElement('style');
-        style.textContent = `
-          @keyframes events-marquee-rl {
-            from { transform: translateX(0); }
-            to { transform: translateX(-${oneSetWidth}px); }
+        const fullSpeed = oneSetWidth / 45; // px per second (matches original 45s duration)
+        let speed = fullSpeed;
+        let targetSpeed = fullSpeed;
+        let offset = 0;
+        let lastTime = performance.now();
+        const easeRate = 1.8; // how fast speed transitions (per second, as a fraction)
+
+        const section = document.getElementById('events');
+        section.addEventListener('mouseenter', () => { targetSpeed = 0; });
+        section.addEventListener('mouseleave', () => { targetSpeed = fullSpeed; });
+
+        function tick(now) {
+          const dt = (now - lastTime) / 1000;
+          lastTime = now;
+          // Ease speed toward target
+          if (speed !== targetSpeed) {
+            const diff = targetSpeed - speed;
+            speed += diff * Math.min(1, easeRate * dt);
+            // Snap when very close
+            if (Math.abs(speed - targetSpeed) < 0.5) speed = targetSpeed;
           }
-        `;
-        document.head.appendChild(style);
-        track.style.animation = 'events-marquee-rl 45s linear infinite';
+          offset -= speed * dt;
+          if (offset <= -oneSetWidth) offset += oneSetWidth;
+          track.style.transform = 'translateX(' + offset + 'px)';
+          requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
         return;
       }
 

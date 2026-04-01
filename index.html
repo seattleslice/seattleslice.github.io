@@ -960,6 +960,13 @@
 
     /* ===================== DESKTOP MARQUEE ===================== */
     @media (min-width: 769px) {
+      .photo-marquee {
+        height: 480px;
+      }
+      .photo-marquee__item {
+        width: 317px;
+        height: 317px;
+      }
       #events {
         overflow: visible;
       }
@@ -1477,9 +1484,9 @@
         [photos[i], photos[j]] = [photos[j], photos[i]];
       }
 
-      const PHOTO_W = 264;
+      const PHOTO_W = window.innerWidth >= 769 ? 317 : 264;
       const SLOT = PHOTO_W + 50; // photo width + gap — the fixed distance between slot starts
-      const BASE_SPEED = 0.75;
+      const BASE_SPEED = 0.9375;
       const SPIN_SPEED = 0.01;
 
       // The marquee is a virtual conveyor belt. We track one global offset
@@ -1531,31 +1538,20 @@
 
         items.forEach(function(item) {
           // Slot position on the infinite belt, wrapped into [0, beltLen)
-          var rawX = (item.slotIndex * effectiveSlot - beltOffset % beltLen + beltLen * 10) % beltLen;
+          var rawX = (item.slotIndex * effectiveSlot + beltOffset % beltLen + beltLen * 10) % beltLen;
 
           // Shift left so wrapping lands off-screen left
           rawX -= PHOTO_W + 50;
 
-          // Catch-up: when a photo wraps to the left, catchUp is a large
-          // negative value that eases toward 0, making the photo rush in
-          if (item.catchUp < 0) {
-            item.catchUp *= 0.985; // exponential ease toward 0
-            if (item.catchUp > -0.5) item.catchUp = 0;
-          }
+          var displayX = rawX;
 
-          var displayX = rawX + item.catchUp;
-
-          // Detect wrap: if rawX just jumped to a low value (photo entering left)
-          // We detect this by checking if the photo is off-screen left and hasn't
-          // been initialized for catch-up yet
-          if (rawX < -(PHOTO_W + 20) && item.catchUp === 0 && item.spinProgress === 1) {
+          // Detect wrap: photo just wrapped to the left side (off-screen)
+          if (rawX < -(PHOTO_W + 20) && item.spinProgress === 1) {
             // Will naturally scroll into view — set up the spin
             item.spinProgress = 0;
             item.currentRotation = 0;
             rotSign *= -1;
             item.rotation = (2.5 + Math.random() * 5.5) * rotSign;
-            // Add catch-up: start further left, rush in
-            item.catchUp = -300;
           }
 
           // Spin in to final rotation

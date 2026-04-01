@@ -1460,19 +1460,19 @@
         var cw = container.offsetWidth;
         beltOffset += BASE_SPEED;
 
-        // The belt is a loop of totalSlots * SLOT pixels
-        var beltLen = totalSlots * SLOT;
+        // Belt must be wider than viewport so photos wrap off-screen right.
+        // On 4K (3840px) with 9 photos the natural belt (2826px) is too short,
+        // so we pad it to at least viewport + a generous buffer.
+        var naturalLen = totalSlots * SLOT;
+        var beltLen = Math.max(naturalLen, cw + PHOTO_W + 600);
 
         items.forEach(function(item) {
-          // Slot position on the infinite belt, wrapped into view
-          var rawX = (item.slotIndex * SLOT - beltOffset % beltLen + beltLen) % beltLen;
+          // Slot position on the infinite belt, wrapped into [0, beltLen)
+          var rawX = (item.slotIndex * SLOT - beltOffset % beltLen + beltLen * 10) % beltLen;
 
-          // Shift so the belt wraps to off-screen right (beyond viewport)
-          // then scrolls left into view. The extra 600px ensures photos start
-          // well off-screen even on ultra-wide / 4K displays.
+          // Shift left so wrapping happens off-screen left (negative)
+          // and new photos enter from well off-screen right
           rawX -= PHOTO_W + 50;
-          var offScreenRight = cw + 600;
-          if (rawX > offScreenRight) rawX -= beltLen;
 
           // Catch-up: when a photo wraps to the left, catchUp is a large
           // negative value that eases toward 0, making the photo rush in

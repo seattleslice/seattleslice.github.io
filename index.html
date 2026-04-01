@@ -711,11 +711,22 @@
       color: #8ab4e0;
       font-size: 18px;
       line-height: 1.8;
+      max-width: 768px;
+      margin: 0 auto;
     }
 
     footer a {
       color: #BB3EFD;
       text-decoration: none;
+    }
+
+    footer .footer-detail {
+      font-size: 0.7em;
+      line-height: 1.4;
+    }
+
+    footer .footer-credit {
+      white-space: nowrap;
     }
 
     /* ===================== PHOTO MARQUEE ===================== */
@@ -1091,6 +1102,11 @@
         height: 56px;
         font-size: 25px;
       }
+      footer .footer-credits-line {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
       .event-card--stack-1 {
         transform: translateX(39px) scale(0.93);
       }
@@ -1338,8 +1354,8 @@
     <footer>
       <p>An event by <a href="https://seattleindies.org" target="_blank">Seattle Indies</a></p>
       <p><strong>Produced by:</strong> Tim Cullings, Ty Taylor, Olga Sheverieva</p>
-      <p><strong>With Advisors:</strong> Mitch Gitelman, Leah Hoyer, Mark DeLoura, Jon Kimmich, Renee Gittins, Larry Hryb,<br />Jen MacLean, Erin Serletic, Rob Wheat, Jennifer Yi, Amanda Rose, Shannon Halberstadt</p>
-      <p><strong>Artwork by:</strong> Emmy Toyonaga &nbsp; &nbsp; &nbsp; <strong>Trailer by:</strong> Angel Mero</p>
+      <p class="footer-detail"><strong>With Advisors:</strong> Mitch Gitelman, Leah Hoyer, Mark DeLoura, Jon Kimmich, Renee Gittins, Larry Hryb, Jen MacLean, Erin Serletic, Rob Wheat, Jennifer Yi, Amanda Rose, Shannon Halberstadt</p>
+      <p class="footer-detail footer-credits-line"><span class="footer-credit"><strong>Artwork by:</strong> Emmy Toyonaga</span> &nbsp; &nbsp; &nbsp; <span class="footer-credit"><strong>Trailer by:</strong> Angel Mero</span></p>
     </footer>
 
   </div>

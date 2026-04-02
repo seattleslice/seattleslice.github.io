@@ -82,8 +82,9 @@ revealEls.forEach(el => revealObserver.observe(el));
     robotAnimId = requestAnimationFrame(animTick);
   }
 
-  // Click on robot triggers animation
-  robotMascot.addEventListener('click', DoAnimation);
+  // Hover triggers animation on desktop, tap on mobile
+  robotMascot.addEventListener('mouseenter', DoAnimation);
+  robotMascot.addEventListener('touchstart', DoAnimation, { passive: true });
 
   // Scroll indicator click (if present on page)
   const scrollIndicator = document.getElementById('scrollIndicator');
@@ -210,12 +211,45 @@ revealEls.forEach(el => revealObserver.observe(el));
     s.animId = requestAnimationFrame(tick);
   }
 
-  // Start idle for each and attach click handlers
+  // Init idle animations
   state.forEach(s => {
     s.img.style.transformOrigin = '50% ' + pivotY + '%';
     startIdleAnimation(s);
-    s.el.addEventListener('click', () => doClickAnimation(s));
   });
+
+  // Detect hover via mousemove hit-testing (characters are behind
+  // content in z-order, so normal mouseenter won't reach them)
+  let lastHovered = null;
+  document.addEventListener('mousemove', function(e) {
+    if (!entered) return;
+    let hit = null;
+    for (let i = 0; i < state.length; i++) {
+      const rect = state[i].el.getBoundingClientRect();
+      if (e.clientX >= rect.left && e.clientX <= rect.right &&
+          e.clientY >= rect.top && e.clientY <= rect.bottom) {
+        hit = state[i];
+        break;
+      }
+    }
+    if (hit && hit !== lastHovered) {
+      doClickAnimation(hit);
+    }
+    lastHovered = hit;
+  });
+
+  // Mobile: tap anywhere near the characters triggers animation
+  document.addEventListener('touchstart', function(e) {
+    if (!entered) return;
+    const touch = e.touches[0];
+    for (let i = 0; i < state.length; i++) {
+      const rect = state[i].el.getBoundingClientRect();
+      if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+          touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+        doClickAnimation(state[i]);
+        break;
+      }
+    }
+  }, { passive: true });
 })();
 
 // ===================== SPEAKER OVERLAY =====================

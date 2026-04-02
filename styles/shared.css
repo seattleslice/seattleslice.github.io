@@ -353,7 +353,6 @@ body {
   min-width: 168px;
   max-width: 384px;
   z-index: 50;
-  cursor: pointer;
   transform: translateX(110%);
   transition: transform 1.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
@@ -404,8 +403,6 @@ body {
   width: 10vw;
   min-width: 70px;
   max-width: 160px;
-  cursor: pointer;
-  pointer-events: auto;
 }
 
 .bottom-char[data-char="1"] {

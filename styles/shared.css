@@ -383,6 +383,38 @@ body {
   transform-origin: 34.0% 74.2%;
 }
 
+/* ===================== BOTTOM CHARACTERS ===================== */
+.bottom-characters {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  pointer-events: none;
+  transform: translateX(-110%);
+  transition: transform 1.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.bottom-characters.entered {
+  transform: translateX(0);
+}
+
+.bottom-char {
+  width: 10vw;
+  min-width: 70px;
+  max-width: 160px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.bottom-char img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform-origin: 50% 80%;
+}
+
 /* ===================== FOOTER ===================== */
 footer {
   text-align: center;

@@ -109,6 +109,87 @@ revealEls.forEach(el => revealObserver.observe(el));
   window.DoAnimation = DoAnimation;
 })();
 
+// ===================== BOTTOM CHARACTERS ANIMATION =====================
+(function() {
+  const container = document.getElementById('bottomCharacters');
+  if (!container) return;
+
+  const chars = container.querySelectorAll('.bottom-char');
+  if (!chars.length) return;
+
+  // Per-character state
+  const state = Array.from(chars).map((el, i) => ({
+    el,
+    img: el.querySelector('img'),
+    idleId: null,
+    animId: null,
+    animating: false,
+    // Offset each character's phase so they don't sway in unison
+    phase: i * 2.1,
+    // Base idle parameters (subtle)
+    idleMaxRotation: 1.2,
+    idleSpeed: 0.4 + i * 0.15
+  }));
+
+  // Slide characters in after a short delay
+  void container.offsetWidth; // force layout so transition triggers
+  setTimeout(() => {
+    container.classList.add('entered');
+  }, 1200);
+
+  function startIdleAnimation(s) {
+    let t = s.phase;
+    function tick() {
+      t += 0.016;
+      const angle = Math.sin(t * s.idleSpeed) * s.idleMaxRotation;
+      s.img.style.transform = 'rotate(' + angle + 'deg)';
+      s.idleId = requestAnimationFrame(tick);
+    }
+    tick();
+  }
+
+  function stopIdleAnimation(s) {
+    if (s.idleId) {
+      cancelAnimationFrame(s.idleId);
+      s.idleId = null;
+    }
+  }
+
+  // Click animation: brief excited rocking
+  function doClickAnimation(s) {
+    if (s.animating) return;
+    s.animating = true;
+    stopIdleAnimation(s);
+
+    const duration = 1500;
+    const start = performance.now();
+
+    function tick(now) {
+      const elapsed = now - start;
+      const p = elapsed / duration;
+
+      if (p >= 1) {
+        s.img.style.transform = 'rotate(0deg)';
+        s.animating = false;
+        startIdleAnimation(s);
+        return;
+      }
+
+      const envelope = Math.sin(p * Math.PI);
+      const angle = envelope * Math.sin(p * Math.PI * 8) * 6;
+      s.img.style.transform = 'rotate(' + angle + 'deg)';
+      s.animId = requestAnimationFrame(tick);
+    }
+    s.animId = requestAnimationFrame(tick);
+  }
+
+  // Start idle for each and attach click handlers
+  state.forEach(s => {
+    startIdleAnimation(s);
+    s.el.addEventListener('click', () => doClickAnimation(s));
+  });
+})();
+
 // ===================== SPEAKER OVERLAY =====================
 (function() {
   const overlay = document.getElementById('speakerOverlay');

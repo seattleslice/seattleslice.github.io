@@ -252,6 +252,40 @@ revealEls.forEach(el => revealObserver.observe(el));
   }, { passive: true });
 })();
 
+// ===================== SKYLINE =====================
+(function() {
+  const skyline = document.getElementById('skyline');
+  if (!skyline) return;
+
+  const hero = document.getElementById('hero');
+  let entered = false;
+
+  let ready = false;
+
+  function updateVisibility() {
+    if (!ready) return;
+    if (!hero) {
+      if (!entered) { entered = true; skyline.classList.add('entered'); }
+      return;
+    }
+    const heroVisible = hero.getBoundingClientRect().bottom / window.innerHeight;
+    if (heroVisible <= 0.85 && !entered) {
+      entered = true;
+      skyline.classList.add('entered');
+    } else if (heroVisible > 0.85 && entered) {
+      entered = false;
+      skyline.classList.remove('entered');
+    }
+  }
+
+  void skyline.offsetWidth;
+  setTimeout(() => {
+    ready = true;
+    updateVisibility();
+  }, 1000);
+  window.addEventListener('scroll', updateVisibility, { passive: true });
+})();
+
 // ===================== SPEAKER OVERLAY =====================
 (function() {
   const overlay = document.getElementById('speakerOverlay');

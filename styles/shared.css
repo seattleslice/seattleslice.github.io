@@ -418,6 +418,30 @@ body {
   transform-origin: 50% 10%;
 }
 
+/* ===================== SKYLINE ===================== */
+.skyline {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 28.8vw;
+  min-width: 201.6px;
+  max-width: 460.8px;
+  z-index: 1;
+  pointer-events: none;
+  transform: translateY(110%);
+  transition: transform 1.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.skyline.entered {
+  transform: translateY(0);
+}
+
+.skyline img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 /* ===================== FOOTER ===================== */
 footer {
   text-align: center;

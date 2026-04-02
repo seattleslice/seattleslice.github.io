@@ -141,11 +141,11 @@ revealEls.forEach(el => revealObserver.observe(el));
       if (!entered) { entered = true; container.classList.add('entered'); }
       return;
     }
-    const heroBottom = hero.getBoundingClientRect().bottom;
-    if (heroBottom <= 0 && !entered) {
+    const heroVisible = hero.getBoundingClientRect().bottom / window.innerHeight;
+    if (heroVisible <= 0.85 && !entered) {
       entered = true;
       container.classList.add('entered');
-    } else if (heroBottom > 0 && entered) {
+    } else if (heroVisible > 0.85 && entered) {
       entered = false;
       container.classList.remove('entered');
     }

@@ -387,17 +387,17 @@ body {
 .bottom-characters {
   position: fixed;
   bottom: 0;
-  left: 0;
+  left: 30px;
   z-index: 1;
   display: flex;
   align-items: flex-end;
   pointer-events: none;
-  transform: translateX(-110%);
+  transform: translateY(110%);
   transition: transform 1.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .bottom-characters.entered {
-  transform: translateX(0);
+  transform: translateY(0);
 }
 
 .bottom-char {
@@ -406,6 +406,12 @@ body {
   max-width: 160px;
   cursor: pointer;
   pointer-events: auto;
+}
+
+.bottom-char[data-char="1"] {
+  width: 6vw;
+  min-width: 42px;
+  max-width: 96px;
 }
 
 .bottom-char img {

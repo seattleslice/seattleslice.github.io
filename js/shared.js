@@ -131,11 +131,29 @@ revealEls.forEach(el => revealObserver.observe(el));
     idleSpeed: 0.4 + i * 0.15
   }));
 
-  // Slide characters in after a short delay
+  // Hide characters while hero/intro video is in view
+  const hero = document.getElementById('hero');
+  let entered = false;
+
+  function updateVisibility() {
+    if (!hero) {
+      // No hero on this page, just show after delay
+      if (!entered) { entered = true; container.classList.add('entered'); }
+      return;
+    }
+    const heroBottom = hero.getBoundingClientRect().bottom;
+    if (heroBottom <= 0 && !entered) {
+      entered = true;
+      container.classList.add('entered');
+    } else if (heroBottom > 0 && entered) {
+      entered = false;
+      container.classList.remove('entered');
+    }
+  }
+
   void container.offsetWidth; // force layout so transition triggers
-  setTimeout(() => {
-    container.classList.add('entered');
-  }, 1200);
+  updateVisibility();
+  window.addEventListener('scroll', updateVisibility, { passive: true });
 
   function startIdleAnimation(s) {
     let t = s.phase;

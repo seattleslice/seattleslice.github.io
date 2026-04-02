@@ -1,3 +1,149 @@
+// ===================== GOOGLE SHEETS IMPORT =====================
+function GSheetsapi({ apiKey, sheetId, sheetName, sheetNumber = 1 }) {
+  try {
+    const sheetNameStr = sheetName && sheetName !== '' ? encodeURIComponent(sheetName) : `Sheet${sheetNumber}`;
+    const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetNameStr}?dateTimeRenderOption=FORMATTED_STRING&majorDimension=ROWS&valueRenderOption=FORMATTED_VALUE&key=${apiKey}`;
+
+    return fetch(sheetsUrl)
+      .then(response => {
+        if (!response.ok) {
+          console.log('there is an error in the gsheets response');
+          throw new Error('Error fetching GSheet');
+        }
+        return response.json();
+      })
+      .then(data => data)
+      .catch(err => {
+        throw new Error(
+          'Failed to fetch from GSheets API. Check your Sheet Id and the public availability of your GSheet.'
+        );
+      });
+  } catch (err) {
+    throw new Error(`General error when fetching GSheet: ${err}`);
+  }
+}
+
+function processGSheetResults(
+  JSONResponse,
+  returnAllResults,
+  filter,
+  filterOptions,
+  startRow
+) {
+  const data = JSONResponse.values;
+  if (typeof startRow === 'undefined') startRow = 3;
+
+  let processedResults = [{}];
+  let colNames = {};
+
+  for (let i = 0; i < data.length; i++) {
+    // Rows
+    const thisRow = data[i];
+
+    for (let j = 0; j < thisRow.length; j++) {
+      // Columns/cells
+      const cellValue = thisRow[j];
+      const colNameToAdd = colNames[j]; // this will be undefined on the first pass
+
+      if (i < startRow) {
+        colNames[j] = cellValue;
+        continue; // skip the header row(s)
+      }
+
+      if (typeof processedResults[i] === 'undefined') {
+        processedResults[i] = {};
+      }
+
+      if (typeof colNameToAdd !== 'undefined' && colNameToAdd.length > 0) {
+        processedResults[i][colNameToAdd] = cellValue;
+      }
+    }
+  }
+
+  // make sure we're only returning valid, filled data items
+  processedResults = processedResults.filter(
+    result => Object.keys(result).length
+  );
+
+  // if we're not filtering, then return all results
+  if (returnAllResults || !filter) {
+    return processedResults;
+  }
+
+  return filterResults(processedResults, filter, filterOptions);
+}
+
+function gsheetProcessor(options, callback, onError) {
+  const { apiKey, sheetId, sheetName, sheetNumber, returnAllResults, filter, filterOptions, startRow } = options;
+
+  if (!options.apiKey || options.apiKey === undefined) {
+    throw new Error('Missing Sheets API key');
+  }
+
+  return GSheetsapi({
+    apiKey,
+    sheetId,
+    sheetName,
+    sheetNumber
+  })
+    .then(result => {
+      const filteredResults = processGSheetResults(
+        result,
+        returnAllResults || false,
+        filter || false,
+        filterOptions || {
+          operator: 'or',
+          matching: 'loose'
+        },
+        startRow
+      );
+
+      callback(filteredResults);
+    });
+}
+
+// ===================== SPEAKERS FROM GOOGLE SHEET =====================
+var speakers = [];
+
+function loadSpeakers(callback) {
+  gsheetProcessor(
+    {
+      sheetId: "1idfs0hL8dM0vwXtdph3Md1EIlc4__sClZyYjpAIyGBQ",
+      sheetName: "Speakers2025",
+      sheetNumber: 1,
+      returnAllResults: true,
+      apiKey: "AIzaSyD4ZoTrXMfF7mhAMVNNiensNsWL5XC6Sqo",
+      startRow: 1
+    },
+    (results) => {
+      var i = 0;
+      results.forEach((result) => {
+        if (result["Name"]) {
+          speakers[i] = {
+            name: result["Name"] || '',
+            sessions: result["Sessions"] || '',
+            company: result["Company"] || '',
+            title: result["Title"] || '',
+            x: result["X"] || '',
+            facebook: result["Facebook"] || '',
+            instagram: result["Instagram"] || '',
+            bluesky: result["Bluesky"] || '',
+            tiktok: result["TikTok"] || '',
+            youtube: result["YouTube"] || '',
+            bio: result["Bio"] || '',
+            linkedin: result["Speakers LinkedIn"] || '',
+            headshotUrl: result["Headshot URL"] || '',
+            shortDescriptor: result["Very Short Descriptor (Company/games list)"] || ''
+          };
+          i++;
+        }
+      });
+
+      if (callback) callback(speakers);
+    }
+  );
+}
+
 // ===================== SCROLL REVEAL =====================
 const revealEls = document.querySelectorAll('.reveal');
 const revealObserver = new IntersectionObserver((entries) => {

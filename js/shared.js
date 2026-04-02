@@ -117,6 +117,11 @@ revealEls.forEach(el => revealObserver.observe(el));
   const chars = container.querySelectorAll('.bottom-char');
   if (!chars.length) return;
 
+  // Pivot point: percentage from top of image. The image is shifted
+  // down so this point sits at the bottom of the screen.
+  const pivotY = 90; // %
+  const offsetY = 100 - pivotY; // how far to push image down
+
   // Per-character state
   const state = Array.from(chars).map((el, i) => ({
     el,
@@ -155,12 +160,16 @@ revealEls.forEach(el => revealObserver.observe(el));
   updateVisibility();
   window.addEventListener('scroll', updateVisibility, { passive: true });
 
+  function setTransform(s, angle) {
+    s.img.style.transform = 'translateY(' + offsetY + '%) rotate(' + angle + 'deg)';
+  }
+
   function startIdleAnimation(s) {
     let t = s.phase;
     function tick() {
       t += 0.016;
       const angle = Math.sin(t * s.idleSpeed) * s.idleMaxRotation;
-      s.img.style.transform = 'rotate(' + angle + 'deg)';
+      setTransform(s, angle);
       s.idleId = requestAnimationFrame(tick);
     }
     tick();
@@ -187,7 +196,7 @@ revealEls.forEach(el => revealObserver.observe(el));
       const p = elapsed / duration;
 
       if (p >= 1) {
-        s.img.style.transform = 'rotate(0deg)';
+        setTransform(s, 0);
         s.animating = false;
         startIdleAnimation(s);
         return;
@@ -195,7 +204,7 @@ revealEls.forEach(el => revealObserver.observe(el));
 
       const envelope = Math.sin(p * Math.PI);
       const angle = envelope * Math.sin(p * Math.PI * 8) * 6;
-      s.img.style.transform = 'rotate(' + angle + 'deg)';
+      setTransform(s, angle);
       s.animId = requestAnimationFrame(tick);
     }
     s.animId = requestAnimationFrame(tick);
@@ -203,6 +212,7 @@ revealEls.forEach(el => revealObserver.observe(el));
 
   // Start idle for each and attach click handlers
   state.forEach(s => {
+    s.img.style.transformOrigin = '50% ' + pivotY + '%';
     startIdleAnimation(s);
     s.el.addEventListener('click', () => doClickAnimation(s));
   });

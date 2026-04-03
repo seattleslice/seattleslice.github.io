@@ -1104,9 +1104,6 @@
         const maxY = 55;    // px vertical rise at edges
         const maxRot = 7.5; // degrees counter-clockwise at edges
 
-        const section = document.getElementById('events');
-        section.addEventListener('mouseenter', () => { targetSpeed = 0; });
-        section.addEventListener('mouseleave', () => { targetSpeed = fullSpeed; });
 
         function tick(now) {
           const dt = (now - lastTime) / 1000;

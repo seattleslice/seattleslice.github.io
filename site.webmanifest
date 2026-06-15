@@ -1,0 +1,14 @@
+{
+  "name": "SLICE — Seattle Loves Indie Creators Expo",
+  "short_name": "SLICE",
+  "description": "A one-day indie game developer conference in Seattle.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#00367B",
+  "theme_color": "#00367B",
+  "icons": [
+    { "src": "/favicon-16x16.png", "sizes": "16x16", "type": "image/png" },
+    { "src": "/favicon-32x32.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "300x300", "type": "image/png" }
+  ]
+}

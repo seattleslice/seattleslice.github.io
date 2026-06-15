@@ -271,6 +271,20 @@
       margin-top: 20px;
     }
 
+    .earlybird-countdown {
+      margin-top: 16px;
+      font-size: 15px;
+      color: #c0c0c0;
+      letter-spacing: 0.5px;
+    }
+
+    .earlybird-countdown strong {
+      font-family: 'Bungee', cursive;
+      font-weight: 400;
+      color: #f5ee1d;
+      letter-spacing: 1px;
+    }
+
     /* ===================== SAVE THE DATE ===================== */
     .save-date__buttons {
       display: flex;
@@ -322,6 +336,28 @@
       margin-bottom: 24px;
     }
 
+    /* Eventbrite embedded checkout card */
+    .tickets-embed {
+      max-width: 720px;
+      margin: 36px auto 0;
+      background: #fff;
+      border-radius: 16px;
+      padding: 10px;
+      box-shadow: 0 4px 30px rgba(187, 62, 253, 0.4), 0 0 70px rgba(245, 238, 29, 0.15);
+    }
+
+    .tickets-embed iframe {
+      display: block;
+      width: 100% !important;
+      border-radius: 8px;
+    }
+
+    /* Centered call-to-action button in the About section */
+    .about__cta {
+      text-align: center;
+      margin-top: 36px;
+    }
+
     /* ===================== PARTNERS ===================== */
     .partners-row {
       display: flex;
@@ -358,6 +394,7 @@
       overflow: hidden;
       margin-top: -120px;
       margin-bottom: 20px;
+      pointer-events: none; /* decorative only — must not swallow clicks on the About CTA it overlaps */
     }
 
     .photo-marquee__item {
@@ -749,7 +786,8 @@
       <h1 class="tagline-banner__heading">Seattle Loves Indie Creators Expo</h1>
       <p class="tagline-banner__sub">A one-day B2B conference built to empower indie and AA game developers.</p>
       <p class="tagline-banner__date">September 2, 2026 &bull; McCaw Hall, Seattle</p>
-      <a href="https://www.youtube.com/playlist?list=PLyq96xsbO53FGty3FDp9P7PMKkDyvcLQS" target="_blank" class="btn--vibrant">Watch SLICE 2025 content</a>
+      <button id="eb-modal-trigger" type="button" class="btn--vibrant">Get Tickets</button>
+      <p id="earlybird-countdown" class="earlybird-countdown" aria-live="off"></p>
     </div>
 
     <div class="divider"></div>
@@ -764,6 +802,9 @@
       <p class="section__text">
         Expect a full day featuring panels, microtalks, roundtables, and networking with hundreds of local and international industry professionals. Topics span funding, marketing, team-building, and more.
       </p>
+      <div class="about__cta">
+        <a href="https://www.youtube.com/playlist?list=PLyq96xsbO53FGty3FDp9P7PMKkDyvcLQS" target="_blank" class="btn btn--primary">Watch SLICE 2025 content</a>
+      </div>
     </section>
 
     <!-- Photo Marquee -->
@@ -780,7 +821,7 @@
           data-name="Eric Barone"
           data-role="Creator of Stardew Valley"
           data-image="https://seattleslice.org/images/headshots/eric-barone.jpg"
-          data-bio="Eric 'ConcernedApe' Barone is the sole developer behind Stardew Valley, one of the best-selling indie games of all time. He created every aspect of the game — code, art, music, writing, and design — over four years of solo development. His story is an inspiration to indie creators everywhere."
+          data-bio="Eric 'ConcernedApe' Barone is the sole developer behind Stardew Valley, one of the best-selling indie games of all time. He created every aspect of the game (code, art, music, writing, and design) over four years of solo development. His story is an inspiration to indie creators everywhere."
           data-twitter="ConcernedApe"
           data-website="https://www.stardewvalley.net">
           <div class="speaker-card__avatar" style="background-image: url('https://seattleslice.org/images/headshots/eric-barone.jpg')"></div>
@@ -884,13 +925,13 @@
 
     <div class="divider"></div>
 
-    <!-- Save the Date -->
-    <section class="section reveal" id="save-the-date">
-      <p class="section__eyebrow">Tickets coming soon but for now...</p>
-      <h2 class="section__title">Save the date!</h2>
-      <div class="save-date__buttons">
-        <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=SLICE+2026&dates=20260902T080000/20260902T213000&ctz=America/Los_Angeles&details=SLICE+%E2%80%93+Seattle+Loves+Indie+Creators+Expo+2026%0Ahttps%3A%2F%2Fseattleslice.org&location=McCaw+Hall%2C+321+Mercer+St%2C+Seattle%2C+WA+98109" target="_blank" rel="noopener" class="btn btn--primary">Add to Google Calendar</a>
-        <a href="data:text/calendar;charset=utf-8,BEGIN%3AVCALENDAR%0AVERSION%3A2.0%0APRODID%3A-//SLICE//EN%0ABEGIN%3AVEVENT%0ADTSTART%3ATZID%3DAmerica/Los_Angeles%3A20260902T080000%0ADTEND%3ATZID%3DAmerica/Los_Angeles%3A20260902T213000%0ASUMMARY%3ASLICE+2026%0ADESCRIPTION%3ASLICE+%E2%80%93+Seattle+Loves+Indie+Creators+Expo+2026%5Cnhttps%3A//seattleslice.org%0ALOCATION%3AMcCaw+Hall%5C%2C+321+Mercer+St%5C%2C+Seattle%5C%2C+WA+98109%0AEND%3AVEVENT%0AEND%3AVCALENDAR" download="SLICE-2026.ics" class="btn btn--outline">Add to iCalendar</a>
+    <!-- Tickets -->
+    <section class="section reveal" id="tickets">
+      <p class="section__eyebrow">Tickets</p>
+      <h2 class="section__title">Get Your Pass</h2>
+      <!-- Eventbrite Embedded Checkout (inline) -->
+      <div class="tickets-embed">
+        <div id="eventbrite-widget-container-1991501404310"></div>
       </div>
     </section>
 
@@ -953,8 +994,8 @@
 
   <div class="robot-mascot" id="robotMascot">
     <div class="robot-mascot__rig" id="robotRig">
-      <img class="robot-mascot__body" src="images/robot/body.png" alt="" draggable="false">
-      <img class="robot-mascot__arm" id="robotArm" src="images/robot/arm.png" alt="" draggable="false">
+      <img class="robot-mascot__body" src="images/robot/v1/body.png" alt="" draggable="false">
+      <img class="robot-mascot__arm" id="robotArm" src="images/robot/v1/arm.png" alt="" draggable="false">
     </div>
   </div>
 
@@ -1251,6 +1292,57 @@
       // Initialize
       positionCards();
     })();
+  </script>
+
+  <!-- Early bird ticket countdown -->
+  <script>
+    (function() {
+      const el = document.getElementById('earlybird-countdown');
+      if (!el) return;
+      // Early bird ends 11:59:59 PM Pacific on June 22, 2026.
+      // June is Pacific Daylight Time (UTC-7), so the offset is -07:00.
+      const deadline = new Date('2026-06-22T23:59:59-07:00').getTime();
+      const pad = (n) => String(n).padStart(2, '0');
+      let timer;
+      function tick() {
+        const diff = deadline - Date.now();
+        if (diff <= 0) {
+          // Early bird window closed — show nothing.
+          el.textContent = '';
+          el.style.display = 'none';
+          if (timer) clearInterval(timer);
+          return;
+        }
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        el.innerHTML = 'Early bird tickets end in <strong>' +
+          d + 'd ' + pad(h) + 'h ' + pad(m) + 'm ' + pad(s) + 's</strong>';
+      }
+      tick();
+      timer = setInterval(tick, 1000);
+    })();
+  </script>
+
+  <!-- Eventbrite Embedded Checkout -->
+  <script src="https://www.eventbrite.com/static/widgets/eb_widgets.js"></script>
+  <script>
+    // Hero: "Get Tickets" opens checkout in a modal over the page
+    window.EBWidgets.createWidget({
+      widgetType: 'checkout',
+      eventId: '1991501404310',
+      modal: true,
+      modalTriggerElementId: 'eb-modal-trigger'
+    });
+
+    // Tickets section: inline embedded checkout
+    window.EBWidgets.createWidget({
+      widgetType: 'checkout',
+      eventId: '1991501404310',
+      iframeContainerId: 'eventbrite-widget-container-1991501404310',
+      iframeContainerHeight: 700
+    });
   </script>
 
 </body>

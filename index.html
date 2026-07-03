@@ -840,7 +840,7 @@
 
       <iframe
         id="hero-video"
-        src="https://www.youtube.com/embed/2aORaw4ibpA?autoplay=1&mute=1&loop=1&playlist=2aORaw4ibpA&controls=0&showinfo=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1"
+        src="https://www.youtube.com/embed/2aORaw4ibpA?autoplay=1&mute=1&controls=0&showinfo=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1"
         frameborder="0"
         allow="autoplay; encrypted-media"
         allowfullscreen
@@ -1429,9 +1429,13 @@
     })();
   </script>
 
-  <!-- Hero background video: reveal it only once it is actually playing, so
-       YouTube's startup chrome (spinner / centered play-pause button) never
-       shows over the hero. -->
+  <!-- Hero background video. Two jobs:
+       1. Reveal the video only once it is actually playing, so YouTube's
+          startup chrome (spinner / centered controls) is never visible.
+       2. Loop through the IFrame API rather than the loop=1&playlist trick.
+          A playlist makes YouTube add prev/next buttons to its control
+          overlay, so we drop it and instead jump back to the start just
+          before the clip ends, which also avoids the end-of-video chrome. -->
   <script>
     (function() {
       const container = document.querySelector('.hero__video-bg');
@@ -1445,12 +1449,26 @@
       }
 
       // Safety net: never leave the hero blank if the API is blocked or slow.
-      // The plain iframe still autoplays on its own, so by now it's playing.
       const fallback = setTimeout(reveal, 2500);
+
+      let player;
+      let loopTimer;
+      // Jump back to the start a moment before the clip actually ends, so the
+      // player never reaches the ENDED state that flashes the control overlay.
+      function startLoopWatch() {
+        if (loopTimer) return;
+        loopTimer = setInterval(function() {
+          if (!player || !player.getDuration) return;
+          const duration = player.getDuration();
+          if (duration > 0 && player.getCurrentTime() >= duration - 0.5) {
+            player.seekTo(0, true);
+          }
+        }, 200);
+      }
 
       // YouTube calls this global once the IFrame API script has loaded.
       window.onYouTubeIframeAPIReady = function() {
-        new YT.Player('hero-video', {
+        player = new YT.Player('hero-video', {
           events: {
             onReady: function(e) {
               // Muted playback may autostart; nudge it in case the autoplay
@@ -1462,6 +1480,11 @@
               if (e.data === YT.PlayerState.PLAYING) {
                 clearTimeout(fallback);
                 reveal();
+                startLoopWatch();
+              } else if (e.data === YT.PlayerState.ENDED) {
+                // Fallback loop in case the pre-emptive seek was missed.
+                e.target.seekTo(0, true);
+                e.target.playVideo();
               }
             }
           }

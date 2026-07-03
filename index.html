@@ -97,24 +97,17 @@
       z-index: 0;
     }
 
-    .hero__video-bg iframe {
+    .hero__video-bg video {
       position: absolute;
       top: 50%;
       left: 50%;
       width: 120vw;
       height: 120vh;
-      min-width: 120vw;
-      min-height: 120vh;
+      /* Slight overscan (like the old embed) crops the trailer's letterbox
+         bars off the top and bottom. object-fit keeps the aspect ratio. */
+      object-fit: cover;
       transform: translate(-50%, -50%);
       pointer-events: none;
-      /* Hidden until the video is actually playing, so YouTube's startup
-         chrome (spinner, centered play/pause button) is never visible. */
-      opacity: 0;
-      transition: opacity 0.8s ease;
-    }
-
-    .hero__video-bg.is-ready iframe {
-      opacity: 1;
     }
 
     .hero__overlay {
@@ -838,14 +831,18 @@
   <section class="hero" id="hero">
     <div class="hero__video-bg">
 
-      <iframe
+      <video
         id="hero-video"
-        src="https://www.youtube.com/embed/2aORaw4ibpA?autoplay=1&mute=1&controls=0&showinfo=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1"
-        frameborder="0"
-        allow="autoplay; encrypted-media"
-        allowfullscreen
-        title="SLICE Background Video"
-      ></iframe>
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="auto"
+        poster="videos/promo-poster.jpg"
+        aria-hidden="true"
+      >
+        <source src="videos/promo.mp4" type="video/mp4">
+      </video>
     </div>
     <div class="hero__overlay"></div>
 
@@ -1426,74 +1423,6 @@
       }
       tick();
       timer = setInterval(tick, 1000);
-    })();
-  </script>
-
-  <!-- Hero background video. Two jobs:
-       1. Reveal the video only once it is actually playing, so YouTube's
-          startup chrome (spinner / centered controls) is never visible.
-       2. Loop through the IFrame API rather than the loop=1&playlist trick.
-          A playlist makes YouTube add prev/next buttons to its control
-          overlay, so we drop it and instead jump back to the start just
-          before the clip ends, which also avoids the end-of-video chrome. -->
-  <script>
-    (function() {
-      const container = document.querySelector('.hero__video-bg');
-      if (!container) return;
-
-      let revealed = false;
-      function reveal() {
-        if (revealed) return;
-        revealed = true;
-        container.classList.add('is-ready');
-      }
-
-      // Safety net: never leave the hero blank if the API is blocked or slow.
-      const fallback = setTimeout(reveal, 2500);
-
-      let player;
-      let loopTimer;
-      // Jump back to the start a moment before the clip actually ends, so the
-      // player never reaches the ENDED state that flashes the control overlay.
-      function startLoopWatch() {
-        if (loopTimer) return;
-        loopTimer = setInterval(function() {
-          if (!player || !player.getDuration) return;
-          const duration = player.getDuration();
-          if (duration > 0 && player.getCurrentTime() >= duration - 0.5) {
-            player.seekTo(0, true);
-          }
-        }, 200);
-      }
-
-      // YouTube calls this global once the IFrame API script has loaded.
-      window.onYouTubeIframeAPIReady = function() {
-        player = new YT.Player('hero-video', {
-          events: {
-            onReady: function(e) {
-              // Muted playback may autostart; nudge it in case the autoplay
-              // URL parameter was throttled by the browser.
-              e.target.mute();
-              e.target.playVideo();
-            },
-            onStateChange: function(e) {
-              if (e.data === YT.PlayerState.PLAYING) {
-                clearTimeout(fallback);
-                reveal();
-                startLoopWatch();
-              } else if (e.data === YT.PlayerState.ENDED) {
-                // Fallback loop in case the pre-emptive seek was missed.
-                e.target.seekTo(0, true);
-                e.target.playVideo();
-              }
-            }
-          }
-        });
-      };
-
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      document.head.appendChild(tag);
     })();
   </script>
 

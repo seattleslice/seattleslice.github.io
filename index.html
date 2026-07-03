@@ -107,6 +107,14 @@
       min-height: 120vh;
       transform: translate(-50%, -50%);
       pointer-events: none;
+      /* Hidden until the video is actually playing, so YouTube's startup
+         chrome (spinner, centered play/pause button) is never visible. */
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+
+    .hero__video-bg.is-ready iframe {
+      opacity: 1;
     }
 
     .hero__overlay {
@@ -426,17 +434,24 @@
       border-radius: 8px;
     }
 
-    /* Volunteer call-to-action under the ticket embed */
+    /* Volunteer call-to-action under the ticket embed. Color and size match
+       the footer credit lines. Its top margin and the section's bottom padding
+       are equal so it sits evenly spaced between the panel above and the
+       divider below. */
     .tickets-volunteer {
       text-align: center;
-      margin: 20px auto 0;
-      font-size: 15px;
-      color: #c0c0c0;
+      margin: 48px auto 0;
+      font-size: 18px;
+      color: #8ab4e0;
     }
 
     .tickets-volunteer a {
       color: #BB3EFD;
-      text-decoration: underline;
+      text-decoration: none;
+    }
+
+    #tickets {
+      padding-bottom: 48px;
     }
 
     /* Centered call-to-action button in the About section */
@@ -824,7 +839,8 @@
     <div class="hero__video-bg">
 
       <iframe
-        src="https://www.youtube.com/embed/2aORaw4ibpA?autoplay=1&mute=1&loop=1&playlist=2aORaw4ibpA&controls=0&showinfo=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&playsinline=1"
+        id="hero-video"
+        src="https://www.youtube.com/embed/2aORaw4ibpA?autoplay=1&mute=1&loop=1&playlist=2aORaw4ibpA&controls=0&showinfo=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&playsinline=1&enablejsapi=1"
         frameborder="0"
         allow="autoplay; encrypted-media"
         allowfullscreen
@@ -1051,7 +1067,7 @@
     <footer>
       <p>An event by <a href="https://seattleindies.org" target="_blank">Seattle Indies</a></p>
       <p><strong>Produced by:</strong> Tim Cullings, Ty Taylor, Olga Sheverieva</p>
-      <p class="footer-detail"><strong>With Advisors:</strong> Mitch Gitelman, Leah Hoyer, Mark DeLoura, Jon Kimmich, Renee Gittins, Larry Hryb, Jen MacLean, Erin Serletic, Rob Wheat, Jennifer Yi, Amanda Rose, Shannon Halberstadt</p>
+      <p class="footer-detail"><strong>With Advisors and Support:</strong> Mitch Gitelman, Leah Hoyer, Mark DeLoura, Jon Kimmich, Renee Gittins, Larry Hryb, Jen MacLean, Jennifer Yi, Shannon Halberstadt, Alex Helgeson</p>
       <p class="footer-detail footer-credits-line"><span class="footer-credit"><strong>Artwork by:</strong> Emmy Toyonaga</span> &nbsp; &nbsp; &nbsp; <span class="footer-credit"><strong>Trailer by:</strong> Angel Mero</span></p>
     </footer>
 
@@ -1410,6 +1426,51 @@
       }
       tick();
       timer = setInterval(tick, 1000);
+    })();
+  </script>
+
+  <!-- Hero background video: reveal it only once it is actually playing, so
+       YouTube's startup chrome (spinner / centered play-pause button) never
+       shows over the hero. -->
+  <script>
+    (function() {
+      const container = document.querySelector('.hero__video-bg');
+      if (!container) return;
+
+      let revealed = false;
+      function reveal() {
+        if (revealed) return;
+        revealed = true;
+        container.classList.add('is-ready');
+      }
+
+      // Safety net: never leave the hero blank if the API is blocked or slow.
+      // The plain iframe still autoplays on its own, so by now it's playing.
+      const fallback = setTimeout(reveal, 2500);
+
+      // YouTube calls this global once the IFrame API script has loaded.
+      window.onYouTubeIframeAPIReady = function() {
+        new YT.Player('hero-video', {
+          events: {
+            onReady: function(e) {
+              // Muted playback may autostart; nudge it in case the autoplay
+              // URL parameter was throttled by the browser.
+              e.target.mute();
+              e.target.playVideo();
+            },
+            onStateChange: function(e) {
+              if (e.data === YT.PlayerState.PLAYING) {
+                clearTimeout(fallback);
+                reveal();
+              }
+            }
+          }
+        });
+      };
+
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(tag);
     })();
   </script>
 

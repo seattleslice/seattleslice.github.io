@@ -489,7 +489,7 @@
       overflow: hidden;
       margin-top: -120px;
       margin-bottom: 20px;
-      pointer-events: none; /* decorative only — must not swallow clicks on the About CTA it overlaps */
+      pointer-events: none; /* decorative only - must not swallow clicks on the About CTA it overlaps */
     }
 
     .photo-marquee__item {
@@ -859,7 +859,7 @@
     </div>
 
     <!-- Date Logo (mirrored) -->
-    <div class="logo-date" aria-label="Sept 2 – McCaw Hall, Seattle">
+    <div class="logo-date" aria-label="Sept 2 - McCaw Hall, Seattle">
       <div class="logo-date__text">
         <span class="logo-date__letter" data-letter="S">S</span>
         <span class="logo-date__letter" data-letter="e">e</span>
@@ -897,7 +897,7 @@
       <p class="section__eyebrow">About SLICE</p>
       <h2 class="section__title">Created For Indie Devs, By Indie Devs</h2>
       <p class="section__text">
-        SLICE is designed to provide practical tools, strategic insights, and essential connections for game developers &mdash; whether you're just getting started or leading a growing studio.
+        SLICE is designed to provide practical tools, strategic insights, and essential connections for game developers - whether you're just getting started or leading a growing studio.
       </p>
       <p class="section__text">
         Expect a full day featuring panels, microtalks, roundtables, and networking with hundreds of local and international industry professionals. Topics span funding, marketing, team-building, and more.
@@ -1131,7 +1131,7 @@
       }
 
       const PHOTO_W = window.innerWidth >= 769 ? 317 : 264;
-      const SLOT = PHOTO_W + 50; // photo width + gap — the fixed distance between slot starts
+      const SLOT = PHOTO_W + 50; // photo width + gap - the fixed distance between slot starts
       const BASE_SPEED = 0.9375;
       const SPIN_SPEED = 0.01;
 
@@ -1139,7 +1139,7 @@
       // that advances at BASE_SPEED every frame. Each photo owns a fixed
       // slot index on the belt, so the gap between any two adjacent photos
       // is always exactly SLOT pixels. When a photo wraps, it keeps its
-      // slot — only its visual entrance (spin + catch-up) is different.
+      // slot - only its visual entrance (spin + catch-up) is different.
 
       var beltOffset = 0; // increases each frame
       const items = [];
@@ -1160,7 +1160,7 @@
           rotation: rotation,
           currentRotation: rotation,
           spinProgress: 1,
-          catchUp: 0, // extra offset for the fast entry — starts negative, eases to 0
+          catchUp: 0, // extra offset for the fast entry - starts negative, eases to 0
         });
       });
 
@@ -1193,7 +1193,7 @@
 
           // Detect wrap: photo just wrapped to the left side (off-screen)
           if (rawX < -(PHOTO_W + 20) && item.spinProgress === 1) {
-            // Will naturally scroll into view — set up the spin
+            // Will naturally scroll into view - set up the spin
             item.spinProgress = 0;
             item.currentRotation = 0;
             rotSign *= -1;
@@ -1265,9 +1265,9 @@
             const centerX = i * cardSpacing + cardWidth / 2 + offset;
             // t: -1 at left edge, 0 at center, +1 at right edge
             const t = Math.max(-1.5, Math.min(1.5, (centerX / vpW - 0.5) * 2));
-            // Vertical: cubic S-curve — higher on right, lower on left
+            // Vertical: cubic S-curve - higher on right, lower on left
             const yOff = -(t * t * t) * maxY;
-            // Rotation: parabolic — counter-clockwise at both edges, level at center
+            // Rotation: parabolic - counter-clockwise at both edges, level at center
             const rot = -(t * t) * maxRot;
             allCards[i].style.transform = 'translateY(' + yOff.toFixed(1) + 'px) rotate(' + rot.toFixed(2) + 'deg)';
           }
@@ -1408,7 +1408,7 @@
       function tick() {
         const diff = deadline - Date.now();
         if (diff <= 0) {
-          // Early bird window closed — show nothing.
+          // Early bird window closed - show nothing.
           el.textContent = '';
           el.style.display = 'none';
           if (timer) clearInterval(timer);

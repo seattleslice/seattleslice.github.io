@@ -136,17 +136,19 @@ body {
 
 .speaker-card {
   background: #002a63;
-  border: 1px solid #1a4a8a;
-  border-radius: 12px;
+  /* Same yellow outline the buttons and the event cards wear */
+  border: 2px solid #f5ee1d;
+  border-radius: 16px;
   padding: 22px 14px 20px;
   text-align: center;
-  transition: border-color 0.3s, transform 0.3s;
+  transition: box-shadow 0.3s, transform 0.3s;
   cursor: pointer;
 }
 
+/* Lift and glow on hover, the way the buttons do */
 .speaker-card:hover {
-  border-color: #BB3EFD;
   transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(187, 62, 253, 0.4);
 }
 
 .speaker-card__avatar {

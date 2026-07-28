@@ -675,12 +675,24 @@
     }
 
     /* ===================== SPEAKERS EXPAND / COLLAPSE ===================== */
-    /* The wrapper animates between the collapsed and expanded heights, which is
-       why it clips its content. Its height is only set while that animation is
-       running - the rest of the time it sizes itself. */
+    /* The wrapper animates between the collapsed and expanded heights. Its
+       height is only set while that animation is running - the rest of the
+       time it sizes itself. */
     .speakers-reveal {
-      overflow: hidden;
+      /* The grid's top margin is carried here as padding so that switching the
+         overflow below cannot collapse the margin in and out of the wrapper. */
+      padding-top: 36px;
       transition: height 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .speakers-reveal .speakers-grid {
+      margin-top: 0;
+    }
+
+    /* Clip only while the height animates. At rest the cards need room outside
+       the box for their hover glow. */
+    .speakers-reveal.is-animating {
+      overflow: hidden;
     }
 
     .speakers-reveal:not(.is-expanded) .speaker-card--extra {
@@ -1199,6 +1211,7 @@
         settleTimer = null;
         wrap.style.height = '';
         wrap.style.transitionDuration = '';
+        wrap.classList.remove('is-animating');
       }
 
       function setExpanded(next) {
@@ -1219,6 +1232,7 @@
         const endHeight = wrap.getBoundingClientRect().height;
         const duration = travelTime(startHeight, endHeight);
 
+        wrap.classList.add('is-animating');
         wrap.style.height = startHeight + 'px';
         void wrap.offsetHeight; // commit the starting height before animating
         wrap.style.transitionDuration = duration + 'ms';

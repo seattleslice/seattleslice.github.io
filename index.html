@@ -732,13 +732,21 @@
       margin-top: 32px;
     }
 
-    /* Teaser shown with the full list */
-    .speakers-note {
-      margin-bottom: 16px;
+    /* Short line telling visitors a list is not final yet */
+    .section-note {
       font-size: 17px;
       color: #a0c4e8;
       text-align: center;
+    }
+
+    /* Shown with the full speaker list, above the collapse button */
+    .speakers-note {
+      margin-bottom: 16px;
       animation: speakerCardIn 0.45s ease;
+    }
+
+    .sessions-note {
+      margin-top: 28px;
     }
 
     /* .btn sets a display, which would otherwise beat the browser's rule for
@@ -1015,7 +1023,7 @@
         <div class="speakers-grid" id="speakersGrid"></div>
       </div>
       <div class="speakers-actions">
-        <p class="speakers-note" id="speakersNote" hidden>With more announced soon!</p>
+        <p class="section-note speakers-note" id="speakersNote" hidden>With more announced soon!</p>
         <button class="btn btn--outline" id="speakersToggle" type="button" hidden>See All Speakers</button>
       </div>
     </section>
@@ -1100,6 +1108,7 @@
     <section class="section reveal" id="sessions">
       <h2 class="section__title">Sessions</h2>
       <div class="sessions-list" id="sessionsList"></div>
+      <p class="section-note sessions-note">With more announced soon!</p>
     </section>
 
     <div class="divider"></div>

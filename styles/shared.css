@@ -22,8 +22,10 @@ body {
   z-index: 5;
 }
 
+/* Less room above the title than below the content - the sections lead with
+   their heading, so a full 80px up there leaves the divider stranded. */
 .section {
-  padding: 80px 24px;
+  padding: 48px 24px 80px;
   max-width: 960px;
   margin: 0 auto;
 }

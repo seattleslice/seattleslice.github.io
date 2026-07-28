@@ -81,7 +81,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lato:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles/shared.css">
+  <!-- Bump ?v= whenever shared.css or shared.js changes. GitHub Pages serves
+       both with max-age=600, and a phone holding a stale shared.js next to a
+       fresh page is how the speaker and session lists silently come up empty. -->
+  <link rel="stylesheet" href="styles/shared.css?v=2026-07-28">
   <style>
     /* ===================== HERO SECTION ===================== */
     .hero {
@@ -1198,7 +1201,7 @@
     </div>
   </div>
 
-  <script src="js/shared.js"></script>
+  <script src="js/shared.js?v=2026-07-28"></script>
   <script>
     // Show scroll indicator after 5 seconds
     setTimeout(() => {
@@ -1327,6 +1330,7 @@
       const loading = loadSpeakers('Speakers2026', function(speakers) {
         if (!speakers.length) {
           hideSection();
+          buildSessions([]);
           return;
         }
 
@@ -1348,6 +1352,9 @@
         loading.catch(function(err) {
           console.error('Could not load the speaker sheet', err);
           hideSection();
+          // Sessions are checked against the speaker list, so without it they
+          // cannot be shown either. Say so by hiding, not by sitting empty.
+          buildSessions([]);
         });
       }
     })();
@@ -1366,6 +1373,12 @@
         if (divider && divider.classList.contains('divider')) {
           divider.style.display = 'none';
         }
+      }
+
+      // No speakers means nothing can pass the seat check
+      if (!speakers || !speakers.length) {
+        hideSection();
+        return;
       }
 
       function buildRow(session) {

@@ -105,8 +105,9 @@ function gsheetProcessor(options, callback, onError) {
 // ===================== SPEAKERS FROM GOOGLE SHEET =====================
 var speakers = [];
 
+// Returns the fetch promise so callers can react when the sheet is unreachable.
 function loadSpeakers(callback) {
-  gsheetProcessor(
+  return gsheetProcessor(
     {
       sheetId: "1idfs0hL8dM0vwXtdph3Md1EIlc4__sClZyYjpAIyGBQ",
       sheetName: "Speakers2025",
@@ -440,8 +441,10 @@ revealEls.forEach(el => revealObserver.observe(el));
   const closeBtn = document.getElementById('speakerClose');
   const avatarEl = document.getElementById('speakerAvatar');
   const nameEl = document.getElementById('speakerNameDisplay');
+  const roleEl = document.getElementById('speakerRole');
   const socialsEl = document.getElementById('speakerSocials');
   const bioEl = document.getElementById('speakerBio');
+  const sessionsEl = document.getElementById('speakerSessions');
 
   if (!overlay || !closeBtn) return;
 
@@ -455,7 +458,46 @@ revealEls.forEach(el => revealObserver.observe(el));
     youtube: '<svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/><path fill="#fff" d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
   };
 
-  function addSocialLink(container, url, title, iconKey) {
+  // Where a bare handle lives for each network
+  const SOCIAL_BASES = {
+    x: 'https://x.com/',
+    linkedin: 'https://www.linkedin.com/in/',
+    bluesky: 'https://bsky.app/profile/',
+    facebook: 'https://www.facebook.com/',
+    instagram: 'https://www.instagram.com/',
+    tiktok: 'https://www.tiktok.com/@',
+    youtube: ''
+  };
+
+  // The sheet is filled in by hand, so a cell can hold a full URL, a bare
+  // domain, an @handle, or several handles separated by spaces.
+  function socialUrl(value, iconKey) {
+    if (!value) return '';
+
+    var raw = String(value).trim().split(/\s+/)[0];
+    if (!raw) return '';
+    if (/^https?:\/\//i.test(raw)) return raw;
+
+    var base = SOCIAL_BASES[iconKey];
+    var handle = raw.replace(/^@/, '');
+
+    // Something like "instagram.com/name" - just needs a scheme
+    if (raw.charAt(0) !== '@' && handle.indexOf('.') !== -1 && handle.indexOf('/') !== -1) {
+      return 'https://' + handle;
+    }
+
+    if (!base) return '';
+
+    // Bluesky handles are domains, and the common ones end in .bsky.social
+    if (iconKey === 'bluesky' && handle.indexOf('.') === -1) {
+      handle += '.bsky.social';
+    }
+
+    return base + handle;
+  }
+
+  function addSocialLink(container, value, title, iconKey) {
+    var url = socialUrl(value, iconKey);
     if (!url) return;
     var a = document.createElement('a');
     a.href = url;
@@ -469,7 +511,45 @@ revealEls.forEach(el => revealObserver.observe(el));
   // Open overlay from a speaker data object (used by dynamically loaded speakers)
   function openSpeakerOverlay(speaker) {
     nameEl.textContent = speaker.name;
-    bioEl.textContent = speaker.bio || '';
+
+    // A handful of bios in the sheet are just a link to a doc
+    const bio = (speaker.bio || '').trim();
+    bioEl.textContent = '';
+    if (/^https?:\/\/\S+$/.test(bio)) {
+      const bioLink = document.createElement('a');
+      bioLink.href = bio;
+      bioLink.target = '_blank';
+      bioLink.rel = 'noopener noreferrer';
+      bioLink.textContent = 'Read full bio';
+      bioEl.appendChild(bioLink);
+    } else {
+      bioEl.textContent = bio;
+    }
+    bioEl.style.display = bio ? '' : 'none';
+
+    // Title and company, skipping whichever one the sheet is missing
+    if (roleEl) {
+      const role = [speaker.title, speaker.company].filter(Boolean).join(', ');
+      roleEl.textContent = role;
+      roleEl.style.display = role ? '' : 'none';
+    }
+
+    // The sheet separates multiple sessions with semicolons
+    if (sessionsEl) {
+      const sessions = (speaker.sessions || '')
+        .split(';')
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      if (sessions.length) {
+        sessionsEl.innerHTML = '<strong>SLICE 2025</strong>';
+        sessionsEl.appendChild(document.createTextNode(sessions.join(' | ')));
+        sessionsEl.style.display = '';
+      } else {
+        sessionsEl.textContent = '';
+        sessionsEl.style.display = 'none';
+      }
+    }
 
     if (speaker.headshotUrl) {
       avatarEl.style.backgroundImage = "url('" + speaker.headshotUrl + "')";

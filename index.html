@@ -674,6 +674,55 @@
       margin: auto 0;
     }
 
+    /* ===================== SPEAKERS EXPAND / COLLAPSE ===================== */
+    /* The wrapper animates between the collapsed and expanded heights, which is
+       why it clips its content. Its height is only set while that animation is
+       running - the rest of the time it sizes itself. */
+    .speakers-reveal {
+      overflow: hidden;
+      transition: height 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .speakers-reveal:not(.is-expanded) .speaker-card--extra {
+      display: none;
+    }
+
+    .speakers-reveal.is-expanded .speaker-card--extra {
+      animation: speakerCardIn 0.45s ease;
+    }
+
+    @keyframes speakerCardIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .speakers-actions {
+      display: flex;
+      justify-content: center;
+      margin-top: 32px;
+    }
+
+    /* .btn sets a display, which would otherwise beat the browser's rule for
+       [hidden] and show the button before the sheet has loaded. */
+    .speakers-actions .btn[hidden] {
+      display: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .speakers-reveal {
+        transition: none;
+      }
+      .speakers-reveal.is-expanded .speaker-card--extra {
+        animation: none;
+      }
+    }
+
     /* ===================== DESKTOP MARQUEE ===================== */
     @media (min-width: 769px) {
       .photo-marquee {
@@ -922,40 +971,11 @@
     <section class="section reveal" id="speakers">
       <p class="section__eyebrow">Featured Speakers From 2025</p>
       <h2 class="section__title">Learn From The Best</h2>
-      <div class="speakers-grid">
-        <div class="speaker-card"
-          data-name="Eric Barone"
-          data-role="Creator of Stardew Valley"
-          data-image="https://seattleslice.org/images/headshots/eric-barone.jpg"
-          data-bio="Eric 'ConcernedApe' Barone is the sole developer behind Stardew Valley, one of the best-selling indie games of all time. He created every aspect of the game (code, art, music, writing, and design) over four years of solo development. His story is an inspiration to indie creators everywhere."
-          data-twitter="ConcernedApe"
-          data-website="https://www.stardewvalley.net">
-          <div class="speaker-card__avatar" style="background-image: url('https://seattleslice.org/images/headshots/eric-barone.jpg')"></div>
-          <div class="speaker-card__name">Eric Barone</div>
-          <div class="speaker-card__role">Creator of Stardew Valley</div>
-        </div>
-        <div class="speaker-card"
-          data-name="Kim Swift"
-          data-role="Creator of Portal"
-          data-image="https://seattleslice.org/images/headshots/kim-swift.jpg"
-          data-bio="Kim Swift is a legendary game designer best known as the project lead on Portal at Valve. She started her career with Narbacular Drop, a student project that caught Valve's attention and became the foundation for Portal. She has since led design at major studios across the industry."
-          data-twitter="kswiftie"
-          data-website="https://en.wikipedia.org/wiki/Kim_Swift">
-          <div class="speaker-card__avatar" style="background-image: url('https://seattleslice.org/images/headshots/kim-swift.jpg')"></div>
-          <div class="speaker-card__name">Kim Swift</div>
-          <div class="speaker-card__role">Creator of Portal</div>
-        </div>
-        <div class="speaker-card"
-          data-name="Ed Fries"
-          data-role="Former VP of Game Publishing, Microsoft"
-          data-image="https://seattleslice.org/images/headshots/ed-fries.jpg"
-          data-bio="Ed Fries is a pioneering game industry executive who served as Vice President of Game Publishing at Microsoft, where he led the creation of the original Xbox console. He joined Microsoft in 1986 and worked on Word and Excel before taking over the games division in 1995. He championed the acquisitions of Bungie, Ensemble Studios, and Rare, helping build Xbox into a major gaming platform. Since leaving Microsoft in 2004, he has been an advisor and investor across the gaming industry."
-          data-twitter=""
-          data-website="https://en.wikipedia.org/wiki/Ed_Fries">
-          <div class="speaker-card__avatar" style="background-image: url('https://seattleslice.org/images/headshots/ed-fries.jpg')"></div>
-          <div class="speaker-card__name">Ed Fries</div>
-          <div class="speaker-card__role">Creator of the Xbox</div>
-        </div>
+      <div class="speakers-reveal" id="speakersReveal">
+        <div class="speakers-grid" id="speakersGrid"></div>
+      </div>
+      <div class="speakers-actions">
+        <button class="btn btn--outline" id="speakersToggle" type="button" hidden>See All Speakers</button>
       </div>
     </section>
 
@@ -1089,8 +1109,10 @@
       <button class="speaker-overlay__close" id="speakerClose" aria-label="Close">&times;</button>
       <div class="speaker-overlay__avatar" id="speakerAvatar"></div>
       <h2 class="speaker-overlay__name" id="speakerNameDisplay"></h2>
+      <p class="speaker-overlay__role" id="speakerRole"></p>
       <div class="speaker-overlay__socials" id="speakerSocials"></div>
       <p class="speaker-overlay__bio" id="speakerBio"></p>
+      <p class="speaker-overlay__sessions" id="speakerSessions"></p>
     </div>
   </div>
 
@@ -1117,6 +1139,148 @@
     setTimeout(() => {
       document.getElementById('scrollIndicator').classList.add('visible');
     }, 5000);
+
+    // ===================== SPEAKERS =====================
+    // Cards are built from the public Google Sheet (see loadSpeakers in
+    // shared.js) and kept in sheet order. Only the first row is shown until
+    // the visitor asks for the rest.
+    (function() {
+      const COLLAPSED_COUNT = 4;
+
+      const section = document.getElementById('speakers');
+      const wrap = document.getElementById('speakersReveal');
+      const grid = document.getElementById('speakersGrid');
+      const toggle = document.getElementById('speakersToggle');
+      if (!section || !wrap || !grid || !toggle) return;
+
+      let expanded = false;
+
+      function buildCard(speaker) {
+        const card = document.createElement('div');
+        card.className = 'speaker-card';
+
+        const avatar = document.createElement('div');
+        avatar.className = 'speaker-card__avatar';
+        if (speaker.headshotUrl) {
+          avatar.style.backgroundImage = "url('" + speaker.headshotUrl + "')";
+        }
+        card.appendChild(avatar);
+
+        const name = document.createElement('div');
+        name.className = 'speaker-card__name';
+        name.textContent = speaker.name;
+        card.appendChild(name);
+
+        const role = document.createElement('div');
+        role.className = 'speaker-card__role';
+        role.textContent = speaker.shortDescriptor || speaker.title || speaker.company || '';
+        card.appendChild(role);
+
+        card.addEventListener('click', function() {
+          openSpeakerOverlay(speaker);
+        });
+
+        return card;
+      }
+
+      // Longer distances get a little more time, so opening the full list
+      // does not feel like a snap.
+      function travelTime(from, to) {
+        const distance = Math.abs(to - from);
+        return Math.min(900, Math.max(400, Math.round(distance * 0.12)));
+      }
+
+      // Hand the height back to the layout once the animation lands, so the
+      // grid can still reflow on resize.
+      let settleTimer = null;
+
+      function settle() {
+        clearTimeout(settleTimer);
+        settleTimer = null;
+        wrap.style.height = '';
+        wrap.style.transitionDuration = '';
+      }
+
+      function setExpanded(next) {
+        if (next === expanded) return;
+
+        const startHeight = wrap.getBoundingClientRect().height;
+
+        expanded = next;
+        wrap.classList.toggle('is-expanded', expanded);
+        toggle.textContent = expanded ? 'Collapse Speakers' : 'See All Speakers';
+
+        // Nothing to animate when the visitor asked for less motion
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          settle();
+          return;
+        }
+
+        const endHeight = wrap.getBoundingClientRect().height;
+        const duration = travelTime(startHeight, endHeight);
+
+        wrap.style.height = startHeight + 'px';
+        void wrap.offsetHeight; // commit the starting height before animating
+        wrap.style.transitionDuration = duration + 'ms';
+        wrap.style.height = endHeight + 'px';
+
+        // A backstop in case transitionend never arrives - an interrupted or
+        // never-started transition would otherwise leave the grid clipped.
+        clearTimeout(settleTimer);
+        settleTimer = setTimeout(settle, duration + 120);
+      }
+
+      wrap.addEventListener('transitionend', function(e) {
+        if (e.target !== wrap || e.propertyName !== 'height') return;
+        settle();
+      });
+
+      toggle.addEventListener('click', function() {
+        const collapsing = expanded;
+        setExpanded(!expanded);
+
+        // Collapsing can leave the visitor scrolled past the section, so walk
+        // them back up to the heading.
+        if (collapsing) {
+          const top = section.getBoundingClientRect().top;
+          if (top < 0) {
+            window.scrollTo({ top: window.scrollY + top - 20, behavior: 'smooth' });
+          }
+        }
+      });
+
+      function hideSection() {
+        section.style.display = 'none';
+        const divider = section.nextElementSibling;
+        if (divider && divider.classList.contains('divider')) {
+          divider.style.display = 'none';
+        }
+      }
+
+      const loading = loadSpeakers(function(speakers) {
+        if (!speakers.length) {
+          hideSection();
+          return;
+        }
+
+        speakers.forEach(function(speaker, index) {
+          const card = buildCard(speaker);
+          if (index >= COLLAPSED_COUNT) {
+            card.classList.add('speaker-card--extra');
+          }
+          grid.appendChild(card);
+        });
+
+        toggle.hidden = speakers.length <= COLLAPSED_COUNT;
+      });
+
+      if (loading && typeof loading.catch === 'function') {
+        loading.catch(function(err) {
+          console.error('Could not load the speaker sheet', err);
+          hideSection();
+        });
+      }
+    })();
 
     // ===================== PHOTO MARQUEE =====================
     (function() {

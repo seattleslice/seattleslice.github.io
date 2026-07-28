@@ -466,7 +466,6 @@ revealEls.forEach(el => revealObserver.observe(el));
 // ===================== SPEAKER OVERLAY =====================
 (function() {
   const overlay = document.getElementById('speakerOverlay');
-  const line = document.getElementById('speakerLine');
   const panel = document.getElementById('speakerPanel');
   const closeBtn = document.getElementById('speakerClose');
   const avatarEl = document.getElementById('speakerAvatar');
@@ -651,13 +650,13 @@ revealEls.forEach(el => revealObserver.observe(el));
     currentIndex = indexOfSpeaker(speaker);
     updateNav();
 
+    // The arrows were display:none while closed, so let their hidden state be
+    // computed before the fade starts. Otherwise they snap straight to full
+    // opacity while the panel fades in behind them.
+    void overlay.offsetWidth;
+
     overlay.classList.add('active');
-    requestAnimationFrame(() => {
-      overlay.classList.add('step-line');
-    });
-    animTimers.push(setTimeout(() => {
-      overlay.classList.add('step-panel');
-    }, 80));
+    overlay.classList.add('is-shown');
   }
   window.openSpeakerOverlay = openSpeakerOverlay;
 
@@ -678,16 +677,15 @@ revealEls.forEach(el => revealObserver.observe(el));
     });
   }
 
+  // The panel and the backdrop fade out together. 'active' comes off only once
+  // that has finished, since it is what makes the overlay visible at all.
   function closeOverlay() {
     clearAnimTimers();
-    overlay.classList.remove('step-panel');
+    overlay.classList.remove('is-shown');
     animTimers.push(setTimeout(() => {
-      overlay.classList.remove('step-line');
-      animTimers.push(setTimeout(() => {
-        overlay.classList.remove('active');
-        currentIndex = -1;
-      }, 70));
-    }, 60));
+      overlay.classList.remove('active');
+      currentIndex = -1;
+    }, 120));
   }
 
   // Attach click to any hardcoded speaker cards already in the DOM

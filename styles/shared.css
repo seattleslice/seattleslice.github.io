@@ -206,7 +206,7 @@ body {
   inset: 0;
   backdrop-filter: blur(0px);
   background: rgba(0, 20, 50, 0);
-  transition: backdrop-filter 0.5s ease, background 0.5s ease;
+  transition: backdrop-filter 0.1s ease, background 0.1s ease;
 }
 
 .speaker-overlay.active::before {
@@ -224,7 +224,7 @@ body {
   height: 3px;
   background: #FFFB10;
   z-index: 2;
-  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: width 0.07s cubic-bezier(0.22, 1, 0.36, 1);
   box-shadow: 0 0 20px rgba(255, 251, 16, 0.5);
 }
 
@@ -246,7 +246,7 @@ body {
   text-align: center;
   transform: scaleY(0);
   opacity: 0;
-  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+  transition: transform 0.08s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.06s ease;
 }
 
 .speaker-overlay.step-panel .speaker-overlay__panel {
@@ -256,7 +256,7 @@ body {
 
 .speaker-overlay.step-panel .speaker-overlay__line {
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.04s ease;
 }
 
 /* Close button */
@@ -283,6 +283,76 @@ body {
   border-color: #FFFB10;
   color: #FFFB10;
   background: rgba(255, 251, 16, 0.1);
+}
+
+/* Previous / next speaker */
+.speaker-overlay__nav {
+  position: absolute;
+  top: 50%;
+  z-index: 4;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid #a0c4e8;
+  background: rgba(0, 26, 61, 0.85);
+  color: #a0c4e8;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.06s ease, transform 0.2s, border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+/* Arrive with the panel rather than with the backdrop */
+.speaker-overlay.step-panel .speaker-overlay__nav {
+  opacity: 1;
+}
+
+.speaker-overlay__nav:hover {
+  border-color: #FFFB10;
+  color: #FFFB10;
+  background: rgba(255, 251, 16, 0.12);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.speaker-overlay__nav:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.speaker-overlay__nav[hidden] {
+  display: none;
+}
+
+/* The panel is min(520px, 90vw) wide, so its edge is half that from centre */
+.speaker-overlay__nav--prev {
+  right: calc(50% + min(260px, 45vw) + 14px);
+}
+
+.speaker-overlay__nav--next {
+  left: calc(50% + min(260px, 45vw) + 14px);
+}
+
+/* Too narrow to stand clear of the panel, so bring them to the screen edges */
+@media (max-width: 720px) {
+  .speaker-overlay__nav {
+    width: 44px;
+    height: 44px;
+    font-size: 15px;
+  }
+
+  .speaker-overlay__nav--prev {
+    right: auto;
+    left: 6px;
+  }
+
+  .speaker-overlay__nav--next {
+    left: auto;
+    right: 6px;
+  }
 }
 
 /* Avatar */

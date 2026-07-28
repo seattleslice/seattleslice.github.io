@@ -475,8 +475,23 @@ revealEls.forEach(el => revealObserver.observe(el));
   const socialsEl = document.getElementById('speakerSocials');
   const bioEl = document.getElementById('speakerBio');
   const sessionsEl = document.getElementById('speakerSessions');
+  const prevBtn = document.getElementById('speakerPrev');
+  const nextBtn = document.getElementById('speakerNext');
 
   if (!overlay || !closeBtn) return;
+
+  // Where the open speaker sits in the loaded list, or -1 when closed
+  let currentIndex = -1;
+
+  // Steps of the open and close sequences that are still pending. Reopening
+  // while a close is in flight would otherwise let the old timers tear the
+  // panel back down.
+  let animTimers = [];
+
+  function clearAnimTimers() {
+    animTimers.forEach(clearTimeout);
+    animTimers = [];
+  }
 
   const SVG_ICONS = {
     x: '<svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
@@ -540,8 +555,9 @@ revealEls.forEach(el => revealObserver.observe(el));
     container.appendChild(a);
   }
 
-  // Open overlay from a speaker data object (used by dynamically loaded speakers)
-  function openSpeakerOverlay(speaker) {
+  // Fill the panel from a speaker data object, without touching the open or
+  // close animation. Used both when opening and when stepping between speakers.
+  function fillPanel(speaker) {
     nameEl.textContent = speaker.name;
 
     // A handful of bios in the sheet are just a link to a doc
@@ -598,13 +614,50 @@ revealEls.forEach(el => revealObserver.observe(el));
     addSocialLink(socialsEl, speaker.tiktok, 'TikTok', 'tiktok');
     addSocialLink(socialsEl, speaker.youtube, 'YouTube', 'youtube');
 
+    // A long bio can leave the panel scrolled part way down
+    if (panel) panel.scrollTop = 0;
+  }
+
+  // The list the arrows step through, in sheet order
+  function speakerList() {
+    return Array.isArray(speakers) ? speakers : [];
+  }
+
+  function indexOfSpeaker(speaker) {
+    const list = speakerList();
+    const direct = list.indexOf(speaker);
+    if (direct !== -1) return direct;
+    return list.findIndex(s => s.name === speaker.name);
+  }
+
+  function updateNav() {
+    const show = speakerList().length > 1 && currentIndex !== -1;
+    if (prevBtn) prevBtn.hidden = !show;
+    if (nextBtn) nextBtn.hidden = !show;
+  }
+
+  // Step to another speaker, wrapping around at either end
+  function stepSpeaker(delta) {
+    const list = speakerList();
+    if (!list.length || currentIndex === -1) return;
+
+    currentIndex = (currentIndex + delta + list.length) % list.length;
+    fillPanel(list[currentIndex]);
+  }
+
+  function openSpeakerOverlay(speaker) {
+    clearAnimTimers();
+    fillPanel(speaker);
+    currentIndex = indexOfSpeaker(speaker);
+    updateNav();
+
     overlay.classList.add('active');
     requestAnimationFrame(() => {
       overlay.classList.add('step-line');
     });
-    setTimeout(() => {
+    animTimers.push(setTimeout(() => {
       overlay.classList.add('step-panel');
-    }, 400);
+    }, 80));
   }
   window.openSpeakerOverlay = openSpeakerOverlay;
 
@@ -626,13 +679,15 @@ revealEls.forEach(el => revealObserver.observe(el));
   }
 
   function closeOverlay() {
+    clearAnimTimers();
     overlay.classList.remove('step-panel');
-    setTimeout(() => {
+    animTimers.push(setTimeout(() => {
       overlay.classList.remove('step-line');
-      setTimeout(() => {
+      animTimers.push(setTimeout(() => {
         overlay.classList.remove('active');
-      }, 350);
-    }, 300);
+        currentIndex = -1;
+      }, 70));
+    }, 60));
   }
 
   // Attach click to any hardcoded speaker cards already in the DOM
@@ -642,6 +697,20 @@ revealEls.forEach(el => revealObserver.observe(el));
 
   closeBtn.addEventListener('click', closeOverlay);
 
+  if (prevBtn) {
+    prevBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      stepSpeaker(-1);
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      stepSpeaker(1);
+    });
+  }
+
   // Close on backdrop click
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay || e.target === overlay.querySelector('::before')) {
@@ -649,11 +718,18 @@ revealEls.forEach(el => revealObserver.observe(el));
     }
   });
 
-  // Close on Escape or Backspace
   document.addEventListener('keydown', (e) => {
-    if (overlay.classList.contains('active') && (e.key === 'Escape' || e.key === 'Backspace')) {
+    if (!overlay.classList.contains('active')) return;
+
+    if (e.key === 'Escape' || e.key === 'Backspace') {
       e.preventDefault();
       closeOverlay();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      stepSpeaker(-1);
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      stepSpeaker(1);
     }
   });
 })();

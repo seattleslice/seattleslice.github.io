@@ -489,7 +489,7 @@
       overflow: hidden;
       margin-top: -120px;
       margin-bottom: 20px;
-      pointer-events: none; /* decorative only - must not swallow clicks on the About CTA it overlaps */
+      pointer-events: none; /* the container must not swallow clicks on the About CTA it overlaps */
     }
 
     .photo-marquee__item {
@@ -502,6 +502,17 @@
       overflow: hidden;
       will-change: transform;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      /* the photos themselves are draggable - they sit below the CTA, so
+         re-enabling pointer events here keeps the overlap band click-through */
+      pointer-events: auto;
+      cursor: grab;
+      touch-action: pan-y;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .photo-marquee--dragging .photo-marquee__item {
+      cursor: grabbing;
     }
 
     .photo-marquee__item img {
@@ -755,6 +766,15 @@
         left: 50%;
         transform: translateX(-50%);
         justify-content: flex-start;
+        cursor: grab;
+        touch-action: pan-y;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      .events-carousel--dragging,
+      .events-carousel--dragging .event-card,
+      .events-carousel--dragging a {
+        cursor: grabbing;
       }
       .events-carousel__arrow {
         display: none;
@@ -1296,6 +1316,128 @@
       }
     })();
 
+    // ===================== DRAG SCROLLER =====================
+    // Shared pointer-drag physics for the auto-scrolling marquees below.
+    // Listens for drags (mouse or touch) on el and feeds raw movement to
+    // onDrag(dx) so the owner can move its own offset. Each frame the owner
+    // asks speed(now, dt) for the auto-scroll velocity in px per second:
+    // fullSpeed normally, 0 while the user is dragging, flick inertia right
+    // after a release, then a short rest and a gradual ramp back up to
+    // fullSpeed. Phase flow: auto, drag, coast, rest, ramp, back to auto.
+    function makeDragScroller(el, opts) {
+      var fullSpeed = opts.fullSpeed;
+      var onDrag = opts.onDrag;
+      var dragClass = opts.dragClass || '';
+
+      var FRICTION = 3.5;   // per second - exponential decay of flick speed
+      var MAX_FLICK = 3500; // px per second cap on release velocity
+      var REST_SPEED = 8;   // px per second - below this the coast has stopped
+      var REST_MS = 600;    // pause after coming to rest
+      var RAMP_RATE = 1.2;  // per second - approach rate back to fullSpeed
+
+      var pointerId = null;
+      var lastX = 0;
+      var lastMoveTime = 0;
+      var pointerSpeed = 0; // px per second, sign matches drag direction
+      var moved = 0;
+      var suppressClick = false;
+
+      var phase = 'auto';
+      var coastSpeed = 0;
+      var restStart = 0;
+      var rampSpeed = 0;
+
+      el.addEventListener('pointerdown', function(e) {
+        if (pointerId !== null) return;
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        pointerId = e.pointerId;
+        lastX = e.clientX;
+        lastMoveTime = e.timeStamp;
+        pointerSpeed = 0;
+        moved = 0;
+        phase = 'drag';
+        if (dragClass) el.classList.add(dragClass);
+        // Capture on the actual target - the container may have
+        // pointer-events none and only receive bubbled events.
+        if (e.target.setPointerCapture) {
+          try { e.target.setPointerCapture(e.pointerId); } catch (err) {}
+        }
+      });
+
+      el.addEventListener('pointermove', function(e) {
+        if (e.pointerId !== pointerId) return;
+        var dx = e.clientX - lastX;
+        var elapsed = e.timeStamp - lastMoveTime;
+        lastX = e.clientX;
+        lastMoveTime = e.timeStamp;
+        moved += Math.abs(dx);
+        if (elapsed > 0) {
+          // Weight recent movement heavily so the release picks up the flick.
+          pointerSpeed = pointerSpeed * 0.4 + (dx / elapsed) * 1000 * 0.6;
+        }
+        onDrag(dx);
+      });
+
+      function endDrag(e) {
+        if (e.pointerId !== pointerId) return;
+        pointerId = null;
+        if (dragClass) el.classList.remove(dragClass);
+        // A finger that stopped moving before lifting is not a flick.
+        if (e.timeStamp - lastMoveTime > 100) pointerSpeed = 0;
+        coastSpeed = Math.max(-MAX_FLICK, Math.min(MAX_FLICK, pointerSpeed));
+        phase = 'coast';
+        if (moved > 5) {
+          suppressClick = true;
+          setTimeout(function() { suppressClick = false; }, 300);
+        }
+      }
+      el.addEventListener('pointerup', endDrag);
+      el.addEventListener('pointercancel', endDrag);
+
+      // A real drag should not activate links under the pointer on release.
+      el.addEventListener('click', function(e) {
+        if (suppressClick) {
+          suppressClick = false;
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }, true);
+
+      // Native image and link dragging fights the marquee drag.
+      el.addEventListener('dragstart', function(e) { e.preventDefault(); });
+
+      return {
+        speed: function(now, dt) {
+          if (phase === 'drag') return 0;
+          if (phase === 'coast') {
+            coastSpeed *= Math.exp(-FRICTION * dt);
+            if (Math.abs(coastSpeed) < REST_SPEED) {
+              phase = 'rest';
+              restStart = now;
+              return 0;
+            }
+            return coastSpeed;
+          }
+          if (phase === 'rest') {
+            if (now - restStart >= REST_MS) {
+              phase = 'ramp';
+              rampSpeed = 0;
+            }
+            return 0;
+          }
+          if (phase === 'ramp') {
+            rampSpeed += (fullSpeed - rampSpeed) * Math.min(1, RAMP_RATE * dt);
+            if (Math.abs(fullSpeed - rampSpeed) < 2) {
+              phase = 'auto';
+              return fullSpeed;
+            }
+            return rampSpeed;
+          }
+          return fullSpeed;
+        }
+      };
+    }
+
     // ===================== PHOTO MARQUEE =====================
     (function() {
       const container = document.getElementById('photoMarquee');
@@ -1321,16 +1463,17 @@
 
       const PHOTO_W = window.innerWidth >= 769 ? 317 : 264;
       const SLOT = PHOTO_W + 50; // photo width + gap - the fixed distance between slot starts
-      const BASE_SPEED = 0.9375;
-      const SPIN_SPEED = 0.01;
+      const BASE_SPEED = 56.25; // px per second
+      const SPIN_RATE = 0.6;    // spin progress per second
 
       // The marquee is a virtual conveyor belt. We track one global offset
-      // that advances at BASE_SPEED every frame. Each photo owns a fixed
+      // that advances at BASE_SPEED px per second. Each photo owns a fixed
       // slot index on the belt, so the gap between any two adjacent photos
       // is always exactly SLOT pixels. When a photo wraps, it keeps its
       // slot - only its visual entrance (spin + catch-up) is different.
+      // Dragging feeds pointer movement straight into the same offset.
 
-      var beltOffset = 0; // increases each frame
+      var beltOffset = 0; // increases as the belt advances
       const items = [];
       let rotSign = Math.random() > 0.5 ? 1 : -1;
 
@@ -1361,19 +1504,33 @@
         return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
       }
 
-      function tick() {
+      var scroller = makeDragScroller(container, {
+        fullSpeed: BASE_SPEED,
+        dragClass: 'photo-marquee--dragging',
+        onDrag: function(dx) { beltOffset += dx; }
+      });
+
+      var lastTime = performance.now();
+
+      function tick(now) {
         var cw = container.offsetWidth;
-        beltOffset += BASE_SPEED;
+        var dt = Math.min((now - lastTime) / 1000, 0.05);
+        lastTime = now;
+        beltOffset += scroller.speed(now, dt) * dt;
 
         // Belt must be wider than viewport so wrapped photos land off-screen right.
-        // On 4K the natural belt (9×314=2826) is narrower than the screen, so we
+        // On 4K the natural belt (9x314=2826) is narrower than the screen, so we
         // pad it and spread photos evenly across the full length.
         var beltLen = Math.max(totalSlots * SLOT, cw + PHOTO_W + 600);
         var effectiveSlot = beltLen / totalSlots;
 
+        // Dragging can push the offset far in either direction, so wrap it
+        // back into [0, beltLen) before positioning.
+        beltOffset = ((beltOffset % beltLen) + beltLen) % beltLen;
+
         items.forEach(function(item) {
           // Slot position on the infinite belt, wrapped into [0, beltLen)
-          var rawX = (item.slotIndex * effectiveSlot + beltOffset % beltLen + beltLen * 10) % beltLen;
+          var rawX = (item.slotIndex * effectiveSlot + beltOffset) % beltLen;
 
           // Shift left so wrapping lands off-screen left
           rawX -= PHOTO_W + 50;
@@ -1391,7 +1548,7 @@
 
           // Spin in to final rotation
           if (item.spinProgress < 1) {
-            item.spinProgress = Math.min(item.spinProgress + SPIN_SPEED, 1);
+            item.spinProgress = Math.min(item.spinProgress + SPIN_RATE * dt, 1);
             item.currentRotation = item.rotation * easeOutBack(item.spinProgress);
           }
 
@@ -1424,28 +1581,30 @@
         const cardWidth = 380;
         const cardSpacing = cardWidth + gap;
         const oneSetWidth = total * cardSpacing;
-        const fullSpeed = oneSetWidth / 60;
-        let speed = fullSpeed;
-        let targetSpeed = fullSpeed;
         let offset = 0;
         let lastTime = performance.now();
-        const easeRate = 1.8;
 
         // Arc path parameters
         const maxY = 55;    // px vertical rise at edges
         const maxRot = 7.5; // degrees counter-clockwise at edges
 
+        // Auto-scroll moves left (negative), one full set per minute.
+        // Dragging feeds pointer movement straight into the same offset.
+        const carousel = document.querySelector('.events-carousel');
+        const scroller = makeDragScroller(carousel, {
+          fullSpeed: -oneSetWidth / 60,
+          dragClass: 'events-carousel--dragging',
+          onDrag: function(dx) { offset += dx; }
+        });
 
         function tick(now) {
-          const dt = (now - lastTime) / 1000;
+          const dt = Math.min((now - lastTime) / 1000, 0.05);
           lastTime = now;
-          if (speed !== targetSpeed) {
-            const diff = targetSpeed - speed;
-            speed += diff * Math.min(1, easeRate * dt);
-            if (Math.abs(speed - targetSpeed) < 0.5) speed = targetSpeed;
-          }
-          offset -= speed * dt;
-          if (offset <= -oneSetWidth) offset += oneSetWidth;
+          offset += scroller.speed(now, dt) * dt;
+          // Keep offset in (-oneSetWidth, 0] so the cloned set always covers
+          // the viewport no matter which way the user dragged.
+          offset %= oneSetWidth;
+          if (offset > 0) offset -= oneSetWidth;
           track.style.transform = 'translateX(' + offset + 'px)';
 
           // Apply arc: each card gets translateY + rotate based on screen position

@@ -151,7 +151,7 @@
 
   <script src="js/shared.js"></script>
   <script>
-    loadSpeakers(function(speakers) {
+    loadSpeakers('Speakers2025', function(speakers) {
       var grid = document.getElementById('speakersGrid');
       speakers.forEach(function(speaker) {
         var card = document.createElement('div');
@@ -159,9 +159,7 @@
 
         var avatar = document.createElement('div');
         avatar.className = 'speaker-card__avatar';
-        if (speaker.headshotUrl) {
-          avatar.style.backgroundImage = "url('" + speaker.headshotUrl + "')";
-        }
+        setHeadshot(avatar, speaker.headshotUrl);
         card.appendChild(avatar);
 
         var name = document.createElement('div');

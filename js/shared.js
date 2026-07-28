@@ -175,6 +175,64 @@ function loadSpeakers(sheetName, callback) {
   );
 }
 
+// ===================== SESSIONS FROM GOOGLE SHEET =====================
+// Only the sessions we can render in full are kept - see loadSessions.
+var sessions = [];
+
+const SESSION_SEATS = ['Moderator/Speaker', 'Seat 1', 'Seat 2', 'Seat 3'];
+
+// Reads the sessions tab and keeps a session only when the sheet has a synopsis
+// for it and every seat that is filled in names a speaker we imported. A seat
+// naming somebody we know nothing about would leave a hole in the panel, so the
+// whole session sits out instead.
+function loadSessions(sheetName, speakerList, callback) {
+  const bySpeakerName = new Map();
+  (speakerList || []).forEach(speaker => bySpeakerName.set(speaker.name.trim(), speaker));
+
+  return gsheetProcessor(
+    {
+      sheetId: SPEAKERS_SHEET_ID,
+      sheetName: sheetName,
+      sheetNumber: 1,
+      returnAllResults: true,
+      apiKey: SPEAKERS_API_KEY,
+      startRow: 1
+    },
+    (results) => {
+      const loaded = [];
+
+      results.forEach((result) => {
+        const title = (result["Title"] || '').trim();
+        const synopsis = (result["Synopsis"] || '').trim();
+        if (!title || !synopsis) return;
+
+        const listed = SESSION_SEATS
+          .map(seat => (result[seat] || '').trim())
+          .filter(Boolean);
+
+        const lineup = listed.map(name => bySpeakerName.get(name));
+        if (lineup.some(speaker => !speaker)) return;
+
+        loaded.push({
+          title: title,
+          format: (result["Format"] || '').trim(),
+          synopsis: synopsis,
+          speakers: lineup
+        });
+      });
+
+      sessions = loaded;
+      if (callback) callback(loaded);
+    }
+  );
+}
+
+// The sessions a speaker appears in, in sheet order
+function sessionsForSpeaker(speaker) {
+  if (!speaker) return [];
+  return sessions.filter(session => session.speakers.indexOf(speaker) !== -1);
+}
+
 // ===================== SCROLL REVEAL =====================
 const revealEls = document.querySelectorAll('.reveal');
 const revealObserver = new IntersectionObserver((entries) => {
@@ -477,9 +535,19 @@ revealEls.forEach(el => revealObserver.observe(el));
   const prevBtn = document.getElementById('speakerPrev');
   const nextBtn = document.getElementById('speakerNext');
 
+  // The session side of the same scrim
+  const sessionPanel = document.getElementById('sessionPanel');
+  const sessionCloseBtn = document.getElementById('sessionClose');
+  const sessionFormatEl = document.getElementById('sessionFormat');
+  const sessionTitleEl = document.getElementById('sessionTitle');
+  const sessionSynopsisEl = document.getElementById('sessionSynopsis');
+  const sessionLineupEl = document.getElementById('sessionLineup');
+
   if (!overlay || !closeBtn) return;
 
-  // Where the open speaker sits in the loaded list, or -1 when closed
+  // Which panel the scrim is showing, and where that item sits in its list.
+  // The arrows walk whichever list is on screen.
+  let mode = 'speaker';
   let currentIndex = -1;
 
   // Steps of the open and close sequences that are still pending. Reopening
@@ -581,26 +649,7 @@ revealEls.forEach(el => revealObserver.observe(el));
       roleEl.style.display = role ? '' : 'none';
     }
 
-    // The sheet separates multiple sessions with semicolons
-    if (sessionsEl) {
-      const sessions = (speaker.sessions || '')
-        .split(';')
-        .map(s => s.trim())
-        .filter(Boolean);
-
-      if (sessions.length) {
-        const label = speaker.year ? 'SLICE ' + speaker.year : 'Sessions';
-        sessionsEl.innerHTML = '';
-        const heading = document.createElement('strong');
-        heading.textContent = label;
-        sessionsEl.appendChild(heading);
-        sessionsEl.appendChild(document.createTextNode(sessions.join(' | ')));
-        sessionsEl.style.display = '';
-      } else {
-        sessionsEl.textContent = '';
-        sessionsEl.style.display = 'none';
-      }
-    }
+    if (sessionsEl) fillSpeakerSessions(speaker);
 
     setHeadshot(avatarEl, speaker.headshotUrl);
 
@@ -617,9 +666,108 @@ revealEls.forEach(el => revealObserver.observe(el));
     if (panel) panel.scrollTop = 0;
   }
 
-  // The list the arrows step through, in sheet order
+  // The sessions the speaker is on, each one a way into that session's panel.
+  // Pages without a sessions sheet fall back to the plain text the speakers
+  // sheet carries in its own Sessions column.
+  function fillSpeakerSessions(speaker) {
+    const theirs = sessionsForSpeaker(speaker);
+    const label = speaker.year ? 'SLICE ' + speaker.year : 'Sessions';
+
+    sessionsEl.innerHTML = '';
+
+    if (theirs.length) {
+      const heading = document.createElement('strong');
+      heading.textContent = label;
+      sessionsEl.appendChild(heading);
+
+      theirs.forEach(session => {
+        const link = document.createElement('button');
+        link.type = 'button';
+        link.className = 'speaker-overlay__session-link';
+        link.textContent = session.title;
+        link.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openSessionOverlay(session);
+        });
+        sessionsEl.appendChild(link);
+      });
+
+      sessionsEl.style.display = '';
+      return;
+    }
+
+    // The sheet separates multiple sessions with semicolons
+    const listed = (speaker.sessions || '')
+      .split(';')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    if (listed.length) {
+      const heading = document.createElement('strong');
+      heading.textContent = label;
+      sessionsEl.appendChild(heading);
+      sessionsEl.appendChild(document.createTextNode(listed.join(' | ')));
+      sessionsEl.style.display = '';
+    } else {
+      sessionsEl.style.display = 'none';
+    }
+  }
+
+  // Fill the session side of the scrim: what it is, then who is on it
+  function fillSessionPanel(session) {
+    if (!sessionPanel) return;
+
+    if (sessionFormatEl) {
+      sessionFormatEl.textContent = session.format || '';
+      sessionFormatEl.style.display = session.format ? '' : 'none';
+    }
+
+    sessionTitleEl.textContent = session.title;
+    sessionSynopsisEl.textContent = session.synopsis || '';
+
+    sessionLineupEl.innerHTML = '';
+    session.speakers.forEach(speaker => {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'session-speaker';
+
+      const avatar = document.createElement('span');
+      avatar.className = 'session-speaker__avatar';
+      setHeadshot(avatar, speaker.headshotUrl);
+      card.appendChild(avatar);
+
+      const name = document.createElement('span');
+      name.className = 'session-speaker__name';
+      name.textContent = speaker.name;
+      card.appendChild(name);
+
+      const role = document.createElement('span');
+      role.className = 'session-speaker__role';
+      role.textContent = speaker.shortDescriptor || speaker.title || speaker.company || '';
+      card.appendChild(role);
+
+      card.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openSpeakerOverlay(speaker);
+      });
+
+      sessionLineupEl.appendChild(card);
+    });
+
+    sessionPanel.scrollTop = 0;
+  }
+
+  // The lists the arrows step through, in sheet order
   function speakerList() {
     return Array.isArray(speakers) ? speakers : [];
+  }
+
+  function sessionList() {
+    return Array.isArray(sessions) ? sessions : [];
+  }
+
+  function activeList() {
+    return mode === 'session' ? sessionList() : speakerList();
   }
 
   function indexOfSpeaker(speaker) {
@@ -630,27 +778,33 @@ revealEls.forEach(el => revealObserver.observe(el));
   }
 
   function updateNav() {
-    const show = speakerList().length > 1 && currentIndex !== -1;
+    const show = activeList().length > 1 && currentIndex !== -1;
     if (prevBtn) prevBtn.hidden = !show;
     if (nextBtn) nextBtn.hidden = !show;
   }
 
-  // Step to another speaker, wrapping around at either end
-  function stepSpeaker(delta) {
-    const list = speakerList();
+  // Step to another item in whichever list is showing, wrapping at either end
+  function stepItem(delta) {
+    const list = activeList();
     if (!list.length || currentIndex === -1) return;
 
     currentIndex = (currentIndex + delta + list.length) % list.length;
-    fillPanel(list[currentIndex]);
+
+    if (mode === 'session') {
+      fillSessionPanel(list[currentIndex]);
+    } else {
+      fillPanel(list[currentIndex]);
+    }
   }
 
-  function openSpeakerOverlay(speaker) {
-    clearAnimTimers();
-    fillPanel(speaker);
-    currentIndex = indexOfSpeaker(speaker);
-    updateNav();
+  function showPanelFor(nextMode) {
+    mode = nextMode;
+    if (panel) panel.hidden = nextMode !== 'speaker';
+    if (sessionPanel) sessionPanel.hidden = nextMode !== 'session';
+  }
 
-    // The arrows were display:none while closed, so let their hidden state be
+  function raiseScrim() {
+    // The arrows and the inactive panel were display:none, so let that state be
     // computed before the fade starts. Otherwise they snap straight to full
     // opacity while the panel fades in behind them.
     void overlay.offsetWidth;
@@ -658,7 +812,28 @@ revealEls.forEach(el => revealObserver.observe(el));
     overlay.classList.add('active');
     overlay.classList.add('is-shown');
   }
+
+  function openSpeakerOverlay(speaker) {
+    clearAnimTimers();
+    showPanelFor('speaker');
+    fillPanel(speaker);
+    currentIndex = indexOfSpeaker(speaker);
+    updateNav();
+    raiseScrim();
+  }
   window.openSpeakerOverlay = openSpeakerOverlay;
+
+  function openSessionOverlay(session) {
+    if (!sessionPanel) return;
+
+    clearAnimTimers();
+    showPanelFor('session');
+    fillSessionPanel(session);
+    currentIndex = sessionList().indexOf(session);
+    updateNav();
+    raiseScrim();
+  }
+  window.openSessionOverlay = openSessionOverlay;
 
   // Open overlay from a hardcoded HTML card (data attributes, used by index.html)
   function openOverlayFromCard(card) {
@@ -694,18 +869,19 @@ revealEls.forEach(el => revealObserver.observe(el));
   });
 
   closeBtn.addEventListener('click', closeOverlay);
+  if (sessionCloseBtn) sessionCloseBtn.addEventListener('click', closeOverlay);
 
   if (prevBtn) {
     prevBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      stepSpeaker(-1);
+      stepItem(-1);
     });
   }
 
   if (nextBtn) {
     nextBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      stepSpeaker(1);
+      stepItem(1);
     });
   }
 
@@ -724,10 +900,10 @@ revealEls.forEach(el => revealObserver.observe(el));
       closeOverlay();
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
-      stepSpeaker(-1);
+      stepItem(-1);
     } else if (e.key === 'ArrowRight') {
       e.preventDefault();
-      stepSpeaker(1);
+      stepItem(1);
     }
   });
 })();

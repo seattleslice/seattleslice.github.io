@@ -182,6 +182,77 @@ body {
   overflow: hidden;
 }
 
+/* ===================== SESSIONS ===================== */
+/* Session titles run long, so these are full width rows rather than a grid */
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 36px;
+}
+
+.session-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 16px 20px;
+  background: #002a63;
+  border: 2px solid #f5ee1d;
+  border-radius: 12px;
+  text-align: left;
+  font-family: 'Lato', sans-serif;
+  cursor: pointer;
+  transition: box-shadow 0.3s, transform 0.3s;
+}
+
+.session-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(187, 62, 253, 0.4);
+}
+
+.session-row__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.session-row__title {
+  display: block;
+  font-family: 'Bungee', cursive;
+  font-size: 16px;
+  line-height: 1.3;
+  color: #f5ee1d;
+}
+
+.session-row__meta {
+  display: block;
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #a0c4e8;
+}
+
+.session-row__chevron {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: #BB3EFD;
+}
+
+@media (max-width: 520px) {
+  .session-row {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .session-row__title {
+    font-size: 14px;
+  }
+
+  .session-row__meta {
+    font-size: 13px;
+  }
+}
+
 /* ===================== SPEAKER OVERLAY ===================== */
 .speaker-overlay {
   position: fixed;
@@ -415,6 +486,29 @@ body {
   color: #a0c4e8;
 }
 
+/* Each session the speaker is on, as a way into that session's panel */
+.speaker-overlay__session-link {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 0;
+  background: none;
+  border: none;
+  font-family: 'Lato', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #c0d8f0;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.speaker-overlay__session-link:hover {
+  color: #f5ee1d;
+}
+
 .speaker-overlay__sessions strong {
   font-family: 'Bungee', cursive;
   font-weight: normal;
@@ -424,6 +518,75 @@ body {
   color: #BB3EFD;
   display: block;
   margin-bottom: 4px;
+}
+
+/* ===================== SESSION PANEL ===================== */
+.session-panel__format {
+  font-family: 'Bungee', cursive;
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #BB3EFD;
+  margin-bottom: 10px;
+}
+
+.session-panel__rule {
+  height: 1px;
+  margin: 24px 0 20px;
+  background: linear-gradient(90deg, transparent, #BB3EFD, #f5ee1d, #BB3EFD, transparent);
+}
+
+/* The line-up sits in one row, wrapping only when the panel is too narrow */
+.session-panel__lineup {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+}
+
+.session-speaker {
+  flex: 0 1 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Lato', sans-serif;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.session-speaker:hover {
+  transform: translateY(-3px);
+  background: rgba(187, 62, 253, 0.15);
+}
+
+.session-speaker__avatar {
+  display: block;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #BB3EFD, #f5ee1d);
+  background-size: cover;
+  background-position: center;
+  border: 2px solid #FFFB10;
+}
+
+.session-speaker__name {
+  font-family: 'Bungee', cursive;
+  font-size: 12px;
+  line-height: 1.25;
+  color: #f5ee1d;
+}
+
+.session-speaker__role {
+  font-size: 11px;
+  line-height: 1.35;
+  color: #a0c4e8;
 }
 
 /* ===================== SCROLL REVEAL ===================== */

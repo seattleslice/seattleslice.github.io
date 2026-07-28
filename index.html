@@ -1096,6 +1096,14 @@
 
     <div class="divider"></div>
 
+    <!-- Sessions -->
+    <section class="section reveal" id="sessions">
+      <h2 class="section__title">Sessions</h2>
+      <div class="sessions-list" id="sessionsList"></div>
+    </section>
+
+    <div class="divider"></div>
+
     <!-- Tickets -->
     <section class="section reveal" id="tickets">
       <h2 class="section__title">Get Your Pass</h2>
@@ -1153,6 +1161,14 @@
       <div class="speaker-overlay__socials" id="speakerSocials"></div>
       <p class="speaker-overlay__bio" id="speakerBio"></p>
       <p class="speaker-overlay__sessions" id="speakerSessions"></p>
+    </div>
+    <div class="speaker-overlay__panel speaker-overlay__panel--session" id="sessionPanel" hidden>
+      <button class="speaker-overlay__close" id="sessionClose" aria-label="Close">&times;</button>
+      <p class="session-panel__format" id="sessionFormat"></p>
+      <h2 class="speaker-overlay__name" id="sessionTitle"></h2>
+      <p class="speaker-overlay__bio" id="sessionSynopsis"></p>
+      <div class="session-panel__rule"></div>
+      <div class="session-panel__lineup" id="sessionLineup"></div>
     </div>
   </div>
 
@@ -1314,6 +1330,9 @@
         });
 
         toggle.hidden = speakers.length <= COLLAPSED_COUNT;
+
+        // Sessions are filtered against this list, so they wait for it
+        buildSessions(speakers);
       });
 
       if (loading && typeof loading.catch === 'function') {
@@ -1323,6 +1342,74 @@
         });
       }
     })();
+
+    // ===================== SESSIONS =====================
+    // A session is only listed when the sheet gives it a synopsis and every
+    // seat names a speaker we imported, so the panel is never half empty.
+    function buildSessions(speakers) {
+      const section = document.getElementById('sessions');
+      const list = document.getElementById('sessionsList');
+      if (!section || !list) return;
+
+      function hideSection() {
+        section.style.display = 'none';
+        const divider = section.nextElementSibling;
+        if (divider && divider.classList.contains('divider')) {
+          divider.style.display = 'none';
+        }
+      }
+
+      function buildRow(session) {
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'session-row';
+
+        const main = document.createElement('span');
+        main.className = 'session-row__main';
+
+        const title = document.createElement('span');
+        title.className = 'session-row__title';
+        title.textContent = session.title;
+        main.appendChild(title);
+
+        const names = session.speakers.map(function(speaker) { return speaker.name; });
+        const meta = document.createElement('span');
+        meta.className = 'session-row__meta';
+        meta.textContent = [session.format, names.join(', ')].filter(Boolean).join(' | ');
+        main.appendChild(meta);
+
+        row.appendChild(main);
+
+        const chevron = document.createElement('span');
+        chevron.className = 'session-row__chevron';
+        chevron.innerHTML = '&#9654;';
+        row.appendChild(chevron);
+
+        row.addEventListener('click', function() {
+          openSessionOverlay(session);
+        });
+
+        return row;
+      }
+
+      const loading = loadSessions('Sessions2026', speakers, function(sessions) {
+        if (!sessions.length) {
+          hideSection();
+          return;
+        }
+
+        sessions.forEach(function(session) {
+          list.appendChild(buildRow(session));
+        });
+      });
+
+      if (loading && typeof loading.catch === 'function') {
+        loading.catch(function(err) {
+          console.error('Could not load the session sheet', err);
+          hideSection();
+        });
+      }
+    }
 
     // ===================== DRAG SCROLLER =====================
     // Shared pointer-drag physics for the auto-scrolling marquees below.

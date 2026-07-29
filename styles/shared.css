@@ -175,13 +175,6 @@ body {
   font-size: 13px;
   line-height: 1.4;
   color: #a0c4e8;
-  /* Descriptors from the sheet vary a lot in length - cap them at two lines so
-     every card keeps the same squarish shape. */
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 /* ===================== SESSIONS ===================== */

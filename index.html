@@ -103,6 +103,7 @@
       z-index: 0;
     }
 
+    .hero__video-bg::before,
     .hero__video-bg video {
       position: absolute;
       top: 50%;
@@ -114,6 +115,25 @@
       object-fit: cover;
       transform: translate(-50%, -50%);
       pointer-events: none;
+    }
+
+    /* The poster frame sits underneath both video layers, so the hero is
+       never blank while the first video decodes and never flashes empty
+       during the swap from the preview encode to the full quality one. */
+    .hero__video-bg::before {
+      content: "";
+      background: url("videos/promo-poster.jpg") center / cover no-repeat;
+      z-index: 0;
+    }
+
+    .hero__video-bg video {
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 500ms ease;
+    }
+
+    .hero__video-bg video.is-visible {
+      opacity: 1;
     }
 
     .hero__overlay {
@@ -943,18 +963,26 @@
   <section class="hero" id="hero">
     <div class="hero__video-bg">
 
+      <!-- Two video layers, no src until the script decides which files to
+           fetch. See the hero video script near the bottom of this file. -->
       <video
         id="hero-video"
         autoplay
         muted
         loop
         playsinline
-        preload="auto"
-        poster="videos/promo-poster.jpg"
+        preload="none"
         aria-hidden="true"
-      >
-        <source src="videos/promo.mp4" type="video/mp4">
-      </video>
+      ></video>
+
+      <video
+        id="hero-video-hq"
+        muted
+        loop
+        playsinline
+        preload="none"
+        aria-hidden="true"
+      ></video>
     </div>
     <div class="hero__overlay"></div>
 
@@ -1897,6 +1925,105 @@
       }
       tick();
       timer = setInterval(tick, 1000);
+    })();
+  </script>
+
+  <script>
+    /* Hero video.
+
+       promo.mp4 is the real thing and stays the version people watch: 59
+       seconds, 1920x1080 at 60fps, ~13.7 Mbps, 101 MB. The trailer is full
+       of text, and text is the first thing to fall apart when you cut
+       bitrate, so it is deliberately not re-encoded.
+
+       The catch is that 13.7 Mbps needs about 1.7 MB/s sustained just to
+       keep up with playback, so the browser will not begin an autoplay
+       video until it has buffered enough to believe it can reach the end.
+       That is what left the hero sitting on a still frame.
+
+       So there are two layers. promo-preview.mp4 (960x540, ~630 kbps,
+       4.7 MB) is a stand-in that starts almost instantly, and promo.mp4 is
+       fetched quietly behind it and crossfaded in at the same timestamp
+       once the browser says it can play through without stalling. Both
+       encodes come from the same source, so the timestamps line up 1:1 and
+       the swap reads as the picture sharpening rather than as a cut.
+
+       If the connection is too slow for the full file to ever be ready, the
+       preview simply keeps looping. Nothing stalls, it just stays soft.
+
+       Both files carry their metadata at the front, so the browser can
+       start decoding off the head of the file rather than waiting on the
+       whole download.
+
+       Under 768px the responsive rules hide the video entirely, so nothing
+       is downloaded there at all. */
+    (function () {
+      const preview = document.getElementById('hero-video');
+      const hq = document.getElementById('hero-video-hq');
+      if (!preview || !hq) return;
+
+      const small = window.matchMedia('(max-width: 768px)');
+      let started = false;
+      let upgrading = false;
+
+      // Browsers reject play() when autoplay is blocked. The poster frame
+      // behind the video layers is a fine fallback, so swallow it.
+      function play(video) {
+        const attempt = video.play();
+        if (attempt && typeof attempt.catch === 'function') {
+          attempt.catch(function () {});
+        }
+      }
+
+      function upgrade() {
+        if (upgrading) return;
+        upgrading = true;
+
+        hq.addEventListener('canplaythrough', function () {
+          // Line the two files up so the crossfade does not jump. Both
+          // encodes come from the same source, so timestamps match 1:1.
+          const length = hq.duration || preview.duration || 0;
+          if (length) hq.currentTime = preview.currentTime % length;
+          play(hq);
+          hq.classList.add('is-visible');
+
+          // Keep the preview underneath until the crossfade finishes, then
+          // release it so we are not decoding two streams for the rest of
+          // the visit.
+          window.setTimeout(function () {
+            preview.classList.remove('is-visible');
+            preview.pause();
+            preview.removeAttribute('src');
+            preview.load();
+          }, 600);
+        }, { once: true });
+
+        hq.preload = 'auto';
+        hq.src = 'videos/promo.mp4';
+        hq.load();
+      }
+
+      function start() {
+        if (started || small.matches) return;
+        started = true;
+
+        preview.addEventListener('playing', function () {
+          preview.classList.add('is-visible');
+          // Hold off on the big file until the preview is actually on
+          // screen, so the two downloads are not fighting for bandwidth.
+          window.setTimeout(upgrade, 1500);
+        }, { once: true });
+
+        preview.preload = 'auto';
+        preview.src = 'videos/promo-preview.mp4';
+        preview.load();
+        play(preview);
+      }
+
+      start();
+      // A tablet rotated into landscape can cross the breakpoint after load,
+      // so pick the video up if the hero background becomes visible later.
+      small.addEventListener('change', start);
     })();
   </script>
 

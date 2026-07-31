@@ -91,16 +91,32 @@
     }
 
     #name {
-      font-size: 48px;
+      font-size: var(--name-size, 48px);
       font-weight: bold;
       color: #66c0f4;
     }
 
     #question {
-      font-size: 56px;
+      font-size: var(--question-size, 56px);
       line-height: 1.4;
       color: #ffffff;
     }
+
+    /* fitQuestion adds this when a question is too tall for the default layout.
+       It buys back horizontal room by widening the box and pulling the QR code
+       in closer, which is cheaper than shrinking the text. */
+    #container.fit-wide {
+      width: 94vw;
+      max-width: 1700px;
+    }
+
+      #container.fit-wide #qr {
+        padding-right: 32px;
+      }
+
+      #container.fit-wide #question {
+        line-height: 1.25;
+      }
 
     /* Hidden unless SHOW_SPEAKERS is true, which puts show-speakers on the html element. */
     footer {
@@ -168,6 +184,24 @@
     let history = [];
     let rows = [];
 
+    // Blank or cleared spreadsheet rows come back with an empty or missing question,
+    // so anything shorter than this is treated as junk and skipped on import.
+    const MIN_QUESTION_LENGTH = 5;
+
+    // Text sizes fitQuestion is allowed to pick from, in px. It always starts at the
+    // largest and only steps down as far as it has to.
+    const QUESTION_MAX_SIZE = 56;
+    const QUESTION_MIN_SIZE = 22;
+    const QUESTION_SIZE_STEP = 2;
+
+    // Empty space to leave above and below the question so it never looks crammed
+    // against the header or the bottom of the screen.
+    const BREATHING_ROOM = 72;
+
+    function hasRealQuestion(entry) {
+      return entry.question.length >= MIN_QUESTION_LENGTH;
+    }
+
     async function fetchQuestions() {
       async function callGsheetProcessor() {
         return new Promise((resolve, reject) => {
@@ -181,16 +215,13 @@
             },
             (results) => {
               try {
-                const rows = [];
-                let i = 0;
-                results.forEach((result) => {
-                  rows[i] = {
+                const rows = results
+                  .map((result) => ({
                     time: result["Timestamp"],
-                    name: result["Your Name"],
-                    question: result["Your Question"],
-                  };
-                  i++;
-                });
+                    name: (result["Your Name"] || "").trim(),
+                    question: (result["Your Question"] || "").trim(),
+                  }))
+                  .filter(hasRealQuestion);
                 resolve(rows);
               } catch (err) {
                 reject(err);
@@ -211,6 +242,50 @@
       }
     }
 
+    // How much vertical room the question box has to work with, once the header
+    // and the speaker footer (when shown) have taken their share.
+    function availableHeight() {
+      const header = document.querySelector('header');
+      const footer = document.querySelector('footer');
+
+      return window.innerHeight - header.offsetHeight - footer.offsetHeight - BREATHING_ROOM;
+    }
+
+    function applyQuestionSize(size) {
+      const container = document.getElementById('container');
+
+      container.style.setProperty('--question-size', size + 'px');
+      // Keep the asker's name in proportion with the question, but never so small
+      // that it stops reading as a heading.
+      container.style.setProperty('--name-size', Math.max(28, Math.round(size * 0.85)) + 'px');
+    }
+
+    // Sizes the current question so it always fits on screen. Long questions get a
+    // wider box first, and only then smaller text, so we give up as little size as
+    // possible. Safe to call any time, including on resize.
+    function fitQuestion() {
+      const container = document.getElementById('container');
+      const limit = availableHeight();
+      const fits = () => container.getBoundingClientRect().height <= limit;
+
+      // Start from the roomiest layout every time, otherwise a long question would
+      // permanently shrink the ones after it.
+      container.classList.remove('fit-wide');
+      applyQuestionSize(QUESTION_MAX_SIZE);
+
+      if (fits()) {
+        return;
+      }
+
+      container.classList.add('fit-wide');
+
+      let size = QUESTION_MAX_SIZE;
+      while (size > QUESTION_MIN_SIZE && !fits()) {
+        size -= QUESTION_SIZE_STEP;
+        applyQuestionSize(size);
+      }
+    }
+
     function updateDisplay(entry) {
       const container = document.getElementById('container');
       container.style.opacity = 0;
@@ -219,6 +294,7 @@
         document.getElementById('name').textContent = entry.name;
         document.getElementById('question').textContent = entry.question;
 
+        fitQuestion();
         container.style.opacity = 1;
       }, 500);
     }
@@ -356,6 +432,13 @@
           callback(filteredResults);
         });
     };
+
+    window.addEventListener('resize', fitQuestion);
+
+    // The custom font changes how tall the text measures, so re-fit once it lands.
+    if (document.fonts) {
+      document.fonts.ready.then(fitQuestion);
+    }
 
     // Initial load
     nextQuestion();</script>

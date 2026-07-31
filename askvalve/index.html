@@ -4,6 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Steam Q&A Display</title>
+  <script>
+    // Set to true to show the speaker photos and names along the bottom of the page,
+    // false to hide them. Runs before the body is parsed so there is no flash.
+    const SHOW_SPEAKERS = false;
+
+    if (SHOW_SPEAKERS) {
+      document.documentElement.classList.add('show-speakers');
+    }
+  </script>
   <style>
     @font-face {
       font-family: 'MotivaSans';
@@ -93,10 +102,15 @@
       color: #ffffff;
     }
 
+    /* Hidden unless SHOW_SPEAKERS is true, which puts show-speakers on the html element. */
     footer {
-      display: flex;
+      display: none;
       justify-content: space-between;
       padding: 24px 48px;
+    }
+
+    .show-speakers footer {
+      display: flex;
     }
 
     .speaker {
@@ -139,11 +153,11 @@
 
   <footer>
     <div class="speaker">
-      <img src="https://media.licdn.com/dms/image/v2/C5103AQHudTapo3SLNA/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1516260326094?e=1756944000&v=beta&t=FvTUr0RO42Un-n7J6Y1esockUBEx-LpzBv0rtuCU5G4" alt="Alden Kroll">
+      <img loading="lazy" src="https://media.licdn.com/dms/image/v2/C5103AQHudTapo3SLNA/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1516260326094?e=1756944000&v=beta&t=FvTUr0RO42Un-n7J6Y1esockUBEx-LpzBv0rtuCU5G4" alt="Alden Kroll">
       <span>Alden Kroll</span>
     </div>
     <div class="speaker">
-      <img src="https://media.licdn.com/dms/image/v2/C4D03AQF_wROejjkr3A/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1654098320101?e=1756944000&v=beta&t=M-s_Y93pQLkrnAgbI-PpkrdPaEEYaFvYeRyo1YOeshg" alt="Erik Peterson">
+      <img loading="lazy" src="https://media.licdn.com/dms/image/v2/C4D03AQF_wROejjkr3A/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1654098320101?e=1756944000&v=beta&t=M-s_Y93pQLkrnAgbI-PpkrdPaEEYaFvYeRyo1YOeshg" alt="Erik Peterson">
       <span>Erik Peterson</span>
     </div>
   </footer>

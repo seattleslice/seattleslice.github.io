@@ -1965,6 +1965,7 @@
       const small = window.matchMedia('(max-width: 768px)');
       let started = false;
       let upgrading = false;
+      let revealed = false;
 
       // Browsers reject play() when autoplay is blocked. The poster frame
       // behind the video layers is a fine fallback, so swallow it.
@@ -1975,27 +1976,93 @@
         }
       }
 
+      // Fade the full quality layer up and, once it is safely covering the
+      // preview, release the preview so we are not decoding two streams for
+      // the rest of the visit. The delay here is longer than the 500ms CSS
+      // transition on purpose: the preview must not start fading until the
+      // layer above it is fully opaque, or the poster shows through the gap.
+      function retirePreview() {
+        preview.classList.remove('is-visible');
+        preview.pause();
+        preview.removeAttribute('src');
+        preview.load();
+      }
+
+      function reveal() {
+        if (revealed) return;
+        revealed = true;
+        hq.classList.add('is-visible');
+        window.setTimeout(retirePreview, 600);
+      }
+
+      // Only ever fade in on a frame that is genuinely on screen. Seeking is
+      // asynchronous, and until it finishes the element still shows the frame
+      // it decoded when the source was attached, which is the opening still.
+      // Fading in on that is what made the first frame flash on a slow
+      // connection. requestVideoFrameCallback fires when a frame has actually
+      // been handed to the compositor, which is the one dependable signal
+      // that there is real picture there. It never fires in a background tab,
+      // so keep a timeout behind it.
+      function revealOnFrame() {
+        if (typeof hq.requestVideoFrameCallback === 'function') {
+          hq.requestVideoFrameCallback(reveal);
+          window.setTimeout(reveal, 1000);
+        } else {
+          window.setTimeout(reveal, 150);
+        }
+      }
+
+      // Line the two layers up so they are showing the same frame when they
+      // blend. Both encodes come from the same source, so timestamps match
+      // 1:1.
+      //
+      // The obvious approach, seeking the full quality file to wherever the
+      // preview has got to, does not survive a slow connection. canplaythrough
+      // only means the browser reckons it can reach the end at the current
+      // rate: measured against a throttled server it fires with a fraction of
+      // a second buffered, and the seek that follows then takes over a second
+      // to fetch. The preview plays on throughout, so it has moved just as far
+      // again by the time the seek lands, and chasing it a second time only
+      // repeats the problem - overshooting instead of undershooting.
+      //
+      // So seek the big file once, then bring the preview back to wherever it
+      // actually landed. The preview is small and already buffered, so that
+      // second seek costs nothing and the two are genuinely in step when they
+      // cross over. The picture steps back by roughly the length of the seek,
+      // which reads as far less of an artefact than the same shot ghosting
+      // against itself a beat out of sync.
+      function sync() {
+        const length = hq.duration || preview.duration || 0;
+        if (!length) {
+          play(hq);
+          revealOnFrame();
+          return;
+        }
+
+        hq.addEventListener('seeked', function () {
+          play(hq);
+          const landed = hq.currentTime;
+          if (Math.abs(preview.currentTime - landed) < 0.1) {
+            revealOnFrame();
+            return;
+          }
+          preview.addEventListener('seeked', revealOnFrame, { once: true });
+          // If the preview cannot seek promptly after all, go without it
+          // rather than sit on it - the full quality layer is the one that
+          // has to be right.
+          window.setTimeout(revealOnFrame, 400);
+          preview.currentTime = landed;
+        }, { once: true });
+
+        hq.currentTime = preview.currentTime % length;
+      }
+
       function upgrade() {
         if (upgrading) return;
         upgrading = true;
 
         hq.addEventListener('canplaythrough', function () {
-          // Line the two files up so the crossfade does not jump. Both
-          // encodes come from the same source, so timestamps match 1:1.
-          const length = hq.duration || preview.duration || 0;
-          if (length) hq.currentTime = preview.currentTime % length;
-          play(hq);
-          hq.classList.add('is-visible');
-
-          // Keep the preview underneath until the crossfade finishes, then
-          // release it so we are not decoding two streams for the rest of
-          // the visit.
-          window.setTimeout(function () {
-            preview.classList.remove('is-visible');
-            preview.pause();
-            preview.removeAttribute('src');
-            preview.load();
-          }, 600);
+          sync();
         }, { once: true });
 
         hq.preload = 'auto';

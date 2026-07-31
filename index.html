@@ -87,7 +87,7 @@
   <!-- Bump ?v= whenever shared.css or shared.js changes. GitHub Pages serves
        both with max-age=600, and a phone holding a stale shared.js next to a
        fresh page is how the speaker and session lists silently come up empty. -->
-  <link rel="stylesheet" href="styles/shared.css?v=2026-07-28">
+  <link rel="stylesheet" href="styles/shared.css?v=2026-07-31">
   <style>
     /* ===================== HERO SECTION ===================== */
     .hero {
@@ -1238,7 +1238,7 @@
     </div>
   </div>
 
-  <script src="js/shared.js?v=2026-07-28"></script>
+  <script src="js/shared.js?v=2026-07-31"></script>
   <script>
     // Show scroll indicator after 5 seconds
     setTimeout(() => {
@@ -1397,8 +1397,9 @@
     })();
 
     // ===================== SESSIONS =====================
-    // A session is only listed when the sheet gives it a synopsis and every
-    // seat names a speaker we imported, so the panel is never half empty.
+    // A session is listed when the sheet gives it a synopsis and at least one
+    // seat names a speaker we imported. There are a lot of them, so a row shows
+    // only the title - the format and the lineup wait for the panel.
     function buildSessions(speakers) {
       const section = document.getElementById('sessions');
       const list = document.getElementById('sessionsList');
@@ -1423,21 +1424,10 @@
         row.type = 'button';
         row.className = 'session-row';
 
-        const main = document.createElement('span');
-        main.className = 'session-row__main';
-
         const title = document.createElement('span');
         title.className = 'session-row__title';
         title.textContent = session.title;
-        main.appendChild(title);
-
-        const names = session.speakers.map(function(speaker) { return speaker.name; });
-        const meta = document.createElement('span');
-        meta.className = 'session-row__meta';
-        meta.textContent = [session.format, names.join(', ')].filter(Boolean).join(' | ');
-        main.appendChild(meta);
-
-        row.appendChild(main);
+        row.appendChild(title);
 
         const chevron = document.createElement('span');
         chevron.className = 'session-row__chevron';

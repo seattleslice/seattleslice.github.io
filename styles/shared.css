@@ -178,11 +178,12 @@ body {
 }
 
 /* ===================== SESSIONS ===================== */
-/* Session titles run long, so these are full width rows rather than a grid */
+/* Session titles run long, so these are full width rows rather than a grid.
+   There are a lot of sessions, so a row carries the title alone and stays thin */
 .sessions-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   margin-top: 36px;
 }
 
@@ -191,7 +192,7 @@ body {
   align-items: center;
   gap: 16px;
   width: 100%;
-  padding: 16px 20px;
+  padding: 11px 20px;
   background: #002a63;
   border: 2px solid #f5ee1d;
   border-radius: 12px;
@@ -206,25 +207,15 @@ body {
   box-shadow: 0 6px 20px rgba(187, 62, 253, 0.4);
 }
 
-.session-row__main {
+/* Lato rather than Bungee - at this size a whole list of titles is an easier
+   read in the body face, so only the yellow carries the heading weight */
+.session-row__title {
   flex: 1;
   min-width: 0;
-}
-
-.session-row__title {
-  display: block;
-  font-family: 'Bungee', cursive;
   font-size: 16px;
+  font-weight: 700;
   line-height: 1.3;
   color: #f5ee1d;
-}
-
-.session-row__meta {
-  display: block;
-  margin-top: 6px;
-  font-size: 14px;
-  line-height: 1.4;
-  color: #a0c4e8;
 }
 
 .session-row__chevron {
@@ -235,16 +226,12 @@ body {
 
 @media (max-width: 520px) {
   .session-row {
-    padding: 14px 16px;
+    padding: 10px 16px;
     gap: 12px;
   }
 
   .session-row__title {
     font-size: 14px;
-  }
-
-  .session-row__meta {
-    font-size: 13px;
   }
 }
 

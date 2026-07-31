@@ -181,10 +181,10 @@ var sessions = [];
 
 const SESSION_SEATS = ['Moderator/Speaker', 'Seat 1', 'Seat 2', 'Seat 3'];
 
-// Reads the sessions tab and keeps a session only when the sheet has a synopsis
-// for it and every seat that is filled in names a speaker we imported. A seat
-// naming somebody we know nothing about would leave a hole in the panel, so the
-// whole session sits out instead.
+// Reads the sessions tab and keeps a session when the sheet has a synopsis for
+// it and at least one seat names a speaker we imported. A seat naming somebody
+// we know nothing about is dropped from the lineup rather than taking the whole
+// session down with it.
 function loadSessions(sheetName, speakerList, callback) {
   const bySpeakerName = new Map();
   (speakerList || []).forEach(speaker => bySpeakerName.set(speaker.name.trim(), speaker));
@@ -206,12 +206,11 @@ function loadSessions(sheetName, speakerList, callback) {
         const synopsis = (result["Synopsis"] || '').trim();
         if (!title || !synopsis) return;
 
-        const listed = SESSION_SEATS
-          .map(seat => (result[seat] || '').trim())
+        const lineup = SESSION_SEATS
+          .map(seat => bySpeakerName.get((result[seat] || '').trim()))
           .filter(Boolean);
 
-        const lineup = listed.map(name => bySpeakerName.get(name));
-        if (lineup.some(speaker => !speaker)) return;
+        if (!lineup.length) return;
 
         loaded.push({
           title: title,

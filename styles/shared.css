@@ -179,7 +179,8 @@ body {
 
 /* ===================== SESSIONS ===================== */
 /* Session titles run long, so these are full width rows rather than a grid.
-   There are a lot of sessions, so a row carries the title alone and stays thin */
+   There are a lot of sessions, so a row carries the title and the names on the
+   one line and stays thin */
 .sessions-list {
   display: flex;
   flex-direction: column;
@@ -207,15 +208,42 @@ body {
   box-shadow: 0 6px 20px rgba(187, 62, 253, 0.4);
 }
 
-/* Lato rather than Bungee - at this size a whole list of titles is an easier
-   read in the body face, so only the yellow carries the heading weight */
-.session-row__title {
+/* The title and the line-up are one run of text rather than two columns, so
+   the names carry on from wherever the title ends instead of taking a line of
+   their own. */
+.session-row__text {
   flex: 1;
   min-width: 0;
   font-size: 16px;
-  font-weight: 700;
   line-height: 1.3;
+}
+
+/* Wide enough for the longest title to fit on its own, so the row is held to
+   the one line it was before the names were on it - a line-up with nowhere
+   left to go trims rather than pushing the row taller. Below this the title
+   needs to wrap anyway, so the names simply carry on with it. */
+@media (min-width: 769px) {
+  .session-row__text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Lato rather than Bungee - at this size a whole list of titles is an easier
+   read in the body face, so only the yellow carries the heading weight */
+.session-row__title {
+  font-weight: 700;
   color: #f5ee1d;
+}
+
+/* Held off the title by about five spaces of Lato, counting the one space in
+   the markup that lets a narrow row break between the two. Body text grey and
+   weight, so the names read as the quieter half of the line. */
+.session-row__speakers {
+  margin-left: 1.05em;
+  font-weight: 400;
+  color: #c0c0c0;
 }
 
 .session-row__chevron {
@@ -230,7 +258,7 @@ body {
     gap: 12px;
   }
 
-  .session-row__title {
+  .session-row__text {
     font-size: 14px;
   }
 }

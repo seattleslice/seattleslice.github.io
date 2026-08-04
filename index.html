@@ -1626,10 +1626,13 @@
 
     // ===================== SPEAKERS =====================
     // Cards are built from the public Google Sheet (see loadSpeakers in
-    // shared.js) and kept in sheet order. Only the first row is shown until
+    // shared.js) and kept in sheet order. Only the first few are shown until
     // the visitor asks for the rest.
     (function() {
-      const COLLAPSED_COUNT = 4;
+      // The fewest cards the collapsed grid shows. It is rounded up to fill
+      // whole rows, so a narrower grid shows more rather than ending on a
+      // short one.
+      const COLLAPSED_MIN = 4;
 
       const section = document.getElementById('speakers');
       const wrap = document.getElementById('speakersReveal');
@@ -1665,6 +1668,41 @@
 
         return card;
       }
+
+      // How many cards the grid fits across. The breakpoints live in the
+      // stylesheet, so read the count back from there rather than repeating
+      // them here. A grid that is not laid out reports its unresolved value
+      // ("repeat(4, 1fr)"), which falls back to one column and so to the
+      // plain minimum.
+      function readColumns() {
+        const tracks = getComputedStyle(grid).gridTemplateColumns;
+        if (!tracks || tracks.indexOf('(') !== -1) return 1;
+        return tracks.split(' ').filter(Boolean).length || 1;
+      }
+
+      // What the last pass laid the cards out for
+      let columns = 0;
+
+      // Round the count up to a whole number of rows, so a collapsed grid
+      // never ends on a short row - three columns show six cards, not three
+      // and a lonely fourth.
+      function applyCollapsedCount() {
+        columns = readColumns();
+        const count = Math.ceil(COLLAPSED_MIN / columns) * columns;
+        const cards = grid.children;
+
+        for (let i = 0; i < cards.length; i++) {
+          cards[i].classList.toggle('speaker-card--extra', i >= count);
+        }
+
+        toggle.hidden = cards.length <= count;
+      }
+
+      // Resizing across a breakpoint changes how many cards fill those rows
+      window.addEventListener('resize', function() {
+        if (readColumns() === columns) return;
+        applyCollapsedCount();
+      });
 
       // Longer distances get a little more time, so opening the full list
       // does not feel like a snap.
@@ -1750,15 +1788,11 @@
           return;
         }
 
-        speakers.forEach(function(speaker, index) {
-          const card = buildCard(speaker);
-          if (index >= COLLAPSED_COUNT) {
-            card.classList.add('speaker-card--extra');
-          }
-          grid.appendChild(card);
+        speakers.forEach(function(speaker) {
+          grid.appendChild(buildCard(speaker));
         });
 
-        toggle.hidden = speakers.length <= COLLAPSED_COUNT;
+        applyCollapsedCount();
 
         // Sessions are filtered against this list, so they wait for it
         buildSessions(speakers);

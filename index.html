@@ -789,6 +789,165 @@
       .speakers-reveal.is-expanded .speaker-card--extra {
         animation: none;
       }
+      .venue-panel {
+        animation: none;
+      }
+    }
+
+    /* ===================== VENUE ===================== */
+    .venue__intro {
+      text-align: center;
+      margin-bottom: 0;
+    }
+
+    .venue__intro strong {
+      color: #f5ee1d;
+    }
+
+    .venue__intro a {
+      color: #BB3EFD;
+      text-decoration: none;
+    }
+
+    .venue__intro a:hover {
+      text-decoration: underline;
+    }
+
+    /* Both panels hang below the pair rather than under their own button, so
+       the buttons stay put whichever one is open. */
+    .venue-toggles {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    .venue-toggle {
+      flex: 1 1 260px;
+      max-width: 320px;
+      padding: 14px 20px;
+      text-align: center;
+    }
+
+    /* Filled while its panel is open, so the pair reads as a two-way switch */
+    .venue-toggle.is-open {
+      background: #f5ee1d;
+      color: #00367B;
+    }
+
+    .venue-panel {
+      margin-top: 28px;
+      padding: 26px 24px 24px;
+      background: #002a63;
+      border: 2px solid #f5ee1d;
+      border-radius: 16px;
+      animation: venuePanelIn 0.35s ease;
+    }
+
+    /* .venue-panel sets no display of its own, but be explicit - the panels
+       are toggled with the hidden attribute. */
+    .venue-panel[hidden] {
+      display: none;
+    }
+
+    @keyframes venuePanelIn {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .venue-panel__lede {
+      font-size: 17px;
+      line-height: 1.7;
+      color: #c0d8f0;
+      margin-bottom: 22px;
+    }
+
+    .venue-panel__note {
+      margin-top: 18px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #8ab4e0;
+      text-align: center;
+    }
+
+    .venue-panel a {
+      color: #f5ee1d;
+    }
+
+    /* The map carries street names, so below roughly 600px of width it scrolls
+       sideways rather than shrinking into an unreadable smudge. */
+    .venue-map__scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 12px;
+    }
+
+    .venue-map {
+      display: block;
+      width: 100%;
+      min-width: 600px;
+      height: auto;
+      border-radius: 12px;
+    }
+
+    .venue-map__legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px 20px;
+      margin-top: 16px;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #a0c4e8;
+    }
+
+    .venue-legend {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .venue-legend svg {
+      flex-shrink: 0;
+    }
+
+    /* One block per way of getting here */
+    .venue-modes {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .venue-mode {
+      padding: 16px 18px;
+      background: rgba(0, 20, 50, 0.45);
+      border-left: 3px solid #BB3EFD;
+      border-radius: 10px;
+    }
+
+    .venue-mode__name {
+      font-family: 'Bungee', cursive;
+      font-size: 15px;
+      line-height: 1.3;
+      color: #f5ee1d;
+      margin-bottom: 8px;
+    }
+
+    .venue-mode__text {
+      font-size: 15px;
+      line-height: 1.65;
+      color: #c0d8f0;
+    }
+
+    .venue-mode__text + .venue-mode__text {
+      margin-top: 8px;
     }
 
     /* ===================== DESKTOP MARQUEE ===================== */
@@ -953,6 +1112,25 @@
       }
       .event-card--stack-back-2 {
         transform: translateX(-70px) scale(0.87);
+      }
+      .venue-toggle {
+        font-size: 14px;
+        padding: 13px 16px;
+      }
+      .venue-panel {
+        padding: 22px 16px 20px;
+      }
+      .venue-mode {
+        padding: 14px 14px;
+      }
+    }
+
+    /* At this width the map is already scrolling sideways, so drop the street
+       names that are only there for orientation and keep the ones that place
+       the hall. */
+    @media (max-width: 620px) {
+      .venue-map__label--minor {
+        display: none;
       }
     }
   </style>
@@ -1149,6 +1327,210 @@
       <h2 class="section__title">Sessions</h2>
       <div class="sessions-list" id="sessionsList"></div>
       <p class="section-note sessions-note">With more announced soon!</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- Venue -->
+    <section class="section reveal" id="venue">
+      <h2 class="section__title">Venue</h2>
+      <p class="section__text venue__intro">
+        SLICE 2026 is at <strong>Marion Oliver McCaw Hall</strong> - <a href="https://www.google.com/maps/search/?api=1&amp;query=Marion+Oliver+McCaw+Hall%2C+321+Mercer+St%2C+Seattle%2C+WA+98109" target="_blank" rel="noopener">321 Mercer St, Seattle, WA 98109</a>
+      </p>
+
+      <div class="venue-toggles">
+        <button class="btn btn--outline venue-toggle" id="parkingToggle" type="button" aria-expanded="false" aria-controls="parkingPanel">Parking Info</button>
+        <button class="btn btn--outline venue-toggle" id="transitToggle" type="button" aria-expanded="false" aria-controls="transitPanel">Public Transit Info</button>
+      </div>
+
+      <!-- Parking -->
+      <div class="venue-panel" id="parkingPanel" role="region" aria-labelledby="parkingToggle" hidden>
+        <p class="venue-panel__lede">
+          Convenient parking is $20 at the skybridge-attached garage on the opposite side of Mercer Street.<br>
+          Free public parking is available within a 10 minute walk to the north.
+        </p>
+
+        <div class="venue-map__scroll">
+          <!-- Hand drawn schematic of Uptown and lower Queen Anne. Coordinates
+               are laid out on a nominal 75px block, avenues running north to
+               south and streets east to west, with Mercer along the bottom.
+               The free parking area is a single polygon: it doubles as the
+               dashed boundary and as the clip that decides which streets get
+               the yellow treatment, so the two can never drift apart. -->
+          <svg class="venue-map" viewBox="0 0 1120 836" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="parkingMapTitle parkingMapDesc">
+            <title id="parkingMapTitle">Free parking near McCaw Hall</title>
+            <desc id="parkingMapDesc">A map of Uptown and lower Queen Anne drawn from OpenStreetMap. McCaw Hall stands on the south side of Mercer Street; the $20 Mercer Street Garage is directly across Mercer and joined to the hall by a skybridge. The blocks from Roy Street north to Ward Street are free but limited to two hours. North of Ward Street, on Prospect Street, Highland Drive, Comstock Street, Lee Street and the avenues between them, street parking is free with no time limit - about a ten minute walk uphill from the hall.</desc>
+            <defs><filter id="venueStarGlow" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="9" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+            <rect width="1120" height="836" fill="#001a3d"/>
+            <!-- Free all day parking runs from Ward St north; the band below it is the two hour zone -->
+            <rect y="0" width="1120" height="328" fill="#f5ee1d" opacity="0.06"/>
+            <rect y="328" width="1120" height="263" fill="#BB3EFD" opacity="0.07"/>
+            <polygon points="-0,211 -0,241 77,242 78,212 -0,211" fill="#0f3a6e"/>
+            <polygon points="76,294 76,347 44,318 44,294 76,294" fill="#0f3a6e"/>
+            <polygon points="-0,241 -1,282 55,282 55,242 -0,241" fill="#0f3a6e"/>
+            <polygon points="773,102 820,102 828,116 827,150 796,151 796,149 794,149 794,151 774,151 774,155 767,155 767,150 746,150 746,140 724,140 724,102 728,102 728,98 773,98 773,102" fill="#0f3a6e"/>
+            <polygon points="252,563 252,588 281,588 281,563 252,563" fill="#0f3a6e"/>
+            <polygon points="738,363 738,394 704,394 704,363 738,363" fill="#0f3a6e"/>
+            <polygon points="190,519 233,519 234,546 218,530 195,523 190,519" fill="#0f3a6e"/>
+            <polygon points="324,192 316,196 314,203 324,205 327,194 327,192 324,192" fill="#0f3a6e"/>
+            <polygon points="447,187 500,186 506,179 507,169 504,176 497,182 447,187" fill="#0f3a6e"/>
+            <polygon points="585,689 586,608 727,609 726,692 773,693 810,700 813,702 812,813 815,813 814,1045 645,1241 498,1243 501,1025 401,1024 400,1133 331,1132 333,811 415,811 416,689 585,689" fill="#0a2851"/>
+            <!-- Street centrelines, straight from OpenStreetMap -->
+            <g fill="none" stroke="#1b4a86" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M434,-48L433,70M577,682L577,601M585,190L586,27M578,344L579,237M-2,206L-1,33M243,522L475,523L493,517M247,207L-2,206M660,513L660,435M658,32L658,25M662,344L663,190M243,432L159,432M248,124L-9,122M722,27L724,24M744,602L745,358M343,71L343,122M243,350L328,350M822,807L781,807L745,791M242,805L314,805M494,591L495,359M433,188L443,185L487,182L497,179L502,174M496,264L496,218M406,109L451,109M409,805L409,589M374,71L374,36M74,907L75,679M81,207L83,-31M159,478L76,477M242,805L-16,803M1165,109L1127,109M995,110L1082,109M248,124L280,125M985,353L923,403L913,403M157,907L159,573M165,207L166,46M721,55L741,95L743,98L747,100L770,100M247,207L293,208L306,207M1120,190L1160,190M991,190L913,190L886,193L836,192L829,190L448,190L436,189L433,188L405,189M162,41L-9,41M203,573L76,572M-8,565L-16,561L-23,560M995,348L996,194M328,273L335,268L342,266L369,266M245,287L-9,286M159,383L-12,381M494,433L829,436M411,71L503,71M658,32L668,28L722,27M744,602L609,601M306,207L317,210L321,213L329,225L369,266L488,268M245,287L311,288L317,285L328,273M1089,437L1102,437M1162,602L1083,602M913,5L907,-9M831,31L1033,32M416,358L495,359L661,359L745,358L817,355L830,352M411,344L412,189M495,343L494,301M660,378L661,359M745,264L746,189M159,478L159,383L163,241M665,518L829,520M913,436L989,436M829,520L913,520M913,520L1075,522M829,265L829,142M327,587L327,528M828,602L913,602M76,477L76,469L77,291L80,280M75,679L76,572M76,477L-8,476M829,520L829,436M76,572L4,571L-8,565M76,572L76,477M328,424L328,360M409,503L410,440M830,352L990,353M828,114L825,109L824,102L822,39L824,-8M658,32L671,35L714,36L723,34L729,30L739,15L742,12L752,17M1064,270L1081,270M745,791L744,790L744,717M912,685L912,696M488,268L527,245L553,226L614,174L721,55L740,33L752,17L764,-12L768,-32M1160,33L1128,33M913,602L1072,603M502,174L503,163L503,71M228,574L228,553L224,542L214,532L200,528L186,526L177,521L164,506L161,501L159,478M913,520L913,194L911,18L916,-3L925,-21L930,-39M1163,522L1086,521M343,104L372,104M488,268L741,269M1102,437L1152,437M493,517L477,513L409,511L327,510L242,512M912,685L913,520M242,574L203,573M828,114L831,106L832,91L831,31M-8,476L-7,286M-8,476L-14,476M-10,882L-9,679M829,436L913,436M830,352L817,348L752,345M829,436L830,352M752,345L495,343L343,346L328,350M328,350L330,189M995,668L995,443M1001,437L1078,437M1001,438L998,432L994,431L991,432L989,436L990,441L994,443L999,441L1001,438M830,352L829,274M833,269L1045,270M833,270L833,267L830,265L828,265L825,269L825,271L828,273L832,272L833,270M745,345L745,273M750,269L825,269M750,269L749,266L746,264L743,265L741,268L741,271L745,273L749,272L750,269M166,38L166,-28M249,43L170,41M170,42L169,39L167,38L164,38L162,41L163,44L165,46L169,45L170,42M80,280L81,235M-9,679L-8,476M405,189L324,190L315,194L306,207M405,189L407,71M1081,191L1001,190M995,185L994,-39M1001,190L1000,187L997,185L994,185L991,189L992,192L995,194L999,193L1001,190M995,431L996,358M1000,353L1080,353M1000,353L999,350L996,348L992,348L990,353L991,357L994,358L999,356L1000,353M661,601L660,524M493,517L571,518M665,519L664,515L662,513L658,514L655,517L656,521L659,524L664,522L665,519M577,511L577,434M583,518L655,518M583,518L582,514L577,511L573,513L571,516L573,521L576,523L581,521L583,518M325,805L409,805M314,805L325,805M327,505L328,439M327,510L327,505M328,360L328,350M328,439L328,424M328,350L340,355L402,357M402,357L416,358M410,425L411,357M410,440L410,425M409,511L409,503M410,526L410,523M409,589L410,526M327,599L327,587M327,528L327,523M494,682L494,591M744,717L744,683M554,600L327,599M609,601L577,601M577,601L577,523M577,601L554,600M744,683L744,648M744,648L744,602M828,602L744,602M831,807L822,807M243,432L494,433M312,71L343,71M343,71L411,71M159,573L159,532M577,434L577,395M829,142L828,114M586,31L658,32M311,96L311,51"/></g>
+            <g fill="none" stroke="#27649f" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M242,623L242,681M-49,679L-9,679M242,599L242,582M1081,667L1082,661M75,679L216,681M242,681L260,681M1051,884L1063,859L1074,828L1077,823L1085,814M1042,880L1057,846L1069,815L1077,789L1083,756M1071,667L1071,692M1049,697L1046,693L995,692L968,688L952,685M1005,812L1019,821L1024,828L1026,837L1023,868M1071,878L1061,847L1059,837L1059,818M1062,801L1071,769M1049,819L1049,842L1056,866M242,722L242,777M325,796L326,707M774,684L785,688L828,692M242,574L244,300L246,273L247,207M828,692L828,682M828,602L829,520M828,692L869,696L912,696M828,682L786,680L774,684M912,685L871,685M912,696L1049,697M1161,685L952,685M1049,697L1147,698M247,207L249,-22L248,-36M1071,769L1074,752M1074,752L1079,714M1071,714L1070,730L1065,759L1053,800L1049,819M1079,714L1081,667M1005,812L1031,775L1040,757L1045,738M952,685L912,685M327,670L328,622M326,681L705,683M327,599L249,599M1075,522L1072,603M242,582L242,574M326,707L326,690M828,634L828,602M831,832L831,807M828,682L828,634M832,770L832,735M871,685L828,682M324,845L324,828M260,681L313,681M242,681L242,722M1078,437L1075,522M993,855L997,830L1005,812M1045,738L1048,725L1049,697M1082,-47L1081,270L1078,437M1083,602L1089,437M1059,818L1062,801M1110,806L1135,812L1152,812M1049,785L1023,868M1071,692L1067,713M1086,691L1083,667M1071,692L1071,714M1082,661L1083,602M1083,667L1082,661M1072,603L1071,667M-9,679L75,679M744,683L774,684M326,681L327,670M326,690L326,681M325,805L325,796M325,814L325,805M242,805L242,867M324,828L325,814M1086,714L1086,691M831,807L832,770M828,729L828,692M216,681L242,681M328,622L327,599M1085,814L1095,808L1101,806L1110,806M242,777L242,805M705,683L744,683M242,599L242,623M822,807L822,874M828,729L823,735L822,784M822,784L822,807M832,735L828,729M313,681L326,681M1091,270L1093,108M1083,756L1086,714M1089,437L1091,270M249,599L242,599M1067,713L1057,760L1049,785"/></g>
+            <!-- Paid lots and garages south of Roy St -->
+            <polygon points="338,614 338,625 343,625 343,642 377,642 381,638 381,610 353,610 353,614 338,614" fill="#23528f" stroke="#4d84c4" stroke-width="1.5"/>
+            <polygon points="319,624 306,624 306,639 319,639 319,624" fill="#23528f" stroke="#4d84c4" stroke-width="1.5"/>
+            <polygon points="312,641 319,641 319,671 308,671 308,644 312,641" fill="#23528f" stroke="#4d84c4" stroke-width="1.5"/>
+            <polygon points="448,636 448,607 435,607 435,635 448,636" fill="#23528f" stroke="#4d84c4" stroke-width="1.5"/>
+            <polygon points="755,766 755,780 773,779 773,766 755,766" fill="#23528f" stroke="#4d84c4" stroke-width="1.5"/>
+            <polygon points="370,692 370,717 385,717 385,692 370,692" fill="#23528f" stroke="#4d84c4" stroke-width="1.5"/>
+            <polygon points="355,718 355,734 366,734 365,718 355,718" fill="#23528f" stroke="#4d84c4" stroke-width="1.5"/>
+            <polygon points="290,670 290,641 294,641 294,670 290,670" fill="#23528f" stroke="#4d84c4" stroke-width="1.5"/>
+            <polygon points="417,639 416,670 420,673 449,673 449,639 417,639" fill="#23528f" stroke="#4d84c4" stroke-width="1.5"/>
+            <polygon points="449,673 467,674 467,639 449,639 449,673" fill="#23528f" stroke="#4d84c4" stroke-width="1.5"/>
+            <polygon points="286,710 286,724 304,724 304,710 286,710" fill="#23528f" stroke="#4d84c4" stroke-width="1.5"/>
+            <polygon points="784,625 783,639 769,639 769,625 784,625" fill="#23528f" stroke="#4d84c4" stroke-width="1.5"/>
+            <polygon points="788,624 788,640 796,640 796,624 788,624" fill="#23528f" stroke="#4d84c4" stroke-width="1.5"/>
+            <polygon points="954,609 986,609 985,672 954,672 954,609" fill="#23528f" stroke="#4d84c4" stroke-width="1.5"/>
+            <polygon points="919,659 950,659 950,672 919,672 919,659" fill="#23528f" stroke="#4d84c4" stroke-width="1.5"/>
+            <!-- Two hour blocks, then the streets with no limit at all -->
+            <g fill="none" stroke="#BB3EFD" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M578,344L579,328M243,522L475,523L493,517M660,513L660,435M662,344L662,328M243,432L159,432M744,591L745,358M243,350L328,350M494,591L495,359M409,591L409,589M159,478L76,477M985,353L923,403L913,403M159,591L159,573M203,573L76,572M-8,565L-16,561L-23,560M995,348L995,328M159,383L-12,381M494,433L829,436M1089,437L1102,437M416,358L495,359L661,359L745,358L817,355L830,352M411,344L411,328M495,343L495,328M660,378L661,359M159,478L159,383L161,328M665,518L829,520M913,436L989,436M829,520L913,520M913,520L1075,522M327,587L327,528M76,477L76,469L77,328M76,591L76,572M76,477L-8,476M829,520L829,436M76,572L4,571L-8,565M76,572L76,477M328,424L328,360M409,503L410,440M830,352L990,353M228,574L228,553L224,542L214,532L200,528L186,526L177,521L164,506L161,501L159,478M913,520L913,328M1163,522L1086,521M1102,437L1152,437M493,517L477,513L409,511L327,510L242,512M913,591L913,520M242,574L203,573M-8,476L-7,328M-8,476L-14,476M829,436L913,436M830,352L817,348L752,345M829,436L830,352M752,345L495,343L343,346L328,350M328,350L328,328M995,591L995,443M1001,437L1078,437M1001,438L998,432L994,431L991,432L989,436L990,441L994,443L999,441L1001,438M830,352L830,328M745,345L745,328M-8,591L-8,476M995,431L996,358M1000,353L1080,353M1000,353L999,350L996,348L992,348L990,353L991,357L994,358L999,356L1000,353M661,591L660,524M493,517L571,518M665,519L664,515L662,513L658,514L655,517L656,521L659,524L664,522L665,519M577,511L577,434M583,518L655,518M583,518L582,514L577,511L573,513L571,516L573,521L576,523L581,521L583,518M327,505L328,439M327,510L327,505M328,360L328,350M328,439L328,424M328,350L340,355L402,357M402,357L416,358M410,425L411,357M410,440L410,425M409,511L409,503M410,526L410,523M409,589L410,526M327,591L327,587M327,528L327,523M577,591L577,523M243,432L494,433M159,573L159,532M577,434L577,395"/></g>
+            <g fill="none" stroke="#f5ee1d" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><path d="M434,-48L433,70M585,190L586,27M579,328L579,237M-2,206L-1,33M247,207L-2,206M658,32L658,25M662,328L663,190M248,124L-9,122M722,27L724,24M343,71L343,122M433,188L443,185L487,182L497,179L502,174M496,264L496,218M406,109L451,109M374,71L374,36M81,207L83,-31M1165,109L1127,109M995,110L1082,109M248,124L280,125M165,207L166,46M721,55L741,95L743,98L747,100L770,100M247,207L293,208L306,207M1120,190L1160,190M991,190L913,190L886,193L836,192L829,190L448,190L436,189L433,188L405,189M162,41L-9,41M995,328L996,194M328,273L335,268L342,266L369,266M245,287L-9,286M411,71L503,71M658,32L668,28L722,27M306,207L317,210L321,213L329,225L369,266L488,268M245,287L311,288L317,285L328,273M913,5L907,-9M831,31L1033,32M411,328L412,189M495,328L494,301M745,264L746,189M161,328L163,241M829,265L829,142M77,328L77,291L80,280M828,114L825,109L824,102L822,39L824,-8M658,32L671,35L714,36L723,34L729,30L739,15L742,12L752,17M1064,270L1081,270M488,268L527,245L553,226L614,174L721,55L740,33L752,17L764,-12L768,-32M1160,33L1128,33M502,174L503,163L503,71M913,328L913,194L911,18L916,-3L925,-21L930,-39M343,104L372,104M488,268L741,269M828,114L831,106L832,91L831,31M-7,328L-7,286M328,328L330,189M830,328L829,274M833,269L1045,270M833,270L833,267L830,265L828,265L825,269L825,271L828,273L832,272L833,270M745,328L745,273M750,269L825,269M750,269L749,266L746,264L743,265L741,268L741,271L745,273L749,272L750,269M166,38L166,-28M249,43L170,41M170,42L169,39L167,38L164,38L162,41L163,44L165,46L169,45L170,42M80,280L81,235M405,189L324,190L315,194L306,207M405,189L407,71M1081,191L1001,190M995,185L994,-39M1001,190L1000,187L997,185L994,185L991,189L992,192L995,194L999,193L1001,190M312,71L343,71M343,71L411,71M829,142L828,114M586,31L658,32M311,96L311,51"/></g>
+            <!-- Where the time limit ends -->
+            <path d="M0,328H1120" fill="none" stroke="#ffffff" stroke-width="5" stroke-dasharray="20 14" opacity="0.7"/>
+            <text x="560" y="175" text-anchor="middle" font-family="Bungee, sans-serif" font-size="54" fill="#cfe6ff" opacity="0.62" paint-order="stroke" stroke="#001a3d" stroke-width="8" stroke-linejoin="round">FREE ALL DAY</text>
+            <!-- The garage, the skybridge over Mercer, and the hall itself -->
+            <polygon points="586,608 727,609 726,671 586,670 586,608" fill="#BB3EFD" fill-opacity="0.3" stroke="#BB3EFD" stroke-width="2.5"/>
+            <path d="M640,666V698" stroke="#f5ee1d" stroke-width="8"/>
+            <polygon points="626,706 634,706 634,699 660,699 660,692 681,692 681,711 683,711 683,788 663,788 663,771 630,771 630,785 616,785 616,770 610,770 612,747 608,716 611,707 617,701 626,706" fill="#ffffff" fill-opacity="0.14" stroke="#ffffff" stroke-width="2.5"/>
+            <polygon points="646,718 651.5,732.4 666.9,733.2 654.9,742.9 658.9,757.8 646,749.4 633.1,757.8 637.1,742.9 625.1,733.2 640.5,732.4" fill="#ffffff" stroke="#BB3EFD" stroke-width="3" stroke-linejoin="round" filter="url(#venueStarGlow)"/>
+            <text x="656" y="648" text-anchor="middle" font-family="Lato, sans-serif" font-size="19" font-weight="700" fill="#f0d8ff">$20</text>
+            <!-- No limit -->
+            <g font-family="Lato, sans-serif" font-size="17" font-weight="700" text-anchor="middle" fill="#00367B">
+            <rect x="728" y="26" width="64" height="32" rx="16" fill="#f5ee1d"/><text x="760" y="48">Free</text>
+            <rect x="268" y="101" width="64" height="32" rx="16" fill="#f5ee1d"/><text x="300" y="123">Free</text>
+            <rect x="848" y="101" width="64" height="32" rx="16" fill="#f5ee1d"/><text x="880" y="123">Free</text>
+            <rect x="218" y="232" width="64" height="32" rx="16" fill="#f5ee1d"/><text x="250" y="254">Free</text>
+            <rect x="848" y="232" width="64" height="32" rx="16" fill="#f5ee1d"/><text x="880" y="254">Free</text>
+            <rect x="968" y="175" width="64" height="32" rx="16" fill="#f5ee1d"/><text x="1000" y="197">Free</text>
+            </g>
+            <!-- Free, but only for two hours -->
+            <g font-family="Lato, sans-serif" font-size="16" font-weight="700" text-anchor="middle" fill="#ffffff">
+            <rect x="385" y="422" width="90" height="30" rx="15" fill="#BB3EFD" fill-opacity="0.85" stroke="#d98bff" stroke-width="1.5"/><text x="430" y="443">2h max</text>
+            <rect x="721" y="502" width="90" height="30" rx="15" fill="#BB3EFD" fill-opacity="0.85" stroke="#d98bff" stroke-width="1.5"/><text x="766" y="523">2h max</text>
+            <rect x="935" y="385" width="90" height="30" rx="15" fill="#BB3EFD" fill-opacity="0.85" stroke="#d98bff" stroke-width="1.5"/><text x="980" y="406">2h max</text>
+            </g>
+            <!-- Street names. The knockout stroke lets them sit over the roads the way they do on a real map. -->
+            <g font-family="Lato, sans-serif" font-size="17" fill="#84acd8" paint-order="stroke" stroke="#001a3d" stroke-width="5" stroke-linejoin="round">
+            <text class="venue-map__label--minor" x="240" y="34">Lee St</text>
+            <text class="venue-map__label--minor" x="600" y="109">Comstock St</text>
+            <text class="venue-map__label--minor" x="140" y="183">W Highland Dr</text>
+            <text x="760" y="183">Highland Dr</text>
+            <text x="600" y="240">Prospect St</text>
+            <text x="560" y="378">Ward St</text>
+            <text x="300" y="429">Aloha St</text>
+            <text class="venue-map__label--minor" x="600" y="509">Valley St</text>
+            <text class="venue-map__label--minor" x="60" y="558">W Roy St</text>
+            <text x="240" y="593">Roy St</text>
+            <text x="150" y="675">Mercer St</text>
+            <text x="830" y="675">Mercer St</text>
+            <text x="230" y="450" text-anchor="middle" transform="rotate(-90 230 450)">Queen Anne Ave N</text>
+            <text class="venue-map__label--minor" x="312" y="480" text-anchor="middle" transform="rotate(-90 312 480)">1st Ave N</text>
+            <text class="venue-map__label--minor" x="478" y="380" text-anchor="middle" transform="rotate(-90 478 380)">2nd Ave N</text>
+            <text x="558" y="480" text-anchor="middle" transform="rotate(-90 558 480)">3rd Ave N</text>
+            <text class="venue-map__label--minor" x="715" y="380" text-anchor="middle" transform="rotate(-90 715 380)">4th Ave N</text>
+            <text x="831" y="480" text-anchor="middle" transform="rotate(-90 831 480)">5th Ave N</text>
+            <text class="venue-map__label--minor" x="873" y="400" text-anchor="middle" transform="rotate(-90 873 400)">Taylor Ave N</text>
+            <text x="1058" y="430" text-anchor="middle" transform="rotate(-90 1058 430)">Aurora Ave N</text>
+            <text class="venue-map__label--minor" x="145" y="400" text-anchor="middle" transform="rotate(-90 145 400)">1st Ave W</text>
+            <text class="venue-map__label--minor" x="380" y="800" font-size="15" fill="#5d8fc4">Seattle Center</text>
+            <text x="628" y="690" text-anchor="end" font-size="14" fill="#f5ee1d">skybridge</text>
+            </g>
+            <text x="646" y="812" text-anchor="middle" font-family="Bungee, sans-serif" font-size="22" fill="#ffffff" paint-order="stroke" stroke="#0a2851" stroke-width="5" stroke-linejoin="round">McCaw Hall</text>
+            <!-- North arrow -->
+            <g><circle cx="62" cy="782" r="30" fill="#001a3d" opacity="0.85"/><polygon points="62,762 72,786 62,779 52,786" fill="#a0c4e8"/><text x="62" y="806" text-anchor="middle" font-family="Lato, sans-serif" font-size="17" font-weight="700" fill="#a0c4e8">N</text></g>
+            </svg>
+        </div>
+
+        <div class="venue-map__legend">
+          <span class="venue-legend">
+            <svg width="26" height="10" viewBox="0 0 26 10" aria-hidden="true"><line x1="2" y1="5" x2="24" y2="5" stroke="#f5ee1d" stroke-width="6" stroke-linecap="round"/></svg>
+            Free street parking, no time limit
+          </span>
+          <span class="venue-legend">
+            <svg width="26" height="10" viewBox="0 0 26 10" aria-hidden="true"><line x1="2" y1="5" x2="24" y2="5" stroke="#BB3EFD" stroke-width="6" stroke-linecap="round"/></svg>
+            Free, but two hours only
+          </span>
+          <span class="venue-legend">
+            <svg width="26" height="10" viewBox="0 0 26 10" aria-hidden="true"><line x1="1" y1="5" x2="25" y2="5" stroke="#ffffff" stroke-width="4" stroke-dasharray="7 5" opacity="0.7"/></svg>
+            Where the time limit ends
+          </span>
+          <span class="venue-legend">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#BB3EFD" fill-opacity="0.45" stroke="#BB3EFD" stroke-width="2"/></svg>
+            $20 garage, skybridge to the hall
+          </span>
+          <span class="venue-legend">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#23528f" stroke="#4d84c4" stroke-width="2"/></svg>
+            Other paid lots
+          </span>
+          <span class="venue-legend">
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,1 14.76,8.2 22.46,8.6 16.47,13.45 18.46,20.9 12,16.7 5.54,20.9 7.53,13.45 1.54,8.6 9.24,8.2" fill="#ffffff"/></svg>
+            McCaw Hall
+          </span>
+        </div>
+
+        <p class="venue-panel__note">
+          The unrestricted blocks start north of Ward St, and it is uphill the whole way. The Mercer Street Garage entrance is on 3rd Ave N between Mercer St and Roy St. Street parking rules change block to block, so always read the posted signs.
+        </p>
+      </div>
+
+      <!-- Public transit -->
+      <div class="venue-panel" id="transitPanel" role="region" aria-labelledby="transitToggle" hidden>
+        <p class="venue-panel__lede">
+          McCaw Hall sits on the north edge of the Seattle Center campus, about two miles north of downtown. The Monorail is the quickest way in from downtown, and several bus routes stop within a few blocks.
+        </p>
+
+        <div class="venue-modes">
+          <div class="venue-mode">
+            <p class="venue-mode__name">Monorail - easiest from downtown</p>
+            <p class="venue-mode__text">
+              The <a href="https://www.seattlemonorail.com/" target="_blank" rel="noopener">Seattle Center Monorail</a> runs between Westlake Center (5th &amp; Pine, 3rd floor) and Seattle Center Station. The ride is about 3 minutes and trains leave every 8 to 10 minutes. From the station it is roughly a 7 minute walk north across the campus to the hall.
+            </p>
+            <p class="venue-mode__text">
+              One way is $4. Weekday service runs 7:30am to 11:00pm.
+            </p>
+          </div>
+
+          <div class="venue-mode">
+            <p class="venue-mode__name">Link light rail</p>
+            <p class="venue-mode__text">
+              Westlake is the closest Link station to Seattle Center. There is elevator access from the Link platform straight up to the Monorail, so the transfer is short. Walking the last stretch instead takes about 25 minutes.
+            </p>
+          </div>
+
+          <div class="venue-mode">
+            <p class="venue-mode__name">Bus</p>
+            <p class="venue-mode__text">
+              Queen Anne Ave N &amp; Mercer St is a 5 minute walk west of the hall and is served by routes 1, 2, 8, 13, 32 and RapidRide D.
+            </p>
+            <p class="venue-mode__text">
+              Routes 3 and 4 stop two blocks east, at 5th Ave N &amp; Mercer St southbound and 5th Ave N &amp; Republican St northbound.
+            </p>
+          </div>
+
+          <div class="venue-mode">
+            <p class="venue-mode__name">Biking and rideshare</p>
+            <p class="venue-mode__text">
+              Bike racks are on Mercer St by the Stage Door entrance, under the skybridge, and across from the main north entrance. Rideshare pick-up and drop-off zones are marked on Mercer, Republican, Harrison and John.
+            </p>
+          </div>
+        </div>
+
+        <p class="venue-panel__note">
+          <a href="https://www.google.com/maps/dir/?api=1&amp;destination=Marion+Oliver+McCaw+Hall%2C+321+Mercer+St%2C+Seattle%2C+WA+98109&amp;travelmode=transit" target="_blank" rel="noopener">Plan your trip to McCaw Hall</a>
+        </p>
+      </div>
     </section>
 
     <div class="divider"></div>
@@ -1459,6 +1841,54 @@
         });
       }
     }
+
+    // ===================== VENUE =====================
+    // Parking and transit each sit behind their own button. Only one is open
+    // at a time - both panels are long, and opening the second on top of the
+    // first would push the section past a screenful with no warning.
+    (function() {
+      const entries = [];
+
+      document.querySelectorAll('.venue-toggle').forEach(function(btn) {
+        const panel = document.getElementById(btn.getAttribute('aria-controls'));
+        if (panel) entries.push({ btn: btn, panel: panel });
+      });
+
+      if (!entries.length) return;
+
+      // A phone cannot show the whole map at a readable size, so it scrolls
+      // sideways instead. Open it on the hall rather than on the far western
+      // corner, which is the one part of the map nobody is looking for.
+      // McCaw Hall sits at 646 of the map's 1120 units across.
+      function centreOnHall(panel) {
+        const scroller = panel.querySelector('.venue-map__scroll');
+        if (!scroller) return;
+        // Wait a frame. The panel has only just stopped being display:none,
+        // and read in the same tick scrollWidth can still come back equal to
+        // the client width, which leaves the map parked at its west edge.
+        window.requestAnimationFrame(function() {
+          // Assigning past the end is clamped, and on a screen wide enough to
+          // show the whole map there is nothing to scroll and this is a no-op.
+          scroller.scrollLeft = scroller.scrollWidth * (646 / 1120) - scroller.clientWidth / 2;
+        });
+      }
+
+      function setOpen(entry, open) {
+        entry.btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        entry.btn.classList.toggle('is-open', open);
+        entry.panel.hidden = !open;
+        if (open) centreOnHall(entry.panel);
+      }
+
+      entries.forEach(function(entry) {
+        entry.btn.addEventListener('click', function() {
+          const opening = entry.btn.getAttribute('aria-expanded') !== 'true';
+          entries.forEach(function(other) {
+            setOpen(other, other === entry && opening);
+          });
+        });
+      });
+    })();
 
     // ===================== DRAG SCROLLER =====================
     // Shared pointer-drag physics for the auto-scrolling marquees below.

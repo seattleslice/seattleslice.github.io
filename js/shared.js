@@ -664,6 +664,7 @@ revealEls.forEach(el => revealObserver.observe(el));
     setHeadshot(avatarEl, speaker.headshotUrl);
 
     socialsEl.innerHTML = '';
+    addSocialLink(socialsEl, speaker.website, 'Website', 'website');
     addSocialLink(socialsEl, speaker.x, 'X / Twitter', 'x');
     addSocialLink(socialsEl, speaker.linkedin, 'LinkedIn', 'linkedin');
     addSocialLink(socialsEl, speaker.bluesky, 'Bluesky', 'bluesky');
@@ -672,7 +673,6 @@ revealEls.forEach(el => revealObserver.observe(el));
     addSocialLink(socialsEl, speaker.tiktok, 'TikTok', 'tiktok');
     addSocialLink(socialsEl, speaker.youtube, 'YouTube', 'youtube');
     addSocialLink(socialsEl, speaker.twitch, 'Twitch', 'twitch');
-    addSocialLink(socialsEl, speaker.website, 'Website', 'website');
 
     // A long bio can leave the panel scrolled part way down
     if (panel) panel.scrollTop = 0;

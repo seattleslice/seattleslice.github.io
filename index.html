@@ -2857,7 +2857,16 @@
         });
       });
 
-      // The panel ships open, so centre whichever floor is already showing
+      // The panel ships open for desktop. On a phone the map runs too long to
+      // lead with, so start it closed there and let the button reveal it.
+      const mapToggle = document.getElementById('sliceMapToggle');
+      if (mapToggle && window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
+        panel.hidden = true;
+        mapToggle.setAttribute('aria-expanded', 'false');
+        mapToggle.classList.remove('is-open');
+      }
+
+      // Centre whichever floor is showing once the panel is on screen
       const shown = floors.filter(function(fl) { return !fl.hidden; })[0];
       if (shown && !panel.hidden) centreFloor(shown);
 

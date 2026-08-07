@@ -2465,16 +2465,24 @@
         });
       }
 
-      function layoutPortrait() {
+      // Width the current portrait sizing was built for; null means unsized
+      let sizedForWidth = null;
+
+      function layoutPortrait(force) {
         if (!portraitQuery || !portraitQuery.matches) {
           FM_VARS.forEach(function(v) { panel.style.removeProperty(v); });
           applyViewBox(BASE_VB);
+          sizedForWidth = null;
           return;
         }
         applyViewBox(PORTRAIT_VB);
         // Only measure while the panel is actually on screen, or the reading
         // is meaningless and the map ends up sized off a collapsed layout.
         if (panel.hidden) return;
+        // Phones fire resize constantly as the address bar slides in and out
+        // while scrolling, which would resize the map under the reader. Size
+        // once per width and hold it; a rotation passes force to redo it.
+        if (!force && sizedForWidth === window.innerWidth) return;
         const anyInner = panel.querySelector('.floormap__inner');
         const areasEl = panel.querySelector('.floormap-areas');
         if (!anyInner || !areasEl) return;
@@ -2497,14 +2505,15 @@
         panel.style.setProperty('--fm-svg-w', mapH + 'px');
         panel.style.setProperty('--fm-svg-h', Math.round(mapH * ratio) + 'px');
         panel.style.setProperty('--fm-list-h', listH + 'px');
+        sizedForWidth = window.innerWidth;
       }
 
       layoutPortrait();
       window.addEventListener('orientationchange', function() {
-        window.setTimeout(layoutPortrait, 120);
+        window.setTimeout(function() { layoutPortrait(true); }, 120);
       });
       // Fonts and images settle after parse, which moves the measurements
-      window.addEventListener('load', layoutPortrait);
+      window.addEventListener('load', function() { layoutPortrait(true); });
 
       const mapToggle = document.getElementById('sliceMapToggle');
       if (mapToggle && window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
@@ -2634,6 +2643,26 @@
         return panel.querySelector('.floormap-region[data-for="' + spot.getAttribute('data-spot') + '"]');
       }
 
+      // Tapping a spot on the phone should bring its card into the list's
+      // window, so the detail is readable without a second scroll. Sits it at
+      // the top where possible, clamped so the last card cannot overshoot.
+      function revealCard(spot) {
+        if (!portraitQuery || !portraitQuery.matches) return;
+        const areas = panel.querySelector('.floormap-areas');
+        const card = cardsFor(spot)[0];
+        if (!areas || !card) return;
+        const max = areas.scrollHeight - areas.clientHeight;
+        if (max <= 0) return;
+        const target = areas.scrollTop +
+          (card.getBoundingClientRect().top - areas.getBoundingClientRect().top);
+        const reduce = window.matchMedia &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        areas.scrollTo({
+          top: Math.max(0, Math.min(target, max)),
+          behavior: reduce ? 'auto' : 'smooth'
+        });
+      }
+
       function setHot(spot, on) {
         spot.classList.toggle('is-hot', on);
         cardsFor(spot).forEach(function(card) { card.classList.toggle('is-hot', on); });
@@ -2648,6 +2677,7 @@
           } else {
             pinned = spot;
             showPop(spot);
+            revealCard(spot);
           }
         }
         spot.addEventListener('mouseenter', function() {

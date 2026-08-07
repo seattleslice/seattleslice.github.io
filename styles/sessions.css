@@ -1,0 +1,324 @@
+/* ===================== SESSIONS SECTION =====================
+   Everything the Sessions section is made of, in one file, so the home page
+   and s.html cannot drift apart. Pair it with js/sessions.js, which builds the
+   markup these rules style.
+
+   Loaded after shared.css, which the section still leans on for .section,
+   .section__title, .section-note and the overlay scrim the panel sits on. */
+
+/* ===================== FORMAT TABS ===================== */
+/* The list runs long enough that it is split by format. One button per
+   format, with a filled pill that slides to whichever one is showing. The
+   pill is measured and placed from script, so until that has run the
+   buttons carry a fill of their own. */
+.session-tabs {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 32px;
+  padding: 6px;
+  background: #002a63;
+  border: 2px solid #1a4a8a;
+  border-radius: 14px;
+}
+
+/* .session-tabs sets a display, which would otherwise beat the browser's
+   rule for [hidden] and show an empty bar before the sheet has loaded. */
+.session-tabs[hidden] {
+  display: none;
+}
+
+.session-tab {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  border-radius: 9px;
+  font-family: 'Bungee', cursive;
+  font-size: 14px;
+  line-height: 1.2;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  color: #8ab4e0;
+  cursor: pointer;
+  transition: color 0.25s ease, background 0.25s ease;
+}
+
+.session-tab:hover {
+  color: #f5ee1d;
+}
+
+/* After the hover rule, so the label sitting on the pill keeps its dark
+   text when the pointer is over it */
+.session-tab.is-active {
+  background: #f5ee1d;
+  color: #00367B;
+}
+
+.session-tab:focus-visible {
+  outline: 2px solid #BB3EFD;
+  outline-offset: 2px;
+}
+
+/* Once the pill is placed it does the filling, and the button hands its
+   own background back */
+.session-tabs--glide .session-tab.is-active {
+  background: none;
+}
+
+.session-tabs__glider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  width: 0;
+  height: 0;
+  border-radius: 9px;
+  background: #f5ee1d;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              height 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.session-tabs--glide .session-tabs__glider {
+  opacity: 1;
+}
+
+/* Two buttons to a row rather than three and a stray one */
+@media (max-width: 560px) {
+  .session-tabs {
+    gap: 4px;
+    padding: 5px;
+  }
+
+  .session-tab {
+    flex: 1 1 calc(50% - 2px);
+    padding: 10px 8px;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+  }
+}
+
+/* ===================== THE LIST ===================== */
+/* Session titles run long, so these are full width rows rather than a grid.
+   There are a lot of sessions, so a row carries the title and the names on the
+   one line and stays thin */
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 36px;
+}
+
+/* Closer to the buttons than the 36px the list keeps on its own */
+.session-tabs:not([hidden]) + .sessions-list {
+  margin-top: 20px;
+}
+
+.session-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 11px 20px;
+  background: #002a63;
+  border: 2px solid #f5ee1d;
+  border-radius: 12px;
+  text-align: left;
+  font-family: 'Lato', sans-serif;
+  cursor: pointer;
+  transition: box-shadow 0.3s, transform 0.3s;
+}
+
+.session-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(187, 62, 253, 0.4);
+}
+
+/* .session-row sets a display of its own, and the rows waiting their turn
+   are held back with the hidden attribute */
+.session-row[hidden] {
+  display: none;
+}
+
+/* The title and the line-up are one run of text rather than two columns, so
+   the names carry on from wherever the title ends instead of taking a line of
+   their own. */
+.session-row__text {
+  flex: 1;
+  min-width: 0;
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+/* Wide enough for the longest title to fit on its own, so the row is held to
+   the one line it was before the names were on it - a line-up with nowhere
+   left to go trims rather than pushing the row taller. Below this the title
+   needs to wrap anyway, so the names simply carry on with it. */
+@media (min-width: 769px) {
+  .session-row__text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Lato rather than Bungee - at this size a whole list of titles is an easier
+   read in the body face, so only the yellow carries the heading weight */
+.session-row__title {
+  font-weight: 700;
+  color: #f5ee1d;
+}
+
+/* Held off the title by about five spaces of Lato, counting the one space in
+   the markup that lets a narrow row break between the two. Body text grey and
+   weight, so the names read as the quieter half of the line. */
+.session-row__speakers {
+  margin-left: 1.05em;
+  font-weight: 400;
+  color: #c0c0c0;
+}
+
+.session-row__chevron {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: #BB3EFD;
+}
+
+@media (max-width: 520px) {
+  .session-row {
+    padding: 10px 16px;
+    gap: 12px;
+  }
+
+  .session-row__text {
+    font-size: 14px;
+  }
+}
+
+.sessions-note {
+  margin-top: 28px;
+}
+
+/* ===================== SWAPPING FORMATS ===================== */
+/* The rows leave together and arrive one after another. The list carries
+   its own height across the swap, so nothing below it jumps when a format
+   has more sessions than the last one did. */
+.sessions-list.is-swapping {
+  overflow: hidden;
+  transition: height 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.session-row--out {
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+/* backwards, so a row still waiting on its delay is not shown at full
+   strength before it has started */
+.session-row--in {
+  animation: sessionRowIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes sessionRowIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ===================== SESSION PANEL ===================== */
+/* What a row opens, on the same scrim the speaker panel uses */
+.session-panel__format {
+  font-family: 'Bungee', cursive;
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #BB3EFD;
+  margin-bottom: 10px;
+}
+
+.session-panel__rule {
+  height: 1px;
+  margin: 24px 0 20px;
+  background: linear-gradient(90deg, transparent, #BB3EFD, #f5ee1d, #BB3EFD, transparent);
+}
+
+/* The line-up sits in one row, wrapping only when the panel is too narrow */
+.session-panel__lineup {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+}
+
+.session-speaker {
+  flex: 0 1 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Lato', sans-serif;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.session-speaker:hover {
+  transform: translateY(-3px);
+  background: rgba(187, 62, 253, 0.15);
+}
+
+.session-speaker__avatar {
+  display: block;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #BB3EFD, #f5ee1d);
+  background-size: cover;
+  background-position: center;
+  border: 2px solid #FFFB10;
+}
+
+.session-speaker__name {
+  font-family: 'Bungee', cursive;
+  font-size: 12px;
+  line-height: 1.25;
+  color: #f5ee1d;
+}
+
+.session-speaker__role {
+  font-size: 11px;
+  line-height: 1.35;
+  color: #a0c4e8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .session-tabs__glider,
+  .sessions-list.is-swapping {
+    transition: none;
+  }
+
+  .session-row--out {
+    transition: none;
+  }
+
+  .session-row--in {
+    animation: none;
+  }
+}

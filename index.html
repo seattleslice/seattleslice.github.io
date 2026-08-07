@@ -946,6 +946,134 @@
       margin-top: 8px;
     }
 
+    /* ===================== SPONSORS ===================== */
+    /* The rows lay the logos out normally and the physics in the page script
+       treats each resulting position as a fixed anchor, so the field stays
+       responsive and the float is only ever an offset from where flexbox put
+       things. Nothing here sets transform - that belongs to the script. */
+    .sponsors-field {
+      --sp-scale: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 44px;
+      padding: 12px 0 8px;
+    }
+
+    .sponsors-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 64px;
+    }
+
+    /* Five logos share this row, so it needs a tighter gap than the Diamond pair. */
+    .sponsors-row--supporting {
+      gap: 36px;
+    }
+
+    .sponsor {
+      position: relative;
+      display: block;
+      width: calc(var(--sp-w) * var(--sp-scale));
+      border-radius: 10px;
+      will-change: transform;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Soft aura behind the artwork. A halo reads better than a card or border
+       against the navy, and it keeps the logos looking like they are floating
+       rather than sitting in boxes. */
+    .sponsor::before {
+      content: "";
+      position: absolute;
+      inset: -26% -14%;
+      border-radius: 50%;
+      background: radial-gradient(closest-side, rgba(187, 62, 253, 0.4), rgba(187, 62, 253, 0) 100%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+
+    .sponsor__img {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: auto;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
+      transition: filter 0.4s ease;
+    }
+
+    .sponsor.is-active::before,
+    .sponsors-field--static .sponsor:hover::before,
+    .sponsors-field--static .sponsor:focus-visible::before {
+      opacity: 1;
+    }
+
+    /* drop-shadow follows the logo silhouette, so the glow hugs the artwork
+       instead of lighting a rectangle around it. That only works because the
+       sponsor PNGs are transparent. */
+    .sponsor.is-active .sponsor__img,
+    .sponsors-field--static .sponsor:hover .sponsor__img,
+    .sponsors-field--static .sponsor:focus-visible .sponsor__img {
+      filter: drop-shadow(0 0 8px rgba(245, 238, 29, 0.55))
+              drop-shadow(0 0 22px rgba(187, 62, 253, 0.5))
+              drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
+    }
+
+    .sponsor:focus-visible {
+      outline: 2px solid #f5ee1d;
+      outline-offset: 12px;
+    }
+
+    /* Widths come from equal optical area per tier: width = sqrt(area x aspect
+       ratio). Sizing on width alone would let a long wordmark like Miraisens
+       tower over a stacked mark like 11 bit studios even at the same tier.
+       Gold carries 1.8x the area of the four beside it, which is what makes it
+       read as larger despite sitting on the same row. The bottom five total
+       689px of logo plus 144px of gaps, leaving ~40px of slack either side for
+       the float to use without crowding the section edge. */
+    .sponsor--xsolla    { --sp-w: 384px; }
+    .sponsor--commerce  { --sp-w: 335px; }
+    .sponsor--phantom   { --sp-w: 164px; }
+    .sponsor--elevenbit { --sp-w: 99px; }
+    .sponsor--premack   { --sp-w: 116px; }
+    .sponsor--miraisens { --sp-w: 161px; }
+    .sponsor--digipen   { --sp-w: 149px; }
+
+    /* Reduced motion: the script parks every logo on its anchor and tags the
+       field, so the grow and glow fall back to a plain CSS hover. */
+    .sponsors-field--static .sponsor {
+      transition: transform 0.3s ease;
+    }
+
+    .sponsors-field--static .sponsor:hover,
+    .sponsors-field--static .sponsor:focus-visible {
+      transform: scale(1.08);
+    }
+
+    /* The bottom row of five is what decides these numbers - the Diamond pair
+       has room to spare at every width. */
+    @media (max-width: 900px) {
+      .sponsors-field { --sp-scale: 0.82; gap: 36px; }
+      .sponsors-row { gap: 48px; }
+      .sponsors-row--supporting { gap: 28px; }
+    }
+
+    @media (max-width: 640px) {
+      .sponsors-field { --sp-scale: 0.72; gap: 30px; }
+      .sponsors-row { gap: 36px; }
+      .sponsors-row--supporting { gap: 24px; }
+    }
+
+    /* The leash is a fixed pixel budget, so once the logos shrink the rows need
+       a little more air between them or a drifting pair closes the whole gap. */
+    @media (max-width: 430px) {
+      .sponsors-field { --sp-scale: 0.66; gap: 38px; }
+    }
+
     /* ===================== DESKTOP MARQUEE ===================== */
     @media (min-width: 769px) {
       .photo-marquee {
@@ -2047,6 +2175,42 @@
         <p class="venue-panel__note">
           <a href="https://www.google.com/maps/dir/?api=1&amp;destination=Marion+Oliver+McCaw+Hall%2C+321+Mercer+St%2C+Seattle%2C+WA+98109&amp;travelmode=transit" target="_blank" rel="noopener">Plan your trip to McCaw Hall</a>
         </p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- Sponsors -->
+    <section class="section reveal" id="sponsors">
+      <h2 class="section__title">Our Generous Sponsors</h2>
+
+      <div class="sponsors-field" id="sponsorsField">
+        <div class="sponsors-row sponsors-row--diamond">
+          <a class="sponsor sponsor--xsolla" href="https://xsolla.com/" target="_blank" rel="noopener noreferrer" aria-label="Xsolla, Diamond sponsor">
+            <img class="sponsor__img" src="images/sponsors/xsolla.png" width="600" height="130" alt="Xsolla" loading="lazy">
+          </a>
+          <a class="sponsor sponsor--commerce" href="https://www.commerce.wa.gov/" target="_blank" rel="noopener noreferrer" aria-label="Washington State Department of Commerce, Diamond sponsor">
+            <img class="sponsor__img" src="images/sponsors/wa-dept-of-commerce.png" width="600" height="171" alt="Washington State Department of Commerce" loading="lazy">
+          </a>
+        </div>
+
+        <div class="sponsors-row sponsors-row--supporting">
+          <a class="sponsor sponsor--phantom" href="https://phantomfriends.com/" target="_blank" rel="noopener noreferrer" aria-label="Phantom Friends, Gold sponsor">
+            <img class="sponsor__img" src="images/sponsors/phantom-friends.png" width="600" height="216" alt="Phantom Friends" loading="lazy">
+          </a>
+          <a class="sponsor sponsor--elevenbit" href="https://www.11bitstudios.com/" target="_blank" rel="noopener noreferrer" aria-label="11 bit studios, sponsor">
+            <img class="sponsor__img" src="images/sponsors/11-bit-studios.png" width="600" height="330" alt="11 bit studios" loading="lazy">
+          </a>
+          <a class="sponsor sponsor--premack" href="https://www.premackrogers.com/" target="_blank" rel="noopener noreferrer" aria-label="Premack Rogers Downs P.C., sponsor">
+            <img class="sponsor__img" src="images/sponsors/premack-rogers-downs.png" width="600" height="238" alt="Premack Rogers Downs P.C." loading="lazy">
+          </a>
+          <a class="sponsor sponsor--miraisens" href="https://www.miraisens.com/" target="_blank" rel="noopener noreferrer" aria-label="Miraisens, Inc., sponsor">
+            <img class="sponsor__img" src="images/sponsors/miraisens.png" width="600" height="124" alt="Miraisens, Inc." loading="lazy">
+          </a>
+          <a class="sponsor sponsor--digipen" href="https://www.digipen.edu/" target="_blank" rel="noopener noreferrer" aria-label="DigiPen Institute of Technology, sponsor">
+            <img class="sponsor__img" src="images/sponsors/digipen.png" width="600" height="145" alt="DigiPen Institute of Technology" loading="lazy">
+          </a>
+        </div>
       </div>
     </section>
 
@@ -3225,6 +3389,204 @@
 
       // Initialize
       positionCards();
+    })();
+
+    // ===================== SPONSOR FLOAT FIELD =====================
+    // Every logo keeps the position flexbox gave it as a fixed anchor and is
+    // tied back to it by a spring, so the drifting never turns into wandering.
+    // Each frame a logo gets three forces: the spring home, a slow wander built
+    // from two out-of-phase sines, and a shove from any neighbour that has
+    // floated too close. Hovering, focusing or clicking one makes it grow and
+    // glow, and widens the space it claims so the rest back further away.
+    (function() {
+      const field = document.getElementById('sponsorsField');
+      if (!field) return;
+      const nodes = Array.from(field.querySelectorAll('.sponsor'));
+      if (!nodes.length) return;
+
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        // Leave the logos parked on their anchors and let the CSS fallback
+        // handle the hover grow.
+        field.classList.add('sponsors-field--static');
+        return;
+      }
+
+      const SPRING = 1.9;         // pull home, tuned for a ~4.5s float period
+      const DAMPING = 0.85;       // under-damped on purpose so it keeps drifting
+      const DRIFT = 30;           // px/s^2 of wander force
+      const MAX_OFFSET = 24;      // px leash, the logo can never leave this box
+      const MAX_TILT = 10;        // degrees, the limit the tilt can reach
+      const REPEL = 260;          // px/s^2 at full overlap
+      const REST_PAD = 1.10;      // neighbours start pushing just before touching
+      // An active logo claims more room, but not so much that it pins its
+      // neighbours against the leash - they should keep drifting as they back off.
+      const ACTIVE_PAD = 1.32;
+      const ACTIVE_SCALE = 1.13;
+      const WAKE_IMPULSE = 190;   // px/s kick handed to everyone else on wake
+
+      function rand(lo, hi) { return lo + Math.random() * (hi - lo); }
+
+      const tiles = nodes.map(function(el) {
+        return {
+          el: el,
+          x: 0, y: 0, vx: 0, vy: 0,   // offset from the anchor, px
+          fx: 0, fy: 0,               // force accumulator for the current frame
+          tilt: 0,
+          scale: 1, scaleTarget: 1,
+          ax: 0, ay: 0, hw: 0, hh: 0, // anchor centre and half extents
+          active: false,
+          // Two slow sines per axis, each with its own rate and phase, so no
+          // two logos ever trace the same path or fall into step.
+          rate: [rand(0.17, 0.31), rand(0.29, 0.48), rand(0.15, 0.28), rand(0.26, 0.44), rand(0.11, 0.21), rand(0.19, 0.35)],
+          phase: [rand(0, 6.28), rand(0, 6.28), rand(0, 6.28), rand(0, 6.28), rand(0, 6.28), rand(0, 6.28)]
+        };
+      });
+
+      // Peaks at +/-1, so the tilt can just touch MAX_TILT but rarely sits there.
+      function wander(t, a, b, time) {
+        return Math.sin(time * t.rate[a] + t.phase[a]) * 0.62 +
+               Math.sin(time * t.rate[b] + t.phase[b]) * 0.38;
+      }
+
+      // Anchors have to be read with the transforms off, otherwise the drift
+      // from the previous frame gets baked into the anchor and the logos walk.
+      function measure() {
+        tiles.forEach(function(t) { t.el.style.transform = 'none'; });
+        const fr = field.getBoundingClientRect();
+        tiles.forEach(function(t) {
+          const r = t.el.getBoundingClientRect();
+          t.ax = r.left - fr.left + r.width / 2;
+          t.ay = r.top - fr.top + r.height / 2;
+          t.hw = r.width / 2;
+          t.hh = r.height / 2;
+        });
+      }
+
+      function setActive(t, on) {
+        if (t.active === on) return;
+        t.active = on;
+        t.scaleTarget = on ? ACTIVE_SCALE : 1;
+        t.el.classList.toggle('is-active', on);
+        if (on) burst(t);
+      }
+
+      // A one-off shove at everyone else the moment a logo wakes up. This rides
+      // on the same trigger as the grow and the glow rather than on the click,
+      // because clicking opens the sponsor in a new tab and the kick would play
+      // to nobody. Firing it from setActive also means it happens exactly once
+      // per activation, however the logo was woken.
+      function burst(src) {
+        tiles.forEach(function(t) {
+          if (t === src) return;
+          const dx = (t.ax + t.x) - (src.ax + src.x);
+          const dy = (t.ay + t.y) - (src.ay + src.y);
+          const dist = Math.hypot(dx, dy) || 0.001;
+          const k = WAKE_IMPULSE / (1 + dist / 180);
+          t.vx += (dx / dist) * k;
+          t.vy += (dy / dist) * k;
+        });
+      }
+
+      let last = performance.now();
+      let running = false;
+
+      function tick(now) {
+        if (!running) return;
+        const dt = Math.min((now - last) / 1000, 0.05);
+        last = now;
+        const time = now / 1000;
+
+        for (const t of tiles) {
+          t.fx = -SPRING * t.x - DAMPING * t.vx + DRIFT * wander(t, 0, 1, time);
+          // Vertical drift is held back a little - a row of logos bobbing as
+          // much as it slides looks unsettled rather than weightless.
+          t.fy = -SPRING * t.y - DAMPING * t.vy + DRIFT * 0.8 * wander(t, 2, 3, time);
+        }
+
+        // Repulsion is measured in each pair's own box space, so a wide wordmark
+        // pushes sideways over a long distance and hardly at all vertically.
+        // Circular repulsion would have wide logos shoving from thin air.
+        for (let i = 0; i < tiles.length; i++) {
+          for (let j = i + 1; j < tiles.length; j++) {
+            const a = tiles[i], b = tiles[j];
+            const dx = (b.ax + b.x) - (a.ax + a.x);
+            const dy = (b.ay + b.y) - (a.ay + a.y);
+            const pad = (a.active || b.active) ? ACTIVE_PAD : REST_PAD;
+            const rx = (a.hw * a.scale + b.hw * b.scale) * pad;
+            const ry = (a.hh * a.scale + b.hh * b.scale) * pad;
+            const nx = dx / rx, ny = dy / ry;
+            const d = Math.sqrt(nx * nx + ny * ny);
+            if (d >= 1 || d < 0.0001) continue;
+            const dist = Math.hypot(dx, dy) || 0.001;
+            const f = (1 - d) * REPEL;
+            a.fx -= (dx / dist) * f;
+            a.fy -= (dy / dist) * f;
+            b.fx += (dx / dist) * f;
+            b.fy += (dy / dist) * f;
+          }
+        }
+
+        for (const t of tiles) {
+          t.vx += t.fx * dt;
+          t.vy += t.fy * dt;
+          t.x += t.vx * dt;
+          t.y += t.vy * dt;
+
+          // Hard leash. Past the limit the offset is clipped and the outward
+          // velocity killed, so a crowded row can never fling a logo away.
+          if (t.x > MAX_OFFSET) { t.x = MAX_OFFSET; if (t.vx > 0) t.vx = 0; }
+          else if (t.x < -MAX_OFFSET) { t.x = -MAX_OFFSET; if (t.vx < 0) t.vx = 0; }
+          if (t.y > MAX_OFFSET) { t.y = MAX_OFFSET; if (t.vy > 0) t.vy = 0; }
+          else if (t.y < -MAX_OFFSET) { t.y = -MAX_OFFSET; if (t.vy < 0) t.vy = 0; }
+
+          t.tilt += (MAX_TILT * wander(t, 4, 5, time) - t.tilt) * Math.min(1, dt * 1.6);
+          t.scale += (t.scaleTarget - t.scale) * Math.min(1, dt * 7);
+
+          t.el.style.transform =
+            'translate(' + t.x.toFixed(2) + 'px,' + t.y.toFixed(2) + 'px) ' +
+            'rotate(' + t.tilt.toFixed(2) + 'deg) ' +
+            'scale(' + t.scale.toFixed(3) + ')';
+        }
+
+        requestAnimationFrame(tick);
+      }
+
+      function start() {
+        if (running) return;
+        running = true;
+        last = performance.now();
+        requestAnimationFrame(tick);
+      }
+
+      tiles.forEach(function(t) {
+        t.el.addEventListener('pointerenter', function() { setActive(t, true); });
+        t.el.addEventListener('pointerleave', function() { setActive(t, false); });
+        t.el.addEventListener('focus', function() { setActive(t, true); });
+        t.el.addEventListener('blur', function() { setActive(t, false); });
+      });
+
+      measure();
+
+      let resizeTimer;
+      window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(measure, 150);
+      });
+
+      // The logos load lazily, so re-measure once each one has a real box.
+      field.querySelectorAll('img').forEach(function(img) {
+        if (!img.complete) img.addEventListener('load', measure, { once: true });
+      });
+
+      // No point simulating a section nobody is looking at.
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function(entries) {
+          if (entries[0].isIntersecting) start();
+          else running = false;
+        }, { rootMargin: '150px' }).observe(field);
+      } else {
+        start();
+      }
     })();
   </script>
 

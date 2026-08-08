@@ -388,6 +388,56 @@
       letter-spacing: 1px;
     }
 
+    /* ===================== FLOATING TICKET CTA =====================
+       Once the banner's "Get Tickets" button has scrolled off the top, a
+       smaller copy of it drops into the corner and rides along. The script
+       near the bottom of this file toggles .is-visible. Desktop only. */
+    .sticky-cta {
+      position: fixed;
+      top: 22px;
+      right: 28px;
+      z-index: 900;
+      /* Parked just above the viewport. The slide lives on this wrapper so
+         that the button underneath keeps its own hover transform. */
+      transform: translateY(calc(-100% - 40px));
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 300ms ease,
+                  visibility 0s linear 520ms;
+    }
+
+    .sticky-cta.is-visible {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+      /* Visible right away on the way in, and only once the slide has
+         finished on the way out. Keeping it hidden rather than merely
+         transparent also keeps the parked button out of the tab order. */
+      visibility: visible;
+      transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 260ms ease,
+                  visibility 0s;
+    }
+
+    /* Same gradient, shimmer and corner radius as the banner button, sized
+       down so it reads as a corner control rather than a second headline. */
+    .sticky-cta .btn--vibrant {
+      margin-top: 0;
+      padding: 13px 28px;
+      font-size: 17px;
+      letter-spacing: 0.5px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sticky-cta,
+      .sticky-cta.is-visible {
+        transform: none;
+        transition: opacity 200ms ease, visibility 0s;
+      }
+    }
+
     /* ===================== SAVE THE DATE ===================== */
     .save-date__buttons {
       display: flex;
@@ -1601,6 +1651,10 @@
       .venue-mode {
         padding: 14px 14px;
       }
+      /* A phone has no screen space to spare for a floating button. */
+      .sticky-cta {
+        display: none;
+      }
     }
 
     /* At this width the map is already scrolling sideways, so drop the street
@@ -1614,6 +1668,12 @@
   </style>
 </head>
 <body>
+
+  <!-- Floating ticket CTA. Parked above the top edge until the banner's
+       "Get Tickets" button scrolls away. See the script at the bottom. -->
+  <div class="sticky-cta" id="stickyCta">
+    <button id="sticky-eb-trigger" type="button" class="btn--vibrant">Get Tickets</button>
+  </div>
 
   <!-- ============ HERO ============ -->
   <section class="hero" id="hero">
@@ -3793,6 +3853,41 @@
       iframeContainerId: 'eventbrite-widget-container-1991501404310',
       iframeContainerHeight: 700
     });
+  </script>
+
+  <!-- Floating ticket CTA -->
+  <script>
+    (function() {
+      const cta = document.getElementById('stickyCta');
+      const banner = document.getElementById('eb-modal-trigger');
+      const floating = document.getElementById('sticky-eb-trigger');
+      if (!cta || !banner || !floating) return;
+
+      // Eventbrite's modal is already bound to the banner button by id, so
+      // hand the click over to it instead of registering a second checkout
+      // widget against the same event.
+      floating.addEventListener('click', function() {
+        banner.click();
+      });
+
+      // Drop in once the banner button has left the top of the viewport, and
+      // pull back up the moment any part of it is on screen again. Watching
+      // the button itself covers the hero video above it for free, since you
+      // cannot reach the video without passing the button first.
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function(entries) {
+          const e = entries[0];
+          const scrolledPast = !e.isIntersecting && e.boundingClientRect.top < 0;
+          cta.classList.toggle('is-visible', scrolledPast);
+        }, { threshold: 0 }).observe(banner);
+      } else {
+        const update = function() {
+          cta.classList.toggle('is-visible', banner.getBoundingClientRect().bottom < 0);
+        };
+        update();
+        window.addEventListener('scroll', update, { passive: true });
+      }
+    })();
   </script>
 
 

@@ -1517,28 +1517,9 @@
         transform: translate(-50%, -50%) rotate(90deg);
       }
 
-      /* Every label counter-rotates so it still reads upright */
-      .floormap__svg text {
-        transform: rotate(-90deg);
-        transform-box: fill-box;
-        transform-origin: center;
-      }
-
-      /* The plan is drawn small to fit, so the markers grow to stay readable
-         and tappable. Scaled about their own centres, they stay on their
-         spot, and the text inside still counter-rotates upright. */
-      .floormap-spot {
-        transform: scale(1.45);
-        transform-box: fill-box;
-        transform-origin: center;
-      }
-
-      /* Turned upright, the Level 2 auditorium label runs across the enlarged
-         2A marker, so it slides up the screen (back along the plan's x) to
-         clear it. The leading translate is applied after the rotation. */
-      #fmFloor2 .fm-aud {
-        transform: translateX(-92px) rotate(-90deg);
-      }
+      /* The labels counter-rotating upright, and the markers scaling up to
+         stay readable, are applied as SVG transform attributes from script
+         rather than CSS here - see applyPortraitTransforms() for why. */
 
       .floormap-areas {
         max-height: var(--fm-list-h, 26vh);
@@ -2677,6 +2658,33 @@
         });
       }
 
+      // Portrait turns each label upright and grows the markers. Both want to
+      // happen about the element's own centre, and CSS does that with
+      // transform-box: fill-box - which WebKit ignores on SVG groups, so on
+      // iPhone every marker scaled about the middle of the whole plan and
+      // landed somewhere else entirely. SVG transform attributes carry their
+      // own explicit origin, so they behave the same in every browser, and
+      // getBoundingClientRect then agrees with what is actually drawn, which
+      // is what keeps the popups pinned to their markers.
+      function applyPortraitTransforms(on) {
+        panel.querySelectorAll('.floormap__svg text').forEach(function(label) {
+          if (!on) { label.removeAttribute('transform'); return; }
+          const x = parseFloat(label.getAttribute('x')) || 0;
+          const y = parseFloat(label.getAttribute('y')) || 0;
+          // The Level 2 auditorium label also slides clear of the 2A marker
+          const nudge = label.classList.contains('fm-aud') &&
+                        label.closest('#fmFloor2') ? 'translate(-92 0) ' : '';
+          label.setAttribute('transform', nudge + 'rotate(-90 ' + x + ' ' + y + ')');
+        });
+        panel.querySelectorAll('.floormap-spot').forEach(function(spot) {
+          if (!on) { spot.removeAttribute('transform'); return; }
+          const x = parseFloat(spot.getAttribute('data-x')) || 0;
+          const y = parseFloat(spot.getAttribute('data-y')) || 0;
+          spot.setAttribute('transform',
+            'translate(' + x + ' ' + y + ') scale(1.45) translate(' + (-x) + ' ' + (-y) + ')');
+        });
+      }
+
       // Width the current portrait sizing was built for; null means unsized
       let sizedForWidth = null;
 
@@ -2684,10 +2692,12 @@
         if (!portraitQuery || !portraitQuery.matches) {
           FM_VARS.forEach(function(v) { panel.style.removeProperty(v); });
           applyViewBox(BASE_VB);
+          applyPortraitTransforms(false);
           sizedForWidth = null;
           return;
         }
         applyViewBox(PORTRAIT_VB);
+        applyPortraitTransforms(true);
         // Only measure while the panel is actually on screen, or the reading
         // is meaningless and the map ends up sized off a collapsed layout.
         if (panel.hidden) return;

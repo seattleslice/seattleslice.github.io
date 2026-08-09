@@ -2628,6 +2628,9 @@
           fl.hidden = !show;
           if (show) centreFloor(fl);
         });
+        // The floor that just came up can be measured for the first time, so
+        // its labels can finally turn about their real centres
+        if (portraitQuery && portraitQuery.matches) applyPortraitTransforms(true);
         hidePop();
       }
 
@@ -2690,15 +2693,47 @@
       // own explicit origin, so they behave the same in every browser, and
       // getBoundingClientRect then agrees with what is actually drawn, which
       // is what keeps the popups pinned to their markers.
+      // A label has to turn about the point it is meant to stay on. The CSS
+      // this replaced used transform-box: fill-box, which turns about the
+      // centre of the label's own inked box, and the x and y attributes are not
+      // that point: y is the text baseline, which on a marker sits below the
+      // middle of the circle, so turning about it swings the code out of its
+      // circle. A marker turns about its circle instead, which is known exactly
+      // and needs no measuring. Anything else turns about the box getBBox
+      // reports, which is the same box fill-box used and reads the same in
+      // every browser - but it only answers for a floor that is on screen, so
+      // the last good reading is kept for the floors that are not.
+      function labelOrigin(label) {
+        const spot = label.closest('.floormap-spot');
+        if (spot) {
+          return [parseFloat(spot.getAttribute('data-x')) || 0,
+                  parseFloat(spot.getAttribute('data-y')) || 0];
+        }
+        let box = null;
+        try { box = label.getBBox(); } catch (e) { box = null; }
+        if (box && (box.width || box.height)) {
+          const ox = box.x + box.width / 2;
+          const oy = box.y + box.height / 2;
+          label.setAttribute('data-ox', ox);
+          label.setAttribute('data-oy', oy);
+          return [ox, oy];
+        }
+        const seen = label.getAttribute('data-ox');
+        if (seen !== null) return [parseFloat(seen), parseFloat(label.getAttribute('data-oy'))];
+        // Never measurable so far: the anchor keeps it upright, near enough,
+        // until its floor comes up and the real centre can be read
+        return [parseFloat(label.getAttribute('x')) || 0,
+                parseFloat(label.getAttribute('y')) || 0];
+      }
+
       function applyPortraitTransforms(on) {
         panel.querySelectorAll('.floormap__svg text').forEach(function(label) {
           if (!on) { label.removeAttribute('transform'); return; }
-          const x = parseFloat(label.getAttribute('x')) || 0;
-          const y = parseFloat(label.getAttribute('y')) || 0;
+          const o = labelOrigin(label);
           // The Level 2 auditorium label also slides clear of the 2A marker
           const nudge = label.classList.contains('fm-aud') &&
                         label.closest('#fmFloor2') ? 'translate(-92 0) ' : '';
-          label.setAttribute('transform', nudge + 'rotate(-90 ' + x + ' ' + y + ')');
+          label.setAttribute('transform', nudge + 'rotate(-90 ' + o[0] + ' ' + o[1] + ')');
         });
         panel.querySelectorAll('.floormap-spot').forEach(function(spot) {
           if (!on) { spot.removeAttribute('transform'); return; }

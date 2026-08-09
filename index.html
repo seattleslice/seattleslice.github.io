@@ -1529,6 +1529,30 @@
       }
     }
 
+    /* Mobile map view: touching the map parks the page on the panel, which is
+       already sized to the height of the window, so the plan and its key list
+       get the screen to themselves. The three fixed characters sit across that
+       bottom edge, so they step aside for as long as the mode lasts: briskly on
+       the way out, and back on the site's usual entrance timing once the reader
+       scrolls off. Portrait phones only - the mode is gated in frameMap(). */
+    @media (max-width: 768px) {
+      body.is-map-view .robot-mascot,
+      body.is-map-view .skyline,
+      body.is-map-view .bottom-characters {
+        transition-duration: 0.5s;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.7, 0.2);
+      }
+
+      body.is-map-view .robot-mascot.entered {
+        transform: translateX(110%);
+      }
+
+      body.is-map-view .skyline.entered,
+      body.is-map-view .bottom-characters.entered {
+        transform: translateY(110%);
+      }
+    }
+
     /* ===================== RESPONSIVE ===================== */
     @media (max-width: 768px) {
       .hero__video-bg {
@@ -2608,7 +2632,7 @@
       }
 
       tabs.forEach(function(tab, i) {
-        tab.addEventListener('click', function() { activateTab(tab); });
+        tab.addEventListener('click', function() { activateTab(tab); frameMap(); });
         // Arrow keys walk the floor list, as tab widgets are expected to.
         // stopPropagation keeps the events carousel's document-level arrow
         // listener from spinning while the user is on the tabs.
@@ -2732,10 +2756,178 @@
 
       layoutPortrait();
       window.addEventListener('orientationchange', function() {
-        window.setTimeout(function() { layoutPortrait(true); }, 120);
+        window.setTimeout(function() { layoutPortrait(true); syncMapView(); }, 120);
       });
       // Fonts and images settle after parse, which moves the measurements
       window.addEventListener('load', function() { layoutPortrait(true); });
+
+      // ---- mobile map view: touching the map frames it to the whole screen ----
+      // Portrait already sizes the panel to the height of the window, so the
+      // framing is only a matter of parking the page on it. Touch anything in
+      // the map and it slides into that frame, and the fixed characters stow
+      // themselves for as long as the mode holds - it reads as a little app
+      // sitting in the page rather than one more section scrolling past.
+      //
+      // Nothing is locked, deliberately. Scrolling the panel meaningfully off
+      // screen ends the mode and lets the characters back in, and the next
+      // touch on the map picks it up again.
+      let mapView = false;
+      let framing = false;   // our own framing scroll still owns the page
+      let frameSeq = 0;      // which framing scroll that is, so stale timers pass
+      let frameTarget = 0;   // page offset the current frame is aiming at
+      let frameGap = 0;      // how far it had to travel, so drift can be judged
+      let framedAt = 1;      // screen share the panel covers once parked there
+      let mapViewAt = -1;    // scroll offset the mode was last judged at
+
+      function mapViewAllowed() {
+        return !!(portraitQuery && portraitQuery.matches) && !panel.hidden;
+      }
+
+      // Distance from the top of the document, off the offset chain. A client
+      // rect would do except that the venue section fades in under a translateY
+      // and one read mid-reveal comes back short by exactly that much.
+      function panelPageTop() {
+        let y = 0;
+        for (let n = panel; n; n = n.offsetParent) y += n.offsetTop;
+        return y;
+      }
+
+      function framedScrollTop() {
+        // Any height the panel leaves over is split above and below it
+        const slack = Math.max(0, window.innerHeight - panel.offsetHeight);
+        const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+        return Math.max(0, Math.min(panelPageTop() - Math.round(slack / 2), max));
+      }
+
+      // Share of the screen the panel covers right now: 1 when it fills it
+      function framedFraction() {
+        const r = panel.getBoundingClientRect();
+        const vh = window.innerHeight;
+        const span = Math.min(r.height, vh);
+        if (span <= 0) return 0;
+        return (Math.min(r.bottom, vh) - Math.max(r.top, 0)) / span;
+      }
+
+      // The same share once the page has come to rest at target. Worked out
+      // from the target rather than sampled, because a frame that runs long
+      // would otherwise be measured in flight and bake in a false floor.
+      function restingFraction(target) {
+        const top = panelPageTop() - target;
+        const vh = window.innerHeight;
+        const span = Math.min(panel.offsetHeight, vh);
+        if (span <= 0) return 0;
+        return (Math.min(top + panel.offsetHeight, vh) - Math.max(top, 0)) / span;
+      }
+
+      function setMapView(on) {
+        if (mapView === on) return;
+        mapView = on;
+        document.body.classList.toggle('is-map-view', on);
+        if (!on) framing = false;
+      }
+
+      function syncMapView() {
+        if (mapView && !mapViewAllowed()) setMapView(false);
+      }
+
+      // Turning the phone sideways leaves the panel no longer sized to the
+      // screen, so the mode has nothing to hold on to. Watching the query
+      // itself rather than only resize keeps that off the frame callbacks.
+      if (portraitQuery && portraitQuery.addEventListener) {
+        portraitQuery.addEventListener('change', syncMapView);
+      }
+
+      // Every handler that counts as touching the map calls this
+      function frameMap() {
+        if (!mapViewAllowed()) { setMapView(false); return; }
+        setMapView(true);
+        frameTarget = framedScrollTop();
+        framedAt = restingFraction(frameTarget);
+        mapViewAt = window.scrollY;
+        // Already parked: hold the mode, but leave the page where it is
+        frameGap = Math.abs(window.scrollY - frameTarget);
+        if (frameGap <= 8) { framing = false; return; }
+        framing = true;
+        const seq = ++frameSeq;
+        const reduce = window.matchMedia &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce) {
+          // shared.css sets scroll-behavior: smooth on html, and that animates
+          // programmatic scrolls too, so asking for a jump is not enough on its
+          // own: turn it off for this one call. Left animated, the frame would
+          // glide while framing had already been cleared, and the first scroll
+          // event of the glide would read the map as scrolled away and end the
+          // mode before it had begun.
+          const root = document.documentElement;
+          const was = root.style.scrollBehavior;
+          root.style.scrollBehavior = 'auto';
+          window.scrollTo(0, frameTarget);
+          root.style.scrollBehavior = was;
+          framing = false;
+        } else if (!('scrollBehavior' in document.documentElement.style)) {
+          // No scroll-behavior support means no options object either, and the
+          // two argument form is the one every browser reads the same way
+          window.scrollTo(0, frameTarget);
+          framing = false;
+        } else {
+          window.scrollTo({ top: frameTarget, behavior: 'smooth' });
+          // A frame that is clamped short never reports arriving, so hand the
+          // page back on a timer too, or the mode could never be scrolled off.
+          window.setTimeout(function() { if (seq === frameSeq) framing = false; }, 1000);
+        }
+      }
+
+      // Deliberately not throttled through requestAnimationFrame. WebKit can
+      // hold frame callbacks back during momentum scrolling, which is the exact
+      // moment the mode has to let go; off the mode this costs a comparison,
+      // and on it a single rect read per scroll event.
+      window.addEventListener('scroll', function() {
+        if (!mapView) return;
+        const y = window.scrollY;
+        if (framing) {
+          // Our own scroll passes through here; arriving hands the page back
+          if (Math.abs(y - frameTarget) <= 4) { framing = false; mapViewAt = y; }
+          // A frame only ever closes on its target, so a page getting further
+          // away than it started is the reader carrying it off. Without this
+          // the mode could be left on, characters stowed, over a map that has
+          // been flicked off screen and has stopped firing scroll events.
+          else if (Math.abs(y - frameTarget) > frameGap + 24) setMapView(false);
+          return;
+        }
+        // Settling by a pixel or two is not the reader scrolling away
+        if (Math.abs(y - mapViewAt) < 4) return;
+        mapViewAt = y;
+        if (!mapViewAllowed()) { setMapView(false); return; }
+        // Measured against where the frame came to rest, so a panel that could
+        // not be fully framed does not read as already scrolled away.
+        if (framedFraction() < framedAt - 0.14) setMapView(false);
+      }, { passive: true });
+
+      // A drag or a wheel while the frame is still moving is the reader taking
+      // the page back, and the mode gives way rather than pulling against them.
+      // A drag inside the key list is not that: it scrolls the list, and these
+      // events bubble to the window whether or not the page moves at all.
+      function releaseFrame(e) {
+        if (!framing) return;
+        const from = e && e.target;
+        if (from && from.closest && from.closest('.floormap-areas')) return;
+        setMapView(false);
+      }
+      window.addEventListener('touchmove', releaseFrame, { passive: true });
+      window.addEventListener('wheel', releaseFrame, { passive: true });
+
+      // The three venue buttons decide which panel is open, and they run their
+      // own handlers first: by the time this one bubbles up the panel has been
+      // shown or hidden and laid out again, so opening the map means framing it
+      // and anything else means the mode is over.
+      const togglesRow = document.querySelector('.venue-toggles');
+      if (togglesRow) {
+        togglesRow.addEventListener('click', function(e) {
+          if (!e.target.closest('.venue-toggle')) return;
+          if (panel.hidden) { setMapView(false); return; }
+          if (e.target.closest('#sliceMapToggle')) frameMap();
+        });
+      }
 
       const mapToggle = document.getElementById('sliceMapToggle');
       if (mapToggle && window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
@@ -2752,8 +2944,16 @@
       const toggleBtn = document.getElementById('sliceMapToggle');
       if (toggleBtn) {
         toggleBtn.addEventListener('click', function() {
-          // Size the portrait layout now that the panel can be measured
-          layoutPortrait();
+          // Size the portrait layout now that the panel can be measured, and
+          // force it when opening. The first sizing ran at parse time, while
+          // the panel was still on screen, and latched the height it read
+          // then; on a phone that reading was taken with the address bar at
+          // full height, and by the time anyone has scrolled down this far the
+          // bar has shrunk and the window is the better part of a hundred
+          // pixels taller. Without a fresh measurement here the map is framed
+          // with a band of the next section showing above and below it.
+          // Scrolling still never resizes the map: only this explicit open.
+          layoutPortrait(!panel.hidden);
           const open = floors.filter(function(fl) { return !fl.hidden; })[0];
           if (open && !panel.hidden) centreFloor(open);
         });
@@ -2831,6 +3031,7 @@
         window.requestAnimationFrame(function() {
           resizeQueued = false;
           layoutPortrait();
+          syncMapView();
           if (shownSpot) showPop(shownSpot);
         });
       });
@@ -2840,6 +3041,7 @@
       panel.querySelectorAll('.floormap-pop').forEach(function(pop) {
         pop.addEventListener('click', function(e) {
           e.stopPropagation();
+          frameMap();
           hidePop();
         });
       });
@@ -2918,6 +3120,7 @@
         });
         spot.addEventListener('click', function(e) {
           e.stopPropagation();
+          frameMap();
           togglePin();
         });
         // SVG elements have no click() method, so run the handler directly
@@ -2925,6 +3128,7 @@
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             e.stopPropagation();
+            frameMap();
             togglePin();
           }
         });
@@ -2942,6 +3146,7 @@
         });
         card.addEventListener('click', function(e) {
           e.stopPropagation();
+          frameMap();
           // A card can belong to a floor that is not on screen: switch to
           // that floor first, then bring the marker into view and pin it.
           const floorBlock = spot.closest('.floormap-floor');
@@ -2990,6 +3195,7 @@
 
         function act(e) {
           e.stopPropagation();
+          frameMap();
           if (proxySpot) {
             // The Lecture Hall stair is an extension of the 1C icon
             proxySpot.dispatchEvent(new MouseEvent('click', { bubbles: false }));

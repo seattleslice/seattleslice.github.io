@@ -1401,7 +1401,12 @@
        Gold carries 1.8x the area of the four beside it, which is what makes it
        read as larger despite sitting on the same row. The bottom five total
        689px of logo plus 144px of gaps, leaving ~40px of slack either side for
-       the float to use without crowding the section edge. */
+       the float to use without crowding the section edge.
+       Epic is the exception: it is a near-square badge, so equal area would put
+       it at 166x193 and it would tower over every wordmark on the page. Its
+       height is capped at 130px instead and the width follows from that. */
+    .sponsor--unity     { --sp-w: 295px; }
+    .sponsor--epic      { --sp-w: 112px; }
     .sponsor--xsolla    { --sp-w: 384px; }
     .sponsor--commerce  { --sp-w: 335px; }
     .sponsor--phantom   { --sp-w: 164px; }
@@ -2590,6 +2595,15 @@
       <h2 class="section__title">Our Generous Sponsors</h2>
 
       <div class="sponsors-field" id="sponsorsField">
+        <div class="sponsors-row sponsors-row--diamond">
+          <a class="sponsor sponsor--unity" href="https://unity.com/" target="_blank" rel="noopener noreferrer" aria-label="Unity, Diamond sponsor">
+            <img class="sponsor__img" src="images/sponsors/unity.png" width="600" height="221" alt="Unity" loading="lazy">
+          </a>
+          <a class="sponsor sponsor--epic" href="https://www.epicgames.com/" target="_blank" rel="noopener noreferrer" aria-label="Epic Games, Diamond sponsor">
+            <img class="sponsor__img" src="images/sponsors/epic-games.png" width="517" height="600" alt="Epic Games" loading="lazy">
+          </a>
+        </div>
+
         <div class="sponsors-row sponsors-row--diamond">
           <a class="sponsor sponsor--xsolla" href="https://xsolla.com/" target="_blank" rel="noopener noreferrer" aria-label="Xsolla, Diamond sponsor">
             <img class="sponsor__img" src="images/sponsors/xsolla.png" width="600" height="130" alt="Xsolla" loading="lazy">
@@ -4065,7 +4079,15 @@
       const SPRING = 1.9;         // pull home, tuned for a ~4.5s float period
       const DAMPING = 0.85;       // under-damped on purpose so it keeps drifting
       const DRIFT = 30;           // px/s^2 of wander force
-      const MAX_OFFSET = 24;      // px leash, the logo can never leave this box
+      // Each logo gets its own leash, sized from the gap to its nearest
+      // neighbour (see measure). A single fixed budget cannot work at every
+      // breakpoint: 24px is comfortable for the Diamonds on a wide screen and
+      // enough for two logos in the bottom row to close a 24px mobile gap and
+      // overlap. Two neighbours can each spend LEASH_SHARE of the gap between
+      // them, so they close at most 80% of it and repulsion covers the rest.
+      const MAX_OFFSET = 24;      // px, the most any logo may stray
+      const MIN_OFFSET = 7;       // px, so a crowded logo still visibly floats
+      const LEASH_SHARE = 0.4;
       const MAX_TILT = 10;        // degrees, the limit the tilt can reach
       const REPEL = 260;          // px/s^2 at full overlap
       const REST_PAD = 1.10;      // neighbours start pushing just before touching
@@ -4110,6 +4132,19 @@
           t.ay = r.top - fr.top + r.height / 2;
           t.hw = r.width / 2;
           t.hh = r.height / 2;
+        });
+        // Now that every box is known, size each leash from the tightest gap
+        // that logo has to live with. Two boxes clear each other as soon as
+        // either axis separates them, so the gap is the larger of the two.
+        tiles.forEach(function(t) {
+          let nearest = Infinity;
+          tiles.forEach(function(o) {
+            if (o === t) return;
+            const gx = Math.abs(o.ax - t.ax) - (t.hw + o.hw);
+            const gy = Math.abs(o.ay - t.ay) - (t.hh + o.hh);
+            nearest = Math.min(nearest, Math.max(gx, gy));
+          });
+          t.leash = Math.max(MIN_OFFSET, Math.min(MAX_OFFSET, nearest * LEASH_SHARE));
         });
       }
 
@@ -4185,10 +4220,11 @@
 
           // Hard leash. Past the limit the offset is clipped and the outward
           // velocity killed, so a crowded row can never fling a logo away.
-          if (t.x > MAX_OFFSET) { t.x = MAX_OFFSET; if (t.vx > 0) t.vx = 0; }
-          else if (t.x < -MAX_OFFSET) { t.x = -MAX_OFFSET; if (t.vx < 0) t.vx = 0; }
-          if (t.y > MAX_OFFSET) { t.y = MAX_OFFSET; if (t.vy > 0) t.vy = 0; }
-          else if (t.y < -MAX_OFFSET) { t.y = -MAX_OFFSET; if (t.vy < 0) t.vy = 0; }
+          const lim = t.leash;
+          if (t.x > lim) { t.x = lim; if (t.vx > 0) t.vx = 0; }
+          else if (t.x < -lim) { t.x = -lim; if (t.vx < 0) t.vx = 0; }
+          if (t.y > lim) { t.y = lim; if (t.vy > 0) t.vy = 0; }
+          else if (t.y < -lim) { t.y = -lim; if (t.vy < 0) t.vy = 0; }
 
           t.tilt += (MAX_TILT * wander(t, 4, 5, time) - t.tilt) * Math.min(1, dt * 1.6);
           t.scale += (t.scaleTarget - t.scale) * Math.min(1, dt * 7);

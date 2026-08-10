@@ -4702,7 +4702,99 @@
     })();
   </script>
 
+  <!-- ============ SECTION DEEP LINKS ============ -->
+  <script>
+    // seattleslice.org/sponsors and the other one-word paths from the nav
+    // are small pages that bounce straight here as /#sponsors (see
+    // sponsors/index.html and its siblings). The browser aims at the hash by
+    // itself, but it aims at a page that is still growing: the speaker grid
+    // and the sessions list arrive from the sheet after load and push
+    // everything below them down. So keep re-placing the section while the
+    // page changes size, and stand down the moment the visitor moves on
+    // their own or the page holds still.
+    (function() {
+      const KNOWN = ['about', 'speakers', 'events', 'sessions', 'venue', 'sponsors', 'tickets'];
+      const id = location.hash.slice(1);
+      if (KNOWN.indexOf(id) === -1) return;
 
+      // Only on a fresh arrival. Coming back or reloading, the browser
+      // restores wherever the visitor last was, and re-aiming the hash then
+      // would yank them away from it.
+      const navEntry = performance.getEntriesByType &&
+        performance.getEntriesByType('navigation')[0];
+      if (navEntry && navEntry.type !== 'navigate') return;
+
+      // Wheel, touch, keys or a press mean the visitor took the wheel. Our
+      // own scrollTo calls fire none of these, so corrections below do not
+      // count against themselves.
+      let visitorSteering = false;
+      ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach(function(type) {
+        window.addEventListener(type, function() { visitorSteering = true; },
+          { passive: true, once: true });
+      });
+
+      function place() {
+        const target = document.getElementById(id);
+        // Gone or hidden (an empty sheet takes its section down): stay put
+        if (!target || !target.offsetParent) return;
+        // Offset chain rather than a rect, and 40px of headroom, for the
+        // same reasons as jumpTop above.
+        let y = 0;
+        for (let n = target; n; n = n.offsetParent) y += n.offsetTop;
+        // A landing, not a glide: shared.css sets scroll-behavior: smooth on
+        // html, and that would animate every correction into a lurch.
+        const rootEl = document.documentElement;
+        const was = rootEl.style.scrollBehavior;
+        rootEl.style.scrollBehavior = 'auto';
+        window.scrollTo(0, Math.max(0, y - 40));
+        rootEl.style.scrollBehavior = was;
+      }
+
+      place();
+
+      // A link opened into a background tab loads with rendering parked, and
+      // the tab's first showing is the first anyone looks: aim once more
+      // right then. The load event gets the same shot, for the stretch the
+      // sheets can beat the rest of the page by.
+      window.addEventListener('load', function() {
+        if (!visitorSteering) place();
+      });
+      document.addEventListener('visibilitychange', function onVis() {
+        if (document.visibilityState !== 'visible') return;
+        document.removeEventListener('visibilitychange', onVis);
+        if (!visitorSteering) place();
+      });
+
+      // Ten seconds of watching is long past the sheets on any connection
+      // worth planning for, and past that the visitor has long since started
+      // reading whatever is in front of them. The sheet-fed sections
+      // announce themselves as DOM changes, which arrive even in a hidden
+      // tab; late image and font layout only shows up as the page changing
+      // height, which takes a visible tab to be seen. So watch both ways.
+      const WATCH_MS = 10000;
+      const watchers = [];
+
+      const mo = new MutationObserver(react);
+      mo.observe(document.body, { childList: true, subtree: true });
+      watchers.push(mo);
+
+      if (typeof ResizeObserver === 'function') {
+        const ro = new ResizeObserver(react);
+        ro.observe(document.body);
+        watchers.push(ro);
+      }
+
+      function react() {
+        if (visitorSteering) { stopWatching(); return; }
+        place();
+      }
+      function stopWatching() {
+        watchers.forEach(function(w) { w.disconnect(); });
+        watchers.length = 0;
+      }
+      setTimeout(stopWatching, WATCH_MS);
+    })();
+  </script>
 
 </body>
 </html>

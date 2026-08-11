@@ -540,6 +540,78 @@ body {
   transform-origin: 50% 10%;
 }
 
+/* ===================== JIMOTHY EASTER EGG ===================== */
+.jimothy-mascot {
+  position: fixed;
+  bottom: 0;
+  left: 30px;
+  width: 18vw;
+  min-width: 126px;
+  max-width: 300px;
+  z-index: 50;
+  display: block;
+  cursor: pointer;
+  /* While offstage the link must leave the tab order and the accessibility
+     tree, not just sit below the viewport; the visibility flip waits out the
+     slide on the way down and is immediate on the way up */
+  visibility: hidden;
+  transform: translateY(110%);
+  transition: transform 1.8s cubic-bezier(0.25, 1, 0.5, 1), visibility 0s 1.8s;
+}
+
+/* Rest position keeps the body pivot (row 246 of the 257px image) on the
+   bottom edge of the screen */
+.jimothy-mascot.entered {
+  visibility: visible;
+  transform: translateY(4.28%);
+  transition-delay: 0s;
+}
+
+/* Every offset below is a fraction of the 262x257 body image, which is what
+   the container is sized to, so the whole rig scales with it. The rig holds
+   the body and the rod; the base is pinned to the page bottom separately. */
+.jimothy-mascot__rig {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  /* Body pivot (106, 246) */
+  transform-origin: 40.458% 95.720%;
+}
+
+.jimothy-mascot__body {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Rod, behind the body: its top anchor (31, 42) in the 100x105 image is pinned
+   to the body's (237, 115), and it pivots there */
+.jimothy-mascot__arm {
+  position: absolute;
+  z-index: 0;
+  left: 78.626%;
+  top: 28.405%;
+  width: 38.168%;
+  height: auto;
+  transform-origin: 31.000% 40.000%;
+}
+
+/* Joystick base, behind the rod. Its pivot (41, 66) in the 88x78 image is
+   pinned 179 px right of the body's pivot and 29 px above the page bottom,
+   which is where the rod can actually hold it, so it stays put while the body
+   sways. It reads as standing a little behind him. */
+.jimothy-mascot__base {
+  position: absolute;
+  z-index: 0;
+  left: 93.130%;
+  top: 58.755%;
+  width: 33.588%;
+  height: auto;
+  transform-origin: 46.591% 84.615%;
+}
+
 /* ===================== SKYLINE ===================== */
 .skyline {
   position: fixed;

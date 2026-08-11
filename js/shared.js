@@ -373,25 +373,30 @@ revealEls.forEach(el => revealObserver.observe(el));
     idleSpeed: 0.4 + i * 0.15
   }));
 
-  // Hide characters while hero/intro video is in view
+  // Hide characters while hero/intro video is in view, or while Jimothy
+  // has the corner (see the Jimothy module below)
   const hero = document.getElementById('hero');
   let entered = false;
 
+  function shouldShow() {
+    if (window.jimothyHoldsCorner) return false;
+    if (!hero) return true; // no hero on this page, just show
+    return hero.getBoundingClientRect().bottom / window.innerHeight <= 0.85;
+  }
+
   function updateVisibility() {
-    if (!hero) {
-      // No hero on this page, just show after delay
-      if (!entered) { entered = true; container.classList.add('entered'); }
-      return;
-    }
-    const heroVisible = hero.getBoundingClientRect().bottom / window.innerHeight;
-    if (heroVisible <= 0.85 && !entered) {
+    const show = shouldShow();
+    if (show && !entered) {
       entered = true;
       container.classList.add('entered');
-    } else if (heroVisible > 0.85 && entered) {
+    } else if (!show && entered) {
       entered = false;
       container.classList.remove('entered');
     }
   }
+
+  // The Jimothy module nudges this when it takes or gives back the corner
+  window.updateBottomCharsVisibility = updateVisibility;
 
   void container.offsetWidth; // force layout so transition triggers
   updateVisibility();
@@ -486,6 +491,202 @@ revealEls.forEach(el => revealObserver.observe(el));
       }
     }
   }, { passive: true });
+})();
+
+// ===================== JIMOTHY EASTER EGG =====================
+// Jimothy hides below the bottom-left corner and only comes up once the
+// reader has scrolled the whole page: the three characters step aside
+// first, then he rises with the body pivot resting on the bottom edge.
+// Scrolling up at all reverses the swap.
+(function() {
+  const jimothyMascot = document.getElementById('jimothyMascot');
+  const jimothyRig = document.getElementById('jimothyRig');
+  const jimothyArm = document.getElementById('jimothyArm');
+  const jimothyBase = document.getElementById('jimothyBase');
+
+  if (!jimothyMascot || !jimothyRig || !jimothyArm || !jimothyBase) return;
+
+  // ---- Rig -------------------------------------------------------------
+  // All coordinates are pixels of the 262x257 body image, which is what the
+  // container is sized to, so the maths holds at any rendered scale. Two points
+  // are pinned: the body's (106,246) on the page bottom, and the base's (41,66)
+  // BASE_OFFSET to its right and BASE_LIFT above it. The rod is a rigid link
+  // from the body's shoulder to the base's socket, so body, rod and base form a
+  // four bar linkage: one degree of freedom, everything else follows.
+  //
+  // The two pinned points and the rod's length decide each other: at rest every
+  // piece must sit at its drawn angle, which means the shoulder has to be the
+  // rod's own drop plus BASE_LIFT plus the socket's height above the page
+  // bottom. The shoulder here is 131 px up while the rod and socket only reach
+  // 119, which is why the base is lifted clear of the page bottom rather than
+  // planted on it. Change any of these and rework the rest from that rule, or
+  // the joints come apart.
+  const BODY_PIVOT = { x: 106, y: 246 };   // meets the page bottom
+  const SHOULDER = { x: 237, y: 115 };     // where the rod's top pins to the body
+  const ARM_TOP = { x: 31, y: 42 };        // on the 100x105 rod image
+  const ARM_BOTTOM = { x: 79, y: 101 };    // on the 100x105 rod image
+  const BASE_SOCKET = { x: 41, y: 23 };    // on the 88x78 base image
+  const BASE_PIVOT = { x: 41, y: 66 };     // the base's own fixed point
+  const BASE_OFFSET = 179;                 // base pivot, right of the body pivot
+  const BASE_LIFT = 29;                    // base pivot, above the page bottom
+
+  // Body pivot to shoulder, rod top to rod bottom, base pivot to socket. The
+  // socket is drawn straight above the base's pivot, which is what lets the
+  // socket swing be a plain sin/cos of the tilt below.
+  const shoulderRadius = Math.hypot(SHOULDER.x - BODY_PIVOT.x, SHOULDER.y - BODY_PIVOT.y);
+  const rodLength = Math.hypot(ARM_BOTTOM.x - ARM_TOP.x, ARM_BOTTOM.y - ARM_TOP.y);
+  const socketRadius = BASE_PIVOT.y - BASE_SOCKET.y;
+  const restShoulderAngle = Math.atan2(SHOULDER.y - BODY_PIVOT.y, SHOULDER.x - BODY_PIVOT.x);
+  const restRodAngle = Math.atan2(ARM_BOTTOM.y - ARM_TOP.y, ARM_BOTTOM.x - ARM_TOP.x);
+  const DEG = 180 / Math.PI;
+
+  // Tilt the base and solve the rest: the socket swings around the base's
+  // pinned pivot, the shoulder has to be one rod length from it while staying
+  // on its own circle around the body's pinned pivot, and the rod points from
+  // one to the other. Origin is the body pivot, y downwards.
+  function setPose(baseDeg) {
+    const t = baseDeg / DEG;
+    const socketX = BASE_OFFSET + socketRadius * Math.sin(t);
+    const socketY = -BASE_LIFT - socketRadius * Math.cos(t);
+    const reach = Math.hypot(socketX, socketY);
+
+    // Circle intersection: distance along the socket direction to the chord,
+    // then off to the side by half the chord. The near side is the one that
+    // keeps Jimothy upright.
+    const along = (reach * reach + shoulderRadius * shoulderRadius - rodLength * rodLength) / (2 * reach);
+    const asideSq = shoulderRadius * shoulderRadius - along * along;
+    const aside = asideSq > 0 ? Math.sqrt(asideSq) : 0;
+    const shoulderX = (along * socketX + aside * socketY) / reach;
+    const shoulderY = (along * socketY - aside * socketX) / reach;
+
+    const bodyDeg = (Math.atan2(shoulderY, shoulderX) - restShoulderAngle) * DEG;
+    const rodDeg = (Math.atan2(socketY - shoulderY, socketX - shoulderX) - restRodAngle) * DEG;
+
+    jimothyRig.style.transform = `rotate(${bodyDeg}deg)`;
+    // The rod hangs inside the rig, so it has already been turned by bodyDeg
+    jimothyArm.style.transform = `rotate(${rodDeg - bodyDeg}deg)`;
+    jimothyBase.style.transform = `rotate(${baseDeg}deg)`;
+  }
+
+  let jimothyAnimId = null;
+  let jimothyIdleId = null;
+  let jimothyAnimating = false;
+
+  // Gentle idle waggle. The socket never leaves the rod's reach at any tilt, but
+  // the body turns over at -26.4 degrees: tilt the base past that and he leans
+  // back the other way instead of following it. Keep every amplitude inside it.
+  function startIdleAnimation() {
+    if (jimothyIdleId) return;
+    let t = 0;
+    let last = null;
+    function idleTick(now) {
+      // 1.2 a second, which is what 0.02 a frame came to at 60Hz, so a 120Hz
+      // screen gets the same lazy waggle rather than one at double speed.
+      // Capped so a tab coming back from the background does not lurch.
+      const step = last === null ? 1 / 60 : Math.min((now - last) / 1000, 0.05);
+      last = now;
+      t += step * 1.2;
+      setPose(Math.sin(t * 0.7) * 4.5 + Math.sin(t * 1.6 + 1) * 1.5);
+      jimothyIdleId = requestAnimationFrame(idleTick);
+    }
+    jimothyIdleId = requestAnimationFrame(idleTick);
+  }
+
+  function stopIdleAnimation() {
+    if (jimothyIdleId) {
+      cancelAnimationFrame(jimothyIdleId);
+      jimothyIdleId = null;
+    }
+  }
+
+  // Excited waggle: he leans on the stick and the base rocks under it
+  function DoJimothyAnimation() {
+    if (jimothyAnimating) return;
+    // He can sit under the pointer for a moment longer while he slides away,
+    // and by then the exit has already parked the rig. Starting a loop here
+    // would leave it running offstage for the rest of the visit.
+    if (!jimothyMascot.classList.contains('entered')) return;
+    jimothyAnimating = true;
+    stopIdleAnimation();
+
+    const duration = 3000;
+    const start = performance.now();
+
+    function animTick(now) {
+      const p = (now - start) / duration;
+
+      if (p >= 1) {
+        jimothyAnimating = false;
+        setPose(0);
+        if (jimothyMascot.classList.contains('entered')) startIdleAnimation();
+        return;
+      }
+
+      const envelope = Math.sin(p * Math.PI);
+      setPose(envelope * Math.sin(p * Math.PI * 8) * 12);
+      jimothyAnimId = requestAnimationFrame(animTick);
+    }
+    jimothyAnimId = requestAnimationFrame(animTick);
+  }
+
+  setPose(0);
+
+  // Swap the corner between the three characters and Jimothy. The shared
+  // slide transition spends most of its motion early, so a beat under a
+  // second is enough for one act to be mostly offstage before the next
+  // comes up.
+  let atBottom = false;
+  let swapTimer = null;
+
+  function isAtBottom() {
+    const doc = document.documentElement;
+    return window.innerHeight + window.scrollY >= doc.scrollHeight - 2;
+  }
+
+  function updateAtBottom() {
+    const nowAtBottom = isAtBottom();
+    if (nowAtBottom === atBottom) return;
+    atBottom = nowAtBottom;
+    clearTimeout(swapTimer);
+
+    if (atBottom) {
+      window.jimothyHoldsCorner = true;
+      if (window.updateBottomCharsVisibility) window.updateBottomCharsVisibility();
+      swapTimer = setTimeout(() => {
+        jimothyMascot.classList.add('entered');
+        DoJimothyAnimation();
+      }, 900);
+    } else {
+      jimothyMascot.classList.remove('entered');
+      swapTimer = setTimeout(() => {
+        window.jimothyHoldsCorner = false;
+        if (window.updateBottomCharsVisibility) window.updateBottomCharsVisibility();
+        // He is off the bottom of the screen by now, so stop the rig until he
+        // is called back up, and leave him parked at rest for the next entrance
+        if (jimothyAnimId) cancelAnimationFrame(jimothyAnimId);
+        jimothyAnimId = null;
+        jimothyAnimating = false;
+        stopIdleAnimation();
+        setPose(0);
+      }, 900);
+    }
+  }
+
+  updateAtBottom();
+  window.addEventListener('scroll', updateAtBottom, { passive: true });
+  window.addEventListener('resize', updateAtBottom, { passive: true });
+
+  // The sheet-fed speaker and session sections grow the page after load
+  // without any scroll event firing, which would leave the at-bottom state
+  // stale; watch the body the way the deeplink corrector does
+  if (typeof ResizeObserver === 'function') {
+    new ResizeObserver(updateAtBottom).observe(document.body);
+  }
+
+  // Hover triggers the excited animation on desktop, tap on mobile
+  // (tapping also follows the link)
+  jimothyMascot.addEventListener('mouseenter', DoJimothyAnimation);
+  jimothyMascot.addEventListener('touchstart', DoJimothyAnimation, { passive: true });
 })();
 
 // ===================== SKYLINE =====================

@@ -87,7 +87,7 @@
   <!-- Bump ?v= whenever shared.css or shared.js changes. GitHub Pages serves
        both with max-age=600, and a phone holding a stale shared.js next to a
        fresh page is how the speaker and session lists silently come up empty. -->
-  <link rel="stylesheet" href="styles/shared.css?v=2026-08-07">
+  <link rel="stylesheet" href="styles/shared.css?v=2026-08-10">
   <!-- The Sessions section, shared with s.html. See js/sessions.js. -->
   <link rel="stylesheet" href="styles/sessions.css?v=2026-08-07">
   <style>
@@ -2713,10 +2713,20 @@
     </div>
   </div>
 
+  <!-- The base is pinned to the page bottom on its own, so it sits outside the
+       rig that carries the body and the rod. See the linkage in js/shared.js. -->
+  <a class="jimothy-mascot" id="jimothyMascot" href="https://itch.io/jam/jimothy-jamothy" target="_blank" rel="noopener noreferrer" aria-label="Jimothy">
+    <img class="jimothy-mascot__base" id="jimothyBase" src="images/jimothy/jimothycontrollerbase.png" alt="" draggable="false">
+    <div class="jimothy-mascot__rig" id="jimothyRig">
+      <img class="jimothy-mascot__arm" id="jimothyArm" src="images/jimothy/jimothyarm.png" alt="" draggable="false">
+      <img class="jimothy-mascot__body" src="images/jimothy/jimothybody.png" alt="" draggable="false">
+    </div>
+  </a>
+
   <!-- Ahead of shared.js: it puts the Sessions section and the session panel
        in place, and shared.js reads both as it starts. -->
   <script src="js/sessions.js?v=2026-08-07"></script>
-  <script src="js/shared.js?v=2026-08-07"></script>
+  <script src="js/shared.js?v=2026-08-10"></script>
   <script>
     // Show scroll indicator after 5 seconds
     setTimeout(() => {

@@ -2597,7 +2597,9 @@
         </div>
 
         <div class="sponsors-row sponsors-row--diamond">
-          <a class="sponsor sponsor--xsolla" href="https://xsolla.com/" target="_blank" rel="noopener noreferrer" aria-label="Xsolla, Diamond sponsor">
+          <!-- Xsolla asked that their mark never sit at an angle, so this one
+               drifts and reacts like the rest but stays level. -->
+          <a class="sponsor sponsor--xsolla" data-no-tilt href="https://xsolla.com/" target="_blank" rel="noopener noreferrer" aria-label="Xsolla, Diamond sponsor">
             <img class="sponsor__img" src="images/sponsors/xsolla.png" width="600" height="130" alt="Xsolla" loading="lazy">
           </a>
           <a class="sponsor sponsor--commerce" href="https://www.commerce.wa.gov/" target="_blank" rel="noopener noreferrer" aria-label="Washington State Department of Commerce, Diamond sponsor">
@@ -4115,6 +4117,9 @@
           x: 0, y: 0, vx: 0, vy: 0,   // offset from the anchor, px
           fx: 0, fy: 0,               // force accumulator for the current frame
           tilt: 0,
+          // Opt a logo out of the tilt with data-no-tilt when the brand needs
+          // to stay level. It keeps the drift, the repulsion and the glow.
+          maxTilt: el.hasAttribute('data-no-tilt') ? 0 : MAX_TILT,
           scale: 1, scaleTarget: 1,
           ax: 0, ay: 0, hw: 0, hh: 0, // anchor centre and half extents
           active: false,
@@ -4236,7 +4241,7 @@
           if (t.y > lim) { t.y = lim; if (t.vy > 0) t.vy = 0; }
           else if (t.y < -lim) { t.y = -lim; if (t.vy < 0) t.vy = 0; }
 
-          t.tilt += (MAX_TILT * wander(t, 4, 5, time) - t.tilt) * Math.min(1, dt * 1.6);
+          t.tilt += (t.maxTilt * wander(t, 4, 5, time) - t.tilt) * Math.min(1, dt * 1.6);
           t.scale += (t.scaleTarget - t.scale) * Math.min(1, dt * 7);
 
           t.el.style.transform =

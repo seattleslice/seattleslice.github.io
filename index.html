@@ -1328,9 +1328,9 @@
       gap: 64px;
     }
 
-    /* Five logos share this row, so it needs a tighter gap than the Diamond pair. */
+    /* Six logos share this row, so it needs a much tighter gap than the rows above. */
     .sponsors-row--supporting {
-      gap: 36px;
+      gap: 28px;
     }
 
     .sponsor {
@@ -1390,10 +1390,10 @@
     /* Widths come from equal optical area per tier: width = sqrt(area x aspect
        ratio). Sizing on width alone would let a long wordmark like Miraisens
        tower over a stacked mark like 11 bit studios even at the same tier.
-       Gold carries 1.8x the area of the four beside it, which is what makes it
-       read as larger despite sitting on the same row. The bottom five total
-       689px of logo plus 144px of gaps, leaving ~40px of slack either side for
-       the float to use without crowding the section edge.
+       Gold carries 1.8x the area of the bottom row, which is what keeps it
+       reading as larger while sitting in a row with two Diamonds. The bottom
+       six total 701px of logo plus 140px of gaps, leaving ~35px of slack either
+       side for the float to use without crowding the section edge.
        Epic is the exception: it is a near-square badge, so equal area would put
        it at 166x193 and it would tower over every wordmark on the page. Its
        height is capped at 130px instead and the width follows from that. */
@@ -1402,10 +1402,12 @@
     .sponsor--xsolla    { --sp-w: 384px; }
     .sponsor--commerce  { --sp-w: 335px; }
     .sponsor--phantom   { --sp-w: 164px; }
-    .sponsor--elevenbit { --sp-w: 99px; }
-    .sponsor--premack   { --sp-w: 116px; }
-    .sponsor--miraisens { --sp-w: 161px; }
-    .sponsor--digipen   { --sp-w: 149px; }
+    .sponsor--elevenbit { --sp-w: 84px; }
+    .sponsor--premack   { --sp-w: 99px; }
+    .sponsor--miraisens { --sp-w: 138px; }
+    .sponsor--digipen   { --sp-w: 127px; }
+    .sponsor--discord   { --sp-w: 161px; }
+    .sponsor--sca       { --sp-w: 92px; }
 
     /* Reduced motion: the script parks every logo on its anchor and tags the
        field, so the grow and glow fall back to a plain CSS hover. */
@@ -1418,24 +1420,26 @@
       transform: scale(1.08);
     }
 
-    /* The bottom row of five is what decides these numbers - the Diamond pair
-       has room to spare at every width. */
+    /* The bottom row of six is what decides these numbers - the rows above have
+       room to spare at every width. */
     @media (max-width: 900px) {
       .sponsors-field { --sp-scale: 0.82; gap: 36px; }
       .sponsors-row { gap: 48px; }
-      .sponsors-row--supporting { gap: 28px; }
+      .sponsors-row--supporting { gap: 22px; }
     }
 
+    /* Below this the bottom six wrap onto two lines anyway, so the row is no
+       longer the constraint and the logos can be bigger than the desktop
+       sizing implies. The widest single logo against the container edge is
+       what caps the scale from here down. */
     @media (max-width: 640px) {
-      .sponsors-field { --sp-scale: 0.72; gap: 30px; }
+      .sponsors-field { --sp-scale: 0.80; gap: 30px; }
       .sponsors-row { gap: 36px; }
-      .sponsors-row--supporting { gap: 24px; }
+      .sponsors-row--supporting { gap: 20px; }
     }
 
-    /* The leash is a fixed pixel budget, so once the logos shrink the rows need
-       a little more air between them or a drifting pair closes the whole gap. */
     @media (max-width: 430px) {
-      .sponsors-field { --sp-scale: 0.66; gap: 38px; }
+      .sponsors-field { --sp-scale: 0.72; gap: 34px; }
     }
 
     /* ===================== DESKTOP MARQUEE ===================== */
@@ -2591,26 +2595,26 @@
           <a class="sponsor sponsor--unity" href="https://unity.com/" target="_blank" rel="noopener noreferrer" aria-label="Unity, Diamond sponsor">
             <img class="sponsor__img" src="images/sponsors/unity.png" width="600" height="221" alt="Unity" loading="lazy">
           </a>
-          <a class="sponsor sponsor--epic" href="https://www.epicgames.com/" target="_blank" rel="noopener noreferrer" aria-label="Epic Games, Diamond sponsor">
-            <img class="sponsor__img" src="images/sponsors/epic-games.png" width="517" height="600" alt="Epic Games" loading="lazy">
-          </a>
-        </div>
-
-        <div class="sponsors-row sponsors-row--diamond">
-          <!-- Xsolla asked that their mark never sit at an angle, so this one
-               drifts and reacts like the rest but stays level. -->
-          <a class="sponsor sponsor--xsolla" data-no-tilt href="https://xsolla.com/" target="_blank" rel="noopener noreferrer" aria-label="Xsolla, Diamond sponsor">
-            <img class="sponsor__img" src="images/sponsors/xsolla.png" width="600" height="130" alt="Xsolla" loading="lazy">
-          </a>
           <a class="sponsor sponsor--commerce" href="https://www.commerce.wa.gov/" target="_blank" rel="noopener noreferrer" aria-label="Washington State Department of Commerce, Diamond sponsor">
             <img class="sponsor__img" src="images/sponsors/wa-dept-of-commerce.png" width="600" height="171" alt="Washington State Department of Commerce" loading="lazy">
           </a>
         </div>
 
-        <div class="sponsors-row sponsors-row--supporting">
+        <div class="sponsors-row sponsors-row--diamond">
+          <a class="sponsor sponsor--epic" href="https://www.epicgames.com/" target="_blank" rel="noopener noreferrer" aria-label="Epic Games, Diamond sponsor">
+            <img class="sponsor__img" src="images/sponsors/epic-games.png" width="517" height="600" alt="Epic Games" loading="lazy">
+          </a>
+          <!-- Xsolla asked that their mark never sit at an angle, so this one
+               drifts and reacts like the rest but stays level. -->
+          <a class="sponsor sponsor--xsolla" data-no-tilt href="https://xsolla.com/" target="_blank" rel="noopener noreferrer" aria-label="Xsolla, Diamond sponsor">
+            <img class="sponsor__img" src="images/sponsors/xsolla.png" width="600" height="127" alt="Xsolla" loading="lazy">
+          </a>
           <a class="sponsor sponsor--phantom" href="https://phantomfriends.com/" target="_blank" rel="noopener noreferrer" aria-label="Phantom Friends, Gold sponsor">
             <img class="sponsor__img" src="images/sponsors/phantom-friends.png" width="600" height="216" alt="Phantom Friends" loading="lazy">
           </a>
+        </div>
+
+        <div class="sponsors-row sponsors-row--supporting">
           <a class="sponsor sponsor--elevenbit" href="https://www.11bitstudios.com/" target="_blank" rel="noopener noreferrer" aria-label="11 bit studios, sponsor">
             <img class="sponsor__img" src="images/sponsors/11-bit-studios.png" width="600" height="330" alt="11 bit studios" loading="lazy">
           </a>
@@ -2622,6 +2626,12 @@
           </a>
           <a class="sponsor sponsor--digipen" href="https://www.digipen.edu/" target="_blank" rel="noopener noreferrer" aria-label="DigiPen Institute of Technology, sponsor">
             <img class="sponsor__img" src="images/sponsors/digipen.png" width="600" height="145" alt="DigiPen Institute of Technology" loading="lazy">
+          </a>
+          <a class="sponsor sponsor--discord" href="https://discord.com/" target="_blank" rel="noopener noreferrer" aria-label="Discord, sponsor">
+            <img class="sponsor__img" src="images/sponsors/discord.png" width="600" height="91" alt="Discord" loading="lazy">
+          </a>
+          <a class="sponsor sponsor--sca" href="https://seattlecomposers.org/" target="_blank" rel="noopener noreferrer" aria-label="Seattle Composers Alliance, sponsor">
+            <img class="sponsor__img" src="images/sponsors/seattle-composers-alliance.png" width="600" height="278" alt="Seattle Composers Alliance" loading="lazy">
           </a>
         </div>
       </div>

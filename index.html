@@ -1328,9 +1328,10 @@
       gap: 64px;
     }
 
-    /* Six logos share this row, so it needs a much tighter gap than the rows above. */
+    /* Seven logos share this row, so it needs a much tighter gap than the rows
+       above. This is about as many as 912px will hold on one line. */
     .sponsors-row--supporting {
-      gap: 28px;
+      gap: 24px;
     }
 
     .sponsor {
@@ -1392,22 +1393,25 @@
        tower over a stacked mark like 11 bit studios even at the same tier.
        Gold carries 1.8x the area of the bottom row, which is what keeps it
        reading as larger while sitting in a row with two Diamonds. The bottom
-       six total 701px of logo plus 140px of gaps, leaving ~35px of slack either
-       side for the float to use without crowding the section edge.
+       seven total 710px of logo plus 144px of gaps, leaving ~29px of slack
+       either side for the float to use without crowding the section edge.
        Epic is the exception: it is a near-square badge, so equal area would put
        it at 166x193 and it would tower over every wordmark on the page. Its
-       height is capped at 130px instead and the width follows from that. */
+       height is capped at 130px instead and the width follows from that.
+       Times of Games is the other exception, deliberately: it carries 0.7x the
+       area of the rest of its row so it reads as the smallest of the set. */
     .sponsor--unity     { --sp-w: 295px; }
     .sponsor--epic      { --sp-w: 112px; }
     .sponsor--xsolla    { --sp-w: 384px; }
     .sponsor--commerce  { --sp-w: 335px; }
     .sponsor--phantom   { --sp-w: 164px; }
-    .sponsor--elevenbit { --sp-w: 84px; }
-    .sponsor--premack   { --sp-w: 99px; }
-    .sponsor--miraisens { --sp-w: 138px; }
-    .sponsor--digipen   { --sp-w: 127px; }
-    .sponsor--discord   { --sp-w: 161px; }
-    .sponsor--sca       { --sp-w: 92px; }
+    .sponsor--elevenbit    { --sp-w: 73px; }
+    .sponsor--premack      { --sp-w: 86px; }
+    .sponsor--miraisens    { --sp-w: 119px; }
+    .sponsor--digipen      { --sp-w: 110px; }
+    .sponsor--discord      { --sp-w: 139px; }
+    .sponsor--sca          { --sp-w: 80px; }
+    .sponsor--timesofgames { --sp-w: 103px; }
 
     /* Reduced motion: the script parks every logo on its anchor and tags the
        field, so the grow and glow fall back to a plain CSS hover. */
@@ -1433,13 +1437,15 @@
        sizing implies. The widest single logo against the container edge is
        what caps the scale from here down. */
     @media (max-width: 640px) {
-      .sponsors-field { --sp-scale: 0.80; gap: 30px; }
+      .sponsors-field { --sp-scale: 0.88; gap: 30px; }
       .sponsors-row { gap: 36px; }
       .sponsors-row--supporting { gap: 20px; }
     }
 
+    /* 0.76 is set by the widest logo against the container: Xsolla at 384px
+       still clears a 360px phone with room for the float to use. */
     @media (max-width: 430px) {
-      .sponsors-field { --sp-scale: 0.72; gap: 34px; }
+      .sponsors-field { --sp-scale: 0.76; gap: 34px; }
     }
 
     /* ===================== DESKTOP MARQUEE ===================== */
@@ -2632,6 +2638,9 @@
           </a>
           <a class="sponsor sponsor--sca" href="https://seattlecomposers.org/" target="_blank" rel="noopener noreferrer" aria-label="Seattle Composers Alliance, sponsor">
             <img class="sponsor__img" src="images/sponsors/seattle-composers-alliance.png" width="600" height="278" alt="Seattle Composers Alliance" loading="lazy">
+          </a>
+          <a class="sponsor sponsor--timesofgames" href="https://www.timesofgames.com/" target="_blank" rel="noopener noreferrer" aria-label="Times of Games, sponsor">
+            <img class="sponsor__img" src="images/sponsors/times-of-games.png" width="600" height="117" alt="Times of Games" loading="lazy">
           </a>
         </div>
       </div>

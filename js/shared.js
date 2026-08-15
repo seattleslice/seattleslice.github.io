@@ -183,6 +183,23 @@ var sessions = [];
 
 const SESSION_SEATS = ['Moderator/Speaker', 'Seat 1', 'Seat 2', 'Seat 3'];
 
+// A seat usually names one person, but a roundtable can put several in the one
+// cell - "Eileen Tanner, Chris Brundage" - and means what side by side seats
+// mean. The cell is looked up whole first, so anybody whose own name carries a
+// comma is still found before it is read as a list.
+function seatSpeakers(cell, bySpeakerName) {
+  const value = (cell || '').trim();
+  if (!value) return [];
+
+  const whole = bySpeakerName.get(value);
+  if (whole) return [whole];
+
+  return value
+    .split(',')
+    .map(name => bySpeakerName.get(name.trim()))
+    .filter(Boolean);
+}
+
 // Reads the sessions tab and keeps a session when the sheet has a synopsis for
 // it and at least one seat names a speaker we imported. A seat naming somebody
 // we know nothing about is dropped from the lineup rather than taking the whole
@@ -208,9 +225,14 @@ function loadSessions(sheetName, speakerList, callback) {
         const synopsis = (result["Synopsis"] || '').trim();
         if (!title || !synopsis) return;
 
-        const lineup = SESSION_SEATS
-          .map(seat => bySpeakerName.get((result[seat] || '').trim()))
-          .filter(Boolean);
+        const lineup = [];
+        SESSION_SEATS.forEach(seat => {
+          seatSpeakers(result[seat], bySpeakerName).forEach(speaker => {
+            // Somebody named twice - a shared cell and a seat of their own -
+            // is still the one seat at the table
+            if (lineup.indexOf(speaker) === -1) lineup.push(speaker);
+          });
+        });
 
         if (!lineup.length) return;
 

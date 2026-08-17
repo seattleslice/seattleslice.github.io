@@ -184,18 +184,12 @@ var sessions = [];
 const SESSION_SEATS = ['Moderator/Speaker', 'Seat 1', 'Seat 2', 'Seat 3'];
 
 // A seat usually names one person, but a roundtable can put several in the one
-// cell - "Eileen Tanner, Chris Brundage" - and means what side by side seats
-// mean. The cell is looked up whole first, so anybody whose own name carries a
-// comma is still found before it is read as a list.
+// cell - "Eileen Tanner; Chris Brundage" - and means what side by side seats
+// mean. Semicolons and not commas, so a name that carries a comma of its own -
+// "Darlene Mortel Edouard, PhD" - is still read as the one person.
 function seatSpeakers(cell, bySpeakerName) {
-  const value = (cell || '').trim();
-  if (!value) return [];
-
-  const whole = bySpeakerName.get(value);
-  if (whole) return [whole];
-
-  return value
-    .split(',')
+  return (cell || '')
+    .split(';')
     .map(name => bySpeakerName.get(name.trim()))
     .filter(Boolean);
 }

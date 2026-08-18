@@ -51,17 +51,22 @@ const SCHEDULE_SLOTS = [
   { start: '6:30 PM',  end: '9:30 PM',  label: 'After-party!' }
 ];
 
-// The rooms in the order a slot lists them, with what the venue calls each one.
-// `key` is what the sheet writes in the Room column; `label` is the badge on a
-// row, for where the sheet's shorthand is too short to read on its own. A room
-// the sheet uses that is not on this list still gets a block of its own, after
-// these, so its sessions stay together rather than scattering.
+// The blocks a slot is listed in, in the order it lists them. `key` is what the
+// sheet writes in the Room column, unless `rooms` is there to say that several
+// of the sheet's rooms belong to the one block. `badge` is the room key panel's
+// shorthand for the block, for where the sheet's own is too short to read.
+//
+// A room the sheet uses that is not on this list still gets a block of its own,
+// after these, so its sessions stay together rather than scattering.
 const SCHEDULE_ROOMS = [
-  { key: 'A',  label: 'AUD', name: 'Auditorium' },
+  { key: 'A',  badge: 'AUD', name: 'Auditorium' },
   { key: 'LH', name: 'Lecture Hall' },
   { key: 'AR', name: 'Allen Room' },
   { key: 'NR', name: 'Norcliffe Room' },
-  { key: 'L5', name: 'Roundtables, Level 5' }
+  // The roundtables are a room apiece in the sheet - 5A through 5F - but they
+  // are the one thing on the schedule: six tables going at once along Level 5.
+  // They share a block, listed 5A first, and each row's badge says which table.
+  { key: 'L5', rooms: /^5[A-Z]$/, badge: '5A-F', name: 'Roundtables, Level 5' }
 ];
 
 // "Micro-talk", "micro talk" and "Microtalks" are all the one format
@@ -218,17 +223,23 @@ function buildSchedule(speakers) {
     return;
   }
 
-  function roomOrder(room) {
-    for (let i = 0; i < SCHEDULE_ROOMS.length; i++) {
-      if (SCHEDULE_ROOMS[i].key === room) return i;
-    }
-    return SCHEDULE_ROOMS.length;
-  }
-
+  // The block a room belongs to. Named outright by most of them, matched by
+  // pattern for the run of roundtable tables. A block answers to its own key
+  // too, which is how the room key panel looks one up without a room in hand.
   function roomEntry(room) {
     return SCHEDULE_ROOMS.filter(function(entry) {
-      return entry.key === room;
+      return entry.key === room || (entry.rooms && entry.rooms.test(room));
     })[0];
+  }
+
+  function blockKey(room) {
+    const known = roomEntry(room);
+    return known ? known.key : room;
+  }
+
+  function blockOrder(room) {
+    const known = roomEntry(room);
+    return known ? SCHEDULE_ROOMS.indexOf(known) : SCHEDULE_ROOMS.length;
   }
 
   function roomName(room) {
@@ -236,14 +247,17 @@ function buildSchedule(speakers) {
     return known ? known.name : '';
   }
 
-  // A room with nothing to say beyond its code wears the code
-  function roomLabel(room) {
+  // A block holding several rooms lets every row say which of them it is in.
+  // One that is a room outright can be renamed whole, which is how the sheet's
+  // bare A reaches the page as AUD.
+  function roomBadge(room) {
     const known = roomEntry(room);
-    return known && known.label ? known.label : room;
+    if (!known || known.rooms) return room;
+    return known.badge || known.key;
   }
 
-  // A slot holds its rooms, a room holds the sessions in it. Both keep the
-  // order they are shown in - rooms by the list above, sessions by the clock.
+  // A slot holds its blocks, a block holds the sessions in it. Both keep the
+  // order they are shown in - blocks by the list above, sessions by the clock.
   const slots = SCHEDULE_SLOTS.map(function(def) {
     return {
       def: def,
@@ -255,7 +269,7 @@ function buildSchedule(speakers) {
   // Anything the sheet has not given a time yet, so a session still being
   // placed is visible rather than missing. Goes away once the sheet is filled.
   const untimed = [];
-  const roomsSeen = new Map();
+  const blocksSeen = new Map();
 
   // The last slot that has started by then. A session somehow earlier than the
   // first slot still has to go somewhere, so it goes at the top of the day.
@@ -268,22 +282,23 @@ function buildSchedule(speakers) {
   }
 
   function placeIn(slot, session, startsAt, sitting, sittings) {
-    const key = session.room || '';
-    let room = slot.rooms.get(key);
+    const room = session.room || '';
+    const key = blockKey(room);
+    let block = slot.rooms.get(key);
 
-    if (!room) {
-      room = { key: key, order: roomOrder(key), items: [] };
-      slot.rooms.set(key, room);
+    if (!block) {
+      block = { key: key, order: blockOrder(room), items: [] };
+      slot.rooms.set(key, block);
     }
 
-    room.items.push({
+    block.items.push({
       session: session,
       startsAt: startsAt,
       sitting: sitting,
       sittings: sittings
     });
 
-    if (key && !roomsSeen.has(key)) roomsSeen.set(key, roomOrder(key));
+    if (room && !blocksSeen.has(key)) blocksSeen.set(key, blockOrder(room));
   }
 
   function buildRow(item, showTime) {
@@ -296,7 +311,7 @@ function buildSchedule(speakers) {
     if (session.room) {
       const badge = document.createElement('span');
       badge.className = 'schedule-row__room';
-      badge.textContent = roomLabel(session.room);
+      badge.textContent = roomBadge(session.room);
 
       const name = roomName(session.room);
       if (name) badge.title = name;
@@ -380,13 +395,20 @@ function buildSchedule(speakers) {
   // holds a session that does not start with the slot - the micro-talks run
   // through a slot four at a time, and the run only reads as a run if every
   // row in it says when it is.
-  function buildRoomBlock(room, slot) {
-    room.items.sort(function(a, b) {
+  function buildRoomBlock(group, slot) {
+    // The clock leads, since that is what a slot is read down. Rooms break the
+    // tie, so a block covering several of them - the roundtable tables all
+    // going at once - runs 5A, 5B, 5C rather than however the sheet was typed.
+    group.items.sort(function(a, b) {
       if (a.startsAt !== b.startsAt) return a.startsAt - b.startsAt;
+
+      const rooms = String(a.session.room).localeCompare(String(b.session.room));
+      if (rooms) return rooms;
+
       return a.session.title.localeCompare(b.session.title);
     });
 
-    const showTimes = room.items.some(function(item) {
+    const showTimes = group.items.some(function(item) {
       return item.startsAt !== slot.startsAt;
     });
 
@@ -394,7 +416,7 @@ function buildSchedule(speakers) {
     block.className = 'schedule-room';
     if (showTimes) block.classList.add('schedule-room--timed');
 
-    const heading = groupHeading(room.items);
+    const heading = groupHeading(group.items);
     if (heading) {
       const head = document.createElement('p');
       head.className = 'schedule-room__head';
@@ -402,7 +424,7 @@ function buildSchedule(speakers) {
       block.appendChild(head);
     }
 
-    room.items.forEach(function(item) {
+    group.items.forEach(function(item) {
       block.appendChild(buildRow(item, showTimes));
     });
 
@@ -461,13 +483,16 @@ function buildSchedule(speakers) {
     return block;
   }
 
+  // One line per block rather than per room, so the six roundtable tables are
+  // explained once, as 5A-F, instead of six times over.
   function buildLegend() {
-    if (!legendEl || !roomsSeen.size) return;
+    if (!legendEl || !blocksSeen.size) return;
 
-    Array.from(roomsSeen.keys())
-      .sort(function(a, b) { return roomsSeen.get(a) - roomsSeen.get(b); })
+    Array.from(blocksSeen.keys())
+      .sort(function(a, b) { return blocksSeen.get(a) - blocksSeen.get(b); })
       .forEach(function(key) {
-        const name = roomName(key);
+        const entry = roomEntry(key);
+        const name = entry ? entry.name : '';
         if (!name) return;
 
         const item = document.createElement('li');
@@ -475,7 +500,7 @@ function buildSchedule(speakers) {
 
         const badge = document.createElement('span');
         badge.className = 'schedule-row__room';
-        badge.textContent = roomLabel(key);
+        badge.textContent = entry.badge || entry.key;
         item.appendChild(badge);
 
         const label = document.createElement('span');
@@ -531,7 +556,10 @@ function buildSchedule(speakers) {
       const first = (at.length ? at[0] : Infinity) - (bt.length ? bt[0] : Infinity);
       if (first) return first;
 
-      const rooms = roomOrder(a.room) - roomOrder(b.room);
+      const blocks = blockOrder(a.room) - blockOrder(b.room);
+      if (blocks) return blocks;
+
+      const rooms = String(a.room).localeCompare(String(b.room));
       if (rooms) return rooms;
 
       return a.title.localeCompare(b.title);

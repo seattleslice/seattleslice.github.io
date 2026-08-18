@@ -87,7 +87,8 @@
 /* Half the size of the badge on a row - the key is being read once, and the
    rows are what the eye should be on. */
 .schedule-legend .schedule-row__room {
-  width: 28px;
+  /* Holds 5A-F, which is the longest thing the key has to say */
+  width: 31px;
   padding: 2px 0;
   font-size: 9px;
 }
@@ -305,7 +306,7 @@
   }
 
   .schedule-legend .schedule-row__room {
-    width: 26px;
+    width: 29px;
     font-size: 8px;
   }
 }

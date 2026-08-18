@@ -54,7 +54,9 @@ const SCHEDULE_SLOTS = [
 // The blocks a slot is listed in, in the order it lists them. `key` is what the
 // sheet writes in the Room column, unless `rooms` is there to say that several
 // of the sheet's rooms belong to the one block. `badge` is the room key panel's
-// shorthand for the block, for where the sheet's own is too short to read.
+// shorthand for the block, for where the sheet's own is too short to read, and
+// `heading` is what the block is called on the page where the format it runs
+// under is not the whole story.
 //
 // A room the sheet uses that is not on this list still gets a block of its own,
 // after these, so its sessions stay together rather than scattering.
@@ -66,7 +68,17 @@ const SCHEDULE_ROOMS = [
   // The roundtables are a room apiece in the sheet - 5A through 5F - but they
   // are the one thing on the schedule: six tables going at once along Level 5.
   // They share a block, listed 5A first, and each row's badge says which table.
-  { key: 'L5', rooms: /^5[A-Z]$/, badge: '5A-F', name: 'Roundtables, Level 5' }
+  { key: 'L5', rooms: /^5[A-Z]$/, badge: '5A-F', name: 'Roundtables, Level 5' },
+  // The breakfast tables, 1A through 1D, run in the Cafe before the day proper
+  // opens. Roundtables by format, but they are their own event and say so
+  // rather than answering to the word the Level 5 tables go under.
+  {
+    key: 'L1',
+    rooms: /^1[A-Z]$/,
+    badge: '1A-D',
+    name: 'Café, Level 1',
+    heading: 'Women in Games Breakfast Sessions'
+  }
 ];
 
 // "Micro-talk", "micro talk" and "Microtalks" are all the one format
@@ -416,7 +428,7 @@ function buildSchedule(speakers) {
     block.className = 'schedule-room';
     if (showTimes) block.classList.add('schedule-room--timed');
 
-    const heading = groupHeading(group.items);
+    const heading = groupHeading(group);
     if (heading) {
       const head = document.createElement('p');
       head.className = 'schedule-room__head';
@@ -431,13 +443,17 @@ function buildSchedule(speakers) {
     return block;
   }
 
-  // A block is a run of micro-talks or of roundtables only when everything in
-  // it is one, so the odd lecture sharing a room does not end up under the
-  // wrong word.
-  function groupHeading(items) {
-    const format = scheduleFormatKey(items[0].session.format);
+  // A block that is an event in its own right carries the name it was given.
+  // Otherwise the format names it, and only when everything in the block is
+  // that one format - the odd lecture sharing a room should not put the rest
+  // under the wrong word.
+  function groupHeading(group) {
+    const entry = roomEntry(group.key);
+    if (entry && entry.heading) return entry.heading;
 
-    const same = items.every(function(item) {
+    const format = scheduleFormatKey(group.items[0].session.format);
+
+    const same = group.items.every(function(item) {
       return scheduleFormatKey(item.session.format) === format;
     });
 

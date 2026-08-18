@@ -189,6 +189,11 @@ body {
 
 /* ===================== SPEAKER OVERLAY ===================== */
 .speaker-overlay {
+  /* Both panels are this wide, and the arrows beside them are placed from it,
+     so there is only the one number to move. On a desktop it is wide enough to
+     keep a four speaker line-up on a single row and to stop a long synopsis
+     running away down the screen; on a phone it is still most of the width. */
+  --panel-width: min(720px, 90vw);
   position: fixed;
   inset: 0;
   z-index: 9999;
@@ -227,7 +232,7 @@ body {
   background: #001a3d;
   border: 2px solid #FFFB10;
   border-radius: 16px;
-  width: min(520px, 90vw);
+  width: var(--panel-width);
   max-height: 80vh;
   overflow-y: auto;
   padding: 48px 36px 36px;
@@ -308,17 +313,19 @@ body {
   display: none;
 }
 
-/* The panel is min(520px, 90vw) wide, so its edge is half that from centre */
+/* The panel is centred, so its edge is half its width from the middle */
 .speaker-overlay__nav--prev {
-  right: calc(50% + min(260px, 45vw) + 14px);
+  right: calc(50% + var(--panel-width) / 2 + 14px);
 }
 
 .speaker-overlay__nav--next {
-  left: calc(50% + min(260px, 45vw) + 14px);
+  left: calc(50% + var(--panel-width) / 2 + 14px);
 }
 
-/* Too narrow to stand clear of the panel, so bring them to the screen edges */
-@media (max-width: 720px) {
+/* Too narrow to stand clear of the panel, so bring them to the screen edges.
+   Half the widest panel is 360px, and an arrow needs another 66px past that,
+   which is the last width where both still have room to sit outside it. */
+@media (max-width: 900px) {
   .speaker-overlay__nav {
     width: 44px;
     height: 44px;

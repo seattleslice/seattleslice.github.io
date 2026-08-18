@@ -1,0 +1,351 @@
+/* ===================== SCHEDULE SECTION =====================
+   The chrome around the slots. The rows themselves are the session rows from
+   styles/sessions.css, wearing a room badge and a start time - a session should
+   look the same whether the day is read by format or by the clock.
+
+   Loaded after shared.css and sessions.css, both of which it leans on:
+   shared.css for .section, .section__title and .section-note, sessions.css for
+   .session-row and the panel a row opens. */
+
+/* ===================== WAITING ON THE SHEET =====================
+   The two sheets take a second or two to fetch and read, and until they are in
+   there is a title over an empty page. The breath in and out says the page is
+   working rather than finished.
+
+   No display of its own, so the hidden attribute takes it down on its own. */
+.schedule-status {
+  margin-top: 34px;
+  font-family: 'Bungee', cursive;
+  font-size: 15px;
+  line-height: 1.3;
+  letter-spacing: 2px;
+  color: #8ab4e0;
+  animation: scheduleStatusPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes scheduleStatusPulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+/* Nothing is still being waited for, so it holds still and says so in the
+   body face - this one is a sentence to read, not a word to glance at. */
+.schedule-status--failed {
+  font-family: 'Lato', sans-serif;
+  font-size: 17px;
+  letter-spacing: 0;
+  color: #f5ee1d;
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .schedule-status {
+    animation: none;
+  }
+}
+
+/* ===================== ROOM KEY ===================== */
+/* Built from the rooms the sheet actually used, so the badges on the rows can
+   stay as short as the signs at the venue.
+
+   It is a key, not part of the day, so it is pinned out of the way and kept
+   small: a stack in the left margin on a wide window, where the section's
+   960px leaves the gutter empty anyway. */
+.schedule-legend {
+  position: fixed;
+  left: 14px;
+  bottom: 14px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 9px 11px;
+  list-style: none;
+  background: rgba(0, 42, 99, 0.94);
+  border: 1px solid #1a4a8a;
+  border-radius: 9px;
+}
+
+/* .schedule-legend sets a display, which would otherwise beat the browser's
+   rule for [hidden] and show an empty bar before the sheet has loaded. */
+.schedule-legend[hidden] {
+  display: none;
+}
+
+.schedule-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.schedule-legend__name {
+  font-size: 11px;
+  line-height: 1.2;
+  color: #8ab4e0;
+}
+
+/* Half the size of the badge on a row - the key is being read once, and the
+   rows are what the eye should be on. */
+.schedule-legend .schedule-row__room {
+  width: 28px;
+  padding: 2px 0;
+  font-size: 9px;
+}
+
+/* Below this the margin is too narrow to hold the stack without it crossing
+   the rows, so the key lies along the foot of the window instead. */
+@media (max-width: 1239px) {
+  .schedule-legend {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 16px;
+    padding: 7px 12px;
+    border-width: 1px 0 0;
+    border-radius: 0;
+  }
+
+  /* Room for the bar to sit over, so it never covers the last row of the day */
+  #schedule {
+    padding-bottom: 108px;
+  }
+}
+
+/* ===================== SLOTS ===================== */
+.schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  margin-top: 28px;
+}
+
+.schedule-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* The band that names the slot. The hours lead in yellow, and what the slot is
+   called - Lunch, Introduction - follows in the purple the eyebrows use. */
+.schedule-slot__head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #1a4a8a;
+}
+
+.schedule-slot__time {
+  font-family: 'Bungee', cursive;
+  font-size: 19px;
+  line-height: 1.2;
+  letter-spacing: 1px;
+  color: #f5ee1d;
+}
+
+.schedule-slot__label {
+  font-family: 'Bungee', cursive;
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #BB3EFD;
+}
+
+/* ===================== ROOMS WITHIN A SLOT ===================== */
+/* One block per room, in the order a slot lists them. The rows in a block sit
+   closer together than the blocks do, so the micro-talks running four to a slot
+   read as the one run and the roundtables as another. */
+.schedule-room {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* What a run of one format is called. Quieter than the purple on the slot
+   heading above it, so the two do not read as the same rank. */
+.schedule-room__head {
+  margin-top: 2px;
+  font-family: 'Bungee', cursive;
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #8ab4e0;
+}
+
+.schedule-slot .schedule-room + .schedule-room {
+  margin-top: 8px;
+}
+
+/* ===================== A ROW ===================== */
+/* .session-row carries the look. What is added here is the two columns in
+   front of the title: which room, and - where the block needs it - when. */
+.schedule-row {
+  gap: 12px;
+  /* The badge and the time sit against the first line of the title rather than
+     the middle of a row that now runs to two or three of them */
+  align-items: flex-start;
+}
+
+/* The Sessions list holds a row to one line and trims whatever is left over,
+   which costs it nothing but the tail of a long title. Here the line-up is half
+   of what the row is for, so a name is never the thing that gets cut: the text
+   wraps and the row grows to hold it. */
+.schedule-row .session-row__text {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+/* Centred down a row that is now as tall as its title needs - it is the way
+   into the whole row, not a mark against the first line of it */
+.schedule-row .session-row__chevron {
+  align-self: center;
+}
+
+/* Which sitting of a repeated session this row is. It takes the gap that
+   normally holds the line-up off the title, and the names follow it at a plain
+   word space - blue rather than the names' grey, so it reads as a note about
+   the row and not as somebody on the bill. */
+.schedule-row__sitting {
+  margin-left: 1.05em;
+  /* Relative, so it stays the same shade smaller than the names it sits in
+     front of once the row drops to 14px on a phone */
+  font-size: 0.88em;
+  color: #8ab4e0;
+}
+
+.schedule-row__sitting + .session-row__speakers {
+  margin-left: 0;
+}
+
+.schedule-row__room {
+  flex-shrink: 0;
+  /* Wide enough for the longest label, which is AUD at 26px of Bungee. The
+     two-letter codes wear the same box so the badges line up down a slot. */
+  width: 40px;
+  padding: 4px 0;
+  background: rgba(187, 62, 253, 0.16);
+  border: 1px solid #BB3EFD;
+  border-radius: 6px;
+  font-family: 'Bungee', cursive;
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: 0.5px;
+  text-align: center;
+  color: #dcb0ff;
+}
+
+/* Held at a fixed width so the titles in a block line up whether or not a
+   given row is carrying a time. Only blocks that need times reserve the room
+   for them - see .schedule-room--timed. */
+.schedule-row__time {
+  display: none;
+  flex-shrink: 0;
+  width: 66px;
+  /* Sits smaller than the title, so a shade of padding drops it onto the
+     first line's middle rather than its top */
+  padding-top: 2px;
+  font-size: 13px;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+  color: #8ab4e0;
+}
+
+.schedule-room--timed .schedule-row__time {
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .schedule {
+    gap: 24px;
+  }
+
+  .schedule-row {
+    gap: 10px;
+  }
+
+  .schedule-row__room {
+    width: 34px;
+    font-size: 10px;
+  }
+
+  .schedule-row__time {
+    width: 58px;
+    font-size: 12px;
+  }
+
+  .schedule-slot__time {
+    font-size: 16px;
+  }
+
+  .schedule-room__head {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+  }
+
+  /* Tighter still, so the four rooms hold one line across a phone. Small even
+     for a key, which is the point - it is a footnote to the rows above it. */
+  .schedule-legend {
+    gap: 3px 10px;
+    padding: 6px 8px;
+  }
+
+  .schedule-legend__item {
+    gap: 5px;
+  }
+
+  .schedule-legend__name {
+    font-size: 9px;
+  }
+
+  .schedule-legend .schedule-row__room {
+    width: 26px;
+    font-size: 8px;
+  }
+}
+
+/* On a phone the two columns in front of the title leave it about half a row
+   to wrap in, so they take a line of their own above it and hand the title the
+   full width. The chevron rides up with them, at the end of the line. */
+@media (max-width: 480px) {
+  .schedule-row {
+    flex-wrap: wrap;
+    row-gap: 5px;
+    /* Applies within each wrapped line now, and the badge, the time and the
+       chevron sharing the first one all want to sit level */
+    align-items: center;
+  }
+
+  .schedule-row__time {
+    padding-top: 0;
+  }
+
+  .schedule-row__room {
+    order: 1;
+  }
+
+  .schedule-room--timed .schedule-row__time {
+    order: 2;
+    width: auto;
+  }
+
+  .schedule-row .session-row__chevron {
+    order: 3;
+    margin-left: auto;
+  }
+
+  .schedule-row .session-row__text {
+    order: 4;
+    flex: 1 0 100%;
+  }
+}
+
+.schedule-note {
+  margin-top: 32px;
+}

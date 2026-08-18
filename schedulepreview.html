@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Primary Meta Tags -->
+  <title>SLICE 2026 Schedule Preview: Seattle Loves Indie Creators Expo</title>
+  <meta name="description" content="A preview of the SLICE 2026 running order: every panel, lecture, micro-talk and roundtable at McCaw Hall on September 2, 2026, by the time it starts and the room it is in.">
+  <meta name="author" content="Seattle Indies">
+  <!-- A draft of the day rather than the published schedule, so it is kept out
+       of search results until the times are settled. -->
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#00367B">
+
+  <!-- Favicons (shared Seattle Indies brand mark) -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lato:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Bump ?v= whenever these change. GitHub Pages serves them with
+       max-age=600, and a phone holding a stale schedule.js next to a fresh
+       page is how the schedule silently comes up empty. -->
+  <link rel="stylesheet" href="styles/shared.css?v=2026-08-10">
+  <!-- The rows are the session rows, so the schedule wears the same stylesheet
+       the Sessions section does and adds only its own chrome on top. -->
+  <link rel="stylesheet" href="styles/sessions.css?v=2026-08-07">
+  <link rel="stylesheet" href="styles/schedule.css?v=2026-08-17">
+</head>
+<body>
+
+  <div class="content">
+
+    <!-- The section is built by js/schedule.js. Anything this page wants to
+         say differently goes on the placeholder as a data attribute:
+         data-title, data-subtitle, data-note, data-sheet, data-speakers-sheet. -->
+    <div data-schedule></div>
+
+  </div>
+
+  <!-- The scrim a schedule row opens on. Both panels are written out here:
+       a row opens the session side, and a name in a line-up opens the speaker
+       side, the same as on the home page. js/shared.js reads the elements of
+       both as it starts. -->
+  <div class="speaker-overlay" id="speakerOverlay">
+    <button class="speaker-overlay__nav speaker-overlay__nav--prev" id="speakerPrev" type="button" aria-label="Previous speaker" hidden>&#9664;</button>
+    <button class="speaker-overlay__nav speaker-overlay__nav--next" id="speakerNext" type="button" aria-label="Next speaker" hidden>&#9654;</button>
+
+    <div class="speaker-overlay__panel" id="speakerPanel">
+      <button class="speaker-overlay__close" id="speakerClose" aria-label="Close">&times;</button>
+      <div class="speaker-overlay__avatar" id="speakerAvatar"></div>
+      <h2 class="speaker-overlay__name" id="speakerNameDisplay"></h2>
+      <p class="speaker-overlay__role" id="speakerRole"></p>
+      <div class="speaker-overlay__socials" id="speakerSocials"></div>
+      <p class="speaker-overlay__bio" id="speakerBio"></p>
+      <p class="speaker-overlay__sessions" id="speakerSessions"></p>
+    </div>
+
+    <!-- The same panel js/sessions.js builds for the home page -->
+    <div class="speaker-overlay__panel speaker-overlay__panel--session" id="sessionPanel" hidden>
+      <button class="speaker-overlay__close" id="sessionClose" type="button" aria-label="Close">&times;</button>
+      <p class="session-panel__format" id="sessionFormat"></p>
+      <h2 class="speaker-overlay__name" id="sessionTitle"></h2>
+      <p class="speaker-overlay__bio" id="sessionSynopsis"></p>
+      <div class="session-panel__rule"></div>
+      <div class="session-panel__lineup" id="sessionLineup"></div>
+    </div>
+  </div>
+
+  <!-- Ahead of shared.js: it puts the Schedule section in place, and shared.js
+       reads the page as it starts. -->
+  <script src="js/schedule.js?v=2026-08-17"></script>
+  <script src="js/shared.js?v=2026-08-17"></script>
+  <script>
+    // No speaker grid on this page to load the list for us, so the section
+    // fetches the speakers its sessions are checked against itself.
+    buildScheduleFromSheet();
+  </script>
+</body>
+</html>

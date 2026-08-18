@@ -198,7 +198,13 @@ function seatSpeakers(cell, bySpeakerName) {
 // it and at least one seat names a speaker we imported. A seat naming somebody
 // we know nothing about is dropped from the lineup rather than taking the whole
 // session down with it.
-function loadSessions(sheetName, speakerList, callback) {
+//
+// The schedule has reason to be the more forgiving of the two: a room standing
+// empty at 2:45 because the sheet is one synopsis short reads as a hole in the
+// day rather than as a session still being written up. It asks for
+// { requireSynopsis: false } and shows the row with nothing under the title.
+function loadSessions(sheetName, speakerList, callback, options) {
+  const requireSynopsis = !options || options.requireSynopsis !== false;
   const bySpeakerName = new Map();
   (speakerList || []).forEach(speaker => bySpeakerName.set(speaker.name.trim(), speaker));
 
@@ -217,7 +223,8 @@ function loadSessions(sheetName, speakerList, callback) {
       results.forEach((result) => {
         const title = (result["Title"] || '').trim();
         const synopsis = (result["Synopsis"] || '').trim();
-        if (!title || !synopsis) return;
+        if (!title) return;
+        if (requireSynopsis && !synopsis) return;
 
         const lineup = [];
         SESSION_SEATS.forEach(seat => {
@@ -233,6 +240,11 @@ function loadSessions(sheetName, speakerList, callback) {
         loaded.push({
           title: title,
           format: (result["Format"] || '').trim(),
+          // Where and when, as the sheet writes them. Only the schedule reads
+          // these, and it does its own parsing - a roundtable that runs twice
+          // carries both of its starts in the one cell.
+          time: (result["Time"] || '').trim(),
+          room: (result["Room"] || '').trim(),
           synopsis: synopsis,
           speakers: lineup
         });

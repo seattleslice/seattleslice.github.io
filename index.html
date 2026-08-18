@@ -1328,10 +1328,10 @@
       gap: 64px;
     }
 
-    /* Seven logos share this row, so it needs a much tighter gap than the rows
-       above. This is about as many as 912px will hold on one line. */
+    /* The supporting tier runs across two rows of four, which lets these logos
+       be much larger than seven crammed onto one line allowed. */
     .sponsors-row--supporting {
-      gap: 24px;
+      gap: 36px;
     }
 
     .sponsor {
@@ -1392,26 +1392,31 @@
        ratio). Sizing on width alone would let a long wordmark like Miraisens
        tower over a stacked mark like 11 bit studios even at the same tier.
        Gold carries 1.8x the area of the bottom row, which is what keeps it
-       reading as larger while sitting in a row with two Diamonds. The bottom
-       seven total 710px of logo plus 144px of gaps, leaving ~29px of slack
-       either side for the float to use without crowding the section edge.
+       reading as larger while sitting in a row with two Diamonds. The supporting
+       tier now runs across two rows of four; the wider of the two (DigiPen
+       through Times of Games) totals 742px of logo plus 108px of gaps, leaving
+       ~31px of slack either side for the float to use.
        Epic is the exception: it is a near-square badge, so equal area would put
        it at 166x193 and it would tower over every wordmark on the page. Its
        height is capped at 130px instead and the width follows from that.
-       Times of Games is the other exception, deliberately: it carries 0.7x the
-       area of the rest of its row so it reads as the smallest of the set. */
+       Times of Games is deliberately smaller too: it carries 0.7x the area of
+       the rest of its row so it reads as the smallest of the set.
+       Nameless Deep is the third exception. Their mark is a tall silhouette at
+       0.75:1, so equal area would make it 107px tall against rowmates of 42 to
+       69. Its height is capped at 82px instead and the width follows. */
     .sponsor--unity     { --sp-w: 295px; }
     .sponsor--epic      { --sp-w: 112px; }
     .sponsor--xsolla    { --sp-w: 384px; }
     .sponsor--commerce  { --sp-w: 335px; }
     .sponsor--phantom   { --sp-w: 164px; }
-    .sponsor--elevenbit    { --sp-w: 73px; }
-    .sponsor--premack      { --sp-w: 86px; }
-    .sponsor--miraisens    { --sp-w: 121px; }
-    .sponsor--digipen      { --sp-w: 110px; }
-    .sponsor--discord      { --sp-w: 139px; }
-    .sponsor--sca          { --sp-w: 80px; }
-    .sponsor--timesofgames { --sp-w: 103px; }
+    .sponsor--namelessdeep { --sp-w: 61px; }
+    .sponsor--elevenbit    { --sp-w: 126px; }
+    .sponsor--premack      { --sp-w: 148px; }
+    .sponsor--miraisens    { --sp-w: 207px; }
+    .sponsor--digipen      { --sp-w: 190px; }
+    .sponsor--discord      { --sp-w: 239px; }
+    .sponsor--sca          { --sp-w: 137px; }
+    .sponsor--timesofgames { --sp-w: 176px; }
 
     /* Reduced motion: the script parks every logo on its anchor and tags the
        field, so the grow and glow fall back to a plain CSS hover. */
@@ -2621,6 +2626,9 @@
         </div>
 
         <div class="sponsors-row sponsors-row--supporting">
+          <a class="sponsor sponsor--namelessdeep" href="https://www.namelessdeep.com/" target="_blank" rel="noopener noreferrer" aria-label="Nameless Deep, sponsor">
+            <img class="sponsor__img" src="images/sponsors/nameless-deep.png" width="448" height="600" alt="Nameless Deep" loading="lazy">
+          </a>
           <a class="sponsor sponsor--elevenbit" href="https://www.11bitstudios.com/" target="_blank" rel="noopener noreferrer" aria-label="11 bit studios, sponsor">
             <img class="sponsor__img" src="images/sponsors/11-bit-studios.png" width="600" height="330" alt="11 bit studios" loading="lazy">
           </a>
@@ -2630,6 +2638,9 @@
           <a class="sponsor sponsor--miraisens" href="https://www.miraisens.com/" target="_blank" rel="noopener noreferrer" aria-label="Miraisens, Inc., sponsor">
             <img class="sponsor__img" src="images/sponsors/miraisens.png" width="600" height="121" alt="Miraisens, Inc." loading="lazy">
           </a>
+        </div>
+
+        <div class="sponsors-row sponsors-row--supporting">
           <a class="sponsor sponsor--digipen" href="https://www.digipen.edu/" target="_blank" rel="noopener noreferrer" aria-label="DigiPen Institute of Technology, sponsor">
             <img class="sponsor__img" src="images/sponsors/digipen.png" width="600" height="145" alt="DigiPen Institute of Technology" loading="lazy">
           </a>

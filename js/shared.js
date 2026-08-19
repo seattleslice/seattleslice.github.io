@@ -264,15 +264,23 @@ function sessionsForSpeaker(speaker) {
 }
 
 // ===================== SCROLL REVEAL =====================
+// A section fades up once 15% of it is on screen. A section taller than about
+// six windows can never show 15% of itself at once, though, and would sit at
+// opacity 0 for good - so for those the first sight of it is the cue instead.
+// The Sessions section grows that tall when the schedule is asked for the whole
+// day; watching for the 0 crossing as well as the 15% one is what catches it.
 const revealEls = document.querySelectorAll('.reveal');
 const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
-    if (entry.isIntersecting) {
+    const unreachable = entry.rootBounds &&
+      entry.target.offsetHeight * 0.15 > entry.rootBounds.height;
+
+    if (entry.intersectionRatio >= 0.15 || (entry.isIntersecting && unreachable)) {
       entry.target.classList.add('visible');
       revealObserver.unobserve(entry.target);
     }
   });
-}, { threshold: 0.15 });
+}, { threshold: [0, 0.15] });
 
 revealEls.forEach(el => revealObserver.observe(el));
 
@@ -959,9 +967,37 @@ revealEls.forEach(el => revealObserver.observe(el));
   function fillSessionPanel(session) {
     if (!sessionPanel) return;
 
+    // What it is, when it runs and where - "Roundtable - 4:45-5:30pm &
+    // 5:45-6:30pm - Table 5D". The when and the where come from the schedule,
+    // so a page that has not loaded it shows the format alone, as before.
     if (sessionFormatEl) {
-      sessionFormatEl.textContent = session.format || '';
-      sessionFormatEl.style.display = session.format ? '' : 'none';
+      const parts = [];
+      if (session.format) parts.push(session.format);
+
+      if (typeof scheduleWhenAndWhere === 'function') {
+        scheduleWhenAndWhere(session).forEach(part => parts.push(part));
+      }
+
+      sessionFormatEl.innerHTML = '';
+
+      parts.forEach((part, at) => {
+        if (at) {
+          const sep = document.createElement('span');
+          sep.className = 'session-panel__sep';
+          sep.textContent = '-';
+          sessionFormatEl.appendChild(sep);
+        }
+
+        // The format keeps the line's own look. What follows it is read rather
+        // than glanced at, so it is set in the body face and the quieter blue
+        // the times on a schedule row already use.
+        const span = document.createElement('span');
+        if (at) span.className = 'session-panel__where';
+        span.textContent = part;
+        sessionFormatEl.appendChild(span);
+      });
+
+      sessionFormatEl.style.display = parts.length ? '' : 'none';
     }
 
     sessionTitleEl.textContent = session.title;

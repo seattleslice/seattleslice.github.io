@@ -68,7 +68,13 @@ const SCHEDULE_ROOMS = [
   // The roundtables are a room apiece in the sheet - 5A through 5F - but they
   // are the one thing on the schedule: six tables going at once along Level 5.
   // They share a block, listed 5A first, and each row's badge says which table.
-  { key: 'L5', rooms: /^5[A-Z]$/, badge: '5A-F', name: 'Roundtables, Level 5' },
+  {
+    key: 'L5',
+    rooms: /^5[A-Z]$/,
+    badge: '5A-F',
+    name: 'Roundtables, Level 5',
+    place: 'Table '
+  },
   // The breakfast tables, 1A through 1D, run in the Cafe before the day proper
   // opens. Roundtables by format, but they are their own event and say so
   // rather than answering to the word the Level 5 tables go under.
@@ -77,6 +83,7 @@ const SCHEDULE_ROOMS = [
     rooms: /^1[A-Z]$/,
     badge: '1A-D',
     name: 'Café, Level 1',
+    place: 'Café Table ',
     heading: 'Women in Games Breakfast Sessions'
   }
 ];
@@ -161,6 +168,50 @@ function scheduleClock(minutes) {
     (minute < 10 ? '0' : '') + minute + ' ' + (hour < 12 ? 'AM' : 'PM');
 }
 
+// ===================== ROOMS =====================
+// The block a room belongs to. Named outright by most of them, matched by
+// pattern for the run of roundtable tables. A block answers to its own key too,
+// which is how the room key panel looks one up without a room in hand.
+function scheduleRoomEntry(room) {
+  return SCHEDULE_ROOMS.filter(function(entry) {
+    return entry.key === room || (entry.rooms && entry.rooms.test(room));
+  })[0];
+}
+
+function scheduleBlockKey(room) {
+  const known = scheduleRoomEntry(room);
+  return known ? known.key : room;
+}
+
+function scheduleBlockOrder(room) {
+  const known = scheduleRoomEntry(room);
+  return known ? SCHEDULE_ROOMS.indexOf(known) : SCHEDULE_ROOMS.length;
+}
+
+function scheduleRoomName(room) {
+  const known = scheduleRoomEntry(room);
+  return known ? known.name : '';
+}
+
+// A block holding several rooms lets every row say which of them it is in. One
+// that is a room outright can be renamed whole, which is how the sheet's bare A
+// reaches the page as AUD.
+function scheduleRoomBadge(room) {
+  const known = scheduleRoomEntry(room);
+  if (!known || known.rooms) return room;
+  return known.badge || known.key;
+}
+
+// Where a session is, said the way somebody would say it out loud: the room's
+// own name where the block is one room, and which table where it is a run of
+// them - "Allen Room", "Table 5D".
+function scheduleRoomPlace(room) {
+  const known = scheduleRoomEntry(room);
+  if (!known) return room;
+  if (!known.rooms) return known.name || known.key;
+  return (known.place || '') + room;
+}
+
 // ===================== MARKUP =====================
 // The slots are built empty. What goes in them waits on the sheet, which is
 // buildSchedule below.
@@ -232,67 +283,78 @@ function buildScheduleSection(config) {
 })();
 
 // ===================== FILLING IT IN =====================
-function buildSchedule(speakers) {
-  const section = document.getElementById('schedule');
-  const list = document.getElementById('scheduleList');
-  const legendEl = document.getElementById('scheduleLegend');
-  const statusEl = document.getElementById('scheduleStatus');
-  if (!section || !list) return;
 
-  // The wait is over either way. Where the Sessions section can hide itself and
-  // let the rest of the home page carry on, this page is only the schedule -
-  // it says what went wrong rather than leaving a title over nothing.
-  function clearStatus() {
-    if (statusEl) statusEl.hidden = true;
+// The label a slot wears on a tab. The am or pm is only worth saying twice
+// when the slot crosses from the one to the other.
+function scheduleSlotLabel(def) {
+  const from = String(def.start).trim().split(/\s+/);
+  const to = String(def.end).trim().split(/\s+/);
+  const crosses = (from[1] || '').toUpperCase() !== (to[1] || '').toUpperCase();
+
+  return (crosses ? from.join('').toLowerCase() : from[0]) +
+    '-' + to.join('').toLowerCase();
+}
+
+// The key the Show All tab goes under, which is no slot in particular
+const SCHEDULE_ALL = 'all';
+
+// The slot a time belongs to: the last one that has started by then. The
+// schedule works this out again while it lays the day out, over its own copy of
+// the slots; this is the same question asked from outside, by the panel.
+function scheduleSlotFor(minutes) {
+  let found = SCHEDULE_SLOTS[0];
+
+  SCHEDULE_SLOTS.forEach(function(def) {
+    const at = scheduleMinutes(def.start);
+    if (at !== null && at <= minutes) found = def;
+  });
+
+  return found;
+}
+
+// When and where a session runs, for the line above its title in the panel:
+//
+//   ['10:30-11:15am', 'Allen Room']
+//   ['4:45-5:30pm & 5:45-6:30pm', 'Table 5D']
+//
+// A roundtable moving tables between its two sittings cannot say the one place
+// for both, so that one says where beside each time instead and comes back as
+// a single part:
+//
+//   ['4:45-5:30pm (Table 5C) & 5:45-6:30pm (Table 5A)']
+//
+// Empty for anything the sheet has not placed yet, which is how the panel knows
+// to show nothing rather than a gap.
+function scheduleWhenAndWhere(session) {
+  const sittings = scheduleSittings(session.time, session.room);
+  if (!sittings.length) return [];
+
+  const times = sittings.map(function(sitting) {
+    return scheduleSlotLabel(scheduleSlotFor(sitting.startsAt));
+  });
+
+  const places = sittings.map(function(sitting) {
+    return sitting.room ? scheduleRoomPlace(sitting.room) : '';
+  });
+
+  const settled = places.every(function(place) { return place === places[0]; });
+
+  if (settled) {
+    return [times.join(' & '), places[0]].filter(Boolean);
   }
 
-  function failStatus() {
-    if (!statusEl) return;
-    statusEl.hidden = false;
-    statusEl.classList.add('schedule-status--failed');
-    statusEl.textContent =
-      'The schedule could not be loaded. Please try again in a moment.';
-  }
+  return [times.map(function(time, at) {
+    return places[at] ? time + ' (' + places[at] + ')' : time;
+  }).join(' & ')];
+}
 
-  // No speakers means nothing can pass the seat check in loadSessions
-  if (!speakers || !speakers.length) {
-    failStatus();
-    return;
-  }
-
-  // The block a room belongs to. Named outright by most of them, matched by
-  // pattern for the run of roundtable tables. A block answers to its own key
-  // too, which is how the room key panel looks one up without a room in hand.
-  function roomEntry(room) {
-    return SCHEDULE_ROOMS.filter(function(entry) {
-      return entry.key === room || (entry.rooms && entry.rooms.test(room));
-    })[0];
-  }
-
-  function blockKey(room) {
-    const known = roomEntry(room);
-    return known ? known.key : room;
-  }
-
-  function blockOrder(room) {
-    const known = roomEntry(room);
-    return known ? SCHEDULE_ROOMS.indexOf(known) : SCHEDULE_ROOMS.length;
-  }
-
-  function roomName(room) {
-    const known = roomEntry(room);
-    return known ? known.name : '';
-  }
-
-  // A block holding several rooms lets every row say which of them it is in.
-  // One that is a room outright can be renamed whole, which is how the sheet's
-  // bare A reaches the page as AUD.
-  function roomBadge(room) {
-    const known = roomEntry(room);
-    if (!known || known.rooms) return room;
-    return known.badge || known.key;
-  }
-
+// ===================== LAYING OUT THE DAY =====================
+// Puts the day into `list` and the room key into `legendEl`, and hands back
+// what it laid out - one entry per block, in the order they were appended - so
+// whoever asked can put a row of tabs over the top and show them one at a time.
+// Everything above this is about reading the sheet; everything below is about
+// who is asking.
+function scheduleRender(sessions, list, legendEl) {
   // A slot holds its blocks, a block holds the sessions in it. Both keep the
   // order they are shown in - blocks by the list above, sessions by the clock.
   const slots = SCHEDULE_SLOTS.map(function(def) {
@@ -321,11 +383,11 @@ function buildSchedule(speakers) {
   // The room comes in with the sitting rather than off the session: the two
   // sittings of a roundtable can be at different tables.
   function placeIn(slot, session, startsAt, room, sitting, sittings) {
-    const key = blockKey(room);
+    const key = scheduleBlockKey(room);
     let block = slot.rooms.get(key);
 
     if (!block) {
-      block = { key: key, order: blockOrder(room), items: [] };
+      block = { key: key, order: scheduleBlockOrder(room), items: [] };
       slot.rooms.set(key, block);
     }
 
@@ -337,7 +399,7 @@ function buildSchedule(speakers) {
       sittings: sittings
     });
 
-    if (room && !blocksSeen.has(key)) blocksSeen.set(key, blockOrder(room));
+    if (room && !blocksSeen.has(key)) blocksSeen.set(key, scheduleBlockOrder(room));
   }
 
   function buildRow(item, showTime) {
@@ -350,9 +412,9 @@ function buildSchedule(speakers) {
     if (item.room) {
       const badge = document.createElement('span');
       badge.className = 'schedule-row__room';
-      badge.textContent = roomBadge(item.room);
+      badge.textContent = scheduleRoomBadge(item.room);
 
-      const name = roomName(item.room);
+      const name = scheduleRoomName(item.room);
       if (name) badge.title = name;
       row.appendChild(badge);
     }
@@ -475,7 +537,7 @@ function buildSchedule(speakers) {
   // that one format - the odd lecture sharing a room should not put the rest
   // under the wrong word.
   function groupHeading(group) {
-    const entry = roomEntry(group.key);
+    const entry = scheduleRoomEntry(group.key);
     if (entry && entry.heading) return entry.heading;
 
     const format = scheduleFormatKey(group.items[0].session.format);
@@ -539,7 +601,7 @@ function buildSchedule(speakers) {
     Array.from(blocksSeen.keys())
       .sort(function(a, b) { return blocksSeen.get(a) - blocksSeen.get(b); })
       .forEach(function(key) {
-        const entry = roomEntry(key);
+        const entry = scheduleRoomEntry(key);
         const name = entry ? entry.name : '';
         if (!name) return;
 
@@ -561,6 +623,111 @@ function buildSchedule(speakers) {
 
     legendEl.hidden = !legendEl.children.length;
   }
+  sessions.forEach(function(session) {
+    const sittings = scheduleSittings(session.time, session.room);
+
+    if (!sittings.length) {
+      untimed.push(session);
+      return;
+    }
+
+    // A roundtable that runs twice is the one session in two slots, so both
+    // rows open the same panel. Each row is told which of the sittings it is,
+    // so somebody who misses the first can see there is a second, and carries
+    // the room that sitting is in - the two need not be the same table.
+    sittings.forEach(function(sitting, at) {
+      placeIn(slotFor(sitting.startsAt), session, sitting.startsAt,
+        sitting.room, at + 1, sittings.length);
+    });
+  });
+
+  buildLegend();
+
+  const laid = [];
+
+  slots.forEach(function(slot) {
+    const block = buildSlot(slot);
+    list.appendChild(block);
+    laid.push({
+      key: block.id,
+      label: scheduleSlotLabel(slot.def),
+      block: block,
+      rows: block.querySelectorAll('.schedule-row').length
+    });
+  });
+
+  // Only there while the sheet is short a time or two, so it gets a tab of its
+  // own rather than being findable only under Show All.
+  if (untimed.length) {
+    const block = buildUntimedSlot();
+    block.id = 'slot-tba';
+    list.appendChild(block);
+    laid.push({
+      key: block.id,
+      label: 'Time TBA',
+      block: block,
+      rows: untimed.length
+    });
+  }
+
+  // The arrows on the panel step through the sessions in sheet order, which
+  // here should be the order the page is read in. Sorting in place - it is the
+  // same array shared.js keeps as `sessions`.
+  sessions.sort(function(a, b) {
+    // Where each one first turns up on the page, which for a roundtable is
+    // the earlier of its two sittings and the table that one is at.
+    const at = scheduleSittings(a.time, a.room)[0];
+    const bt = scheduleSittings(b.time, b.room)[0];
+
+    const aStarts = at ? at.startsAt : Infinity;
+    const bStarts = bt ? bt.startsAt : Infinity;
+    if (aStarts !== bStarts) return aStarts - bStarts;
+
+    const aRoom = at ? at.room : '';
+    const bRoom = bt ? bt.room : '';
+
+    const blocks = scheduleBlockOrder(aRoom) - scheduleBlockOrder(bRoom);
+    if (blocks) return blocks;
+
+    const rooms = aRoom.localeCompare(bRoom);
+    if (rooms) return rooms;
+
+    return a.title.localeCompare(b.title);
+  });
+
+  return laid;
+}
+
+// ===================== THE STANDALONE PAGE =====================
+// A page that is nothing but the schedule: it owns the section, fetches the
+// sheet itself and shows the day whole.
+function buildSchedule(speakers) {
+  const section = document.getElementById('schedule');
+  const list = document.getElementById('scheduleList');
+  const legendEl = document.getElementById('scheduleLegend');
+  const statusEl = document.getElementById('scheduleStatus');
+  if (!section || !list) return;
+
+  // The wait is over either way. Where the Sessions section can hide itself and
+  // let the rest of the home page carry on, this page is only the schedule -
+  // it says what went wrong rather than leaving a title over nothing.
+  function clearStatus() {
+    if (statusEl) statusEl.hidden = true;
+  }
+
+  function failStatus() {
+    if (!statusEl) return;
+    statusEl.hidden = false;
+    statusEl.classList.add('schedule-status--failed');
+    statusEl.textContent =
+      'The schedule could not be loaded. Please try again in a moment.';
+  }
+
+  // No speakers means nothing can pass the seat check in loadSessions
+  if (!speakers || !speakers.length) {
+    failStatus();
+    return;
+  }
 
   const loading = loadSessions(scheduleConfig.sheet, speakers, function(sessions) {
     if (!sessions.length) {
@@ -568,59 +735,10 @@ function buildSchedule(speakers) {
       return;
     }
 
-    sessions.forEach(function(session) {
-      const sittings = scheduleSittings(session.time, session.room);
-
-      if (!sittings.length) {
-        untimed.push(session);
-        return;
-      }
-
-      // A roundtable that runs twice is the one session in two slots, so both
-      // rows open the same panel. Each row is told which of the sittings it is,
-      // so somebody who misses the first can see there is a second, and carries
-      // the room that sitting is in - the two need not be the same table.
-      sittings.forEach(function(sitting, at) {
-        placeIn(slotFor(sitting.startsAt), session, sitting.startsAt,
-          sitting.room, at + 1, sittings.length);
-      });
-    });
-
-    buildLegend();
-
-    slots.forEach(function(slot) {
-      list.appendChild(buildSlot(slot));
-    });
-
-    if (untimed.length) list.appendChild(buildUntimedSlot());
+    scheduleRender(sessions, list, legendEl);
 
     // The day is on the page, so the wait is over
     clearStatus();
-
-    // The arrows on the panel step through the sessions in sheet order, which
-    // on this page should be the order the page is read in. Sorting in place -
-    // it is the same array shared.js keeps as `sessions`.
-    sessions.sort(function(a, b) {
-      // Where each one first turns up on the page, which for a roundtable is
-      // the earlier of its two sittings and the table that one is at.
-      const at = scheduleSittings(a.time, a.room)[0];
-      const bt = scheduleSittings(b.time, b.room)[0];
-
-      const aStarts = at ? at.startsAt : Infinity;
-      const bStarts = bt ? bt.startsAt : Infinity;
-      if (aStarts !== bStarts) return aStarts - bStarts;
-
-      const aRoom = at ? at.room : '';
-      const bRoom = bt ? bt.room : '';
-
-      const blocks = blockOrder(aRoom) - blockOrder(bRoom);
-      if (blocks) return blocks;
-
-      const rooms = aRoom.localeCompare(bRoom);
-      if (rooms) return rooms;
-
-      return a.title.localeCompare(b.title);
-    });
   }, { requireSynopsis: false });
 
   if (loading && typeof loading.catch === 'function') {
@@ -646,4 +764,96 @@ function buildScheduleFromSheet() {
       buildSchedule([]);
     });
   }
+}
+
+// ===================== THE SCHEDULE AS A VIEW =====================
+// The home page shows the day as one of two views of the same sessions, inside
+// the Sessions section rather than a section of its own - see js/sessions.js.
+// The whole day is laid out once and a row of tabs picks which slot is on
+// screen, so moving through the day never goes back to the sheet.
+//
+// Builds its tabs and its list into `host`, and hands back a fill() for once
+// the sheet has arrived.
+function buildScheduleView(host) {
+  const bar = tabBar({
+    id: 'scheduleTabs',
+    label: 'Time slots',
+    controls: 'scheduleList',
+    className: 'session-tabs--slots'
+  });
+  host.appendChild(bar.element);
+
+  const list = document.createElement('div');
+  list.className = 'schedule schedule--tabbed';
+  list.id = 'scheduleList';
+  list.setAttribute('role', 'tabpanel');
+  host.appendChild(list);
+
+  // Inline here rather than pinned to the corner of the window: this is one
+  // section of a long page, and a key that outlived it would sit over the rest.
+  const legend = document.createElement('ul');
+  legend.className = 'schedule-legend schedule-legend--inline';
+  legend.id = 'scheduleLegend';
+  legend.setAttribute('aria-label', 'Room key');
+  legend.hidden = true;
+  host.appendChild(legend);
+
+  let laid = [];
+  let swapping = null;
+
+  // Show one slot, or the lot. The arrivals are stepped in one after another,
+  // which is what the delay is for.
+  function show(key, animate) {
+    let shown = 0;
+
+    laid.forEach(function(entry) {
+      const on = key === SCHEDULE_ALL || entry.key === key;
+
+      entry.block.classList.remove('schedule-slot--out');
+      entry.block.classList.remove('schedule-slot--in');
+      entry.block.style.animationDelay = '';
+      entry.block.hidden = !on;
+      if (!on) return;
+
+      if (animate) {
+        entry.block.style.animationDelay = tabSwapDelay(shown);
+        entry.block.classList.add('schedule-slot--in');
+      }
+      shown++;
+    });
+  }
+
+  function fill(sessions) {
+    laid = scheduleRender(sessions, list, legend);
+    if (!laid.length) return false;
+
+    bar.setTabs(
+      laid.map(function(entry) {
+        return { key: entry.key, label: entry.label };
+      }).concat([{ key: SCHEDULE_ALL, label: 'Show All' }]),
+      function(key, animate) {
+        tabSwapCancel(swapping);
+        swapping = tabSwap(list, function(stagger) {
+          show(key, stagger);
+        }, {
+          animate: animate,
+          itemSelector: '.schedule-slot',
+          outClass: 'schedule-slot--out'
+        });
+      }
+    );
+
+    // The day opens where the day opens: the first slot with anything in it.
+    const first = laid.filter(function(entry) { return entry.rows; })[0];
+    bar.select(first ? first.key : laid[0].key, false);
+    return true;
+  }
+
+  return {
+    fill: fill,
+    // A bar built while its view was hidden has no widths to measure, so the
+    // pill is placed the first time the view is actually on screen.
+    reflow: function() { bar.reflow(); },
+    playIn: function() { bar.playIn(TAB_SWAP.staggerMs, TAB_SWAP.staggerMaxMs); }
+  };
 }

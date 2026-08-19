@@ -93,6 +93,22 @@
   font-size: 9px;
 }
 
+/* Where the schedule is one view inside a longer page, a key pinned to the
+   window would outlive the section it explains, so it stays in the flow and
+   sits above the day it is a key to. */
+.schedule-legend--inline {
+  position: static;
+  flex-direction: row;
+  flex-wrap: wrap;
+  /* Centred in its box. Left-aligned it read as a list that had been cut off
+     rather than as the whole key. */
+  justify-content: center;
+  gap: 8px 20px;
+  margin-top: 20px;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
 /* Below this the margin is too narrow to hold the stack without it crossing
    the rows, so the key lies along the foot of the window instead. */
 @media (max-width: 1239px) {
@@ -112,6 +128,13 @@
   /* Room for the bar to sit over, so it never covers the last row of the day */
   #schedule {
     padding-bottom: 108px;
+  }
+
+  /* Never the foot of the window - this one belongs to its section */
+  .schedule-legend--inline {
+    position: static;
+    border-width: 1px;
+    border-radius: 10px;
   }
 }
 
@@ -155,6 +178,52 @@
   letter-spacing: 3px;
   text-transform: uppercase;
   color: #BB3EFD;
+}
+
+/* A slot the tabs are not showing. .schedule-slot sets a display of its own,
+   which would otherwise beat the browser's rule for [hidden]. */
+.schedule-slot[hidden] {
+  display: none;
+}
+
+/* Leaving together, arriving one after another - the same move the session
+   rows make when their format is swapped. */
+.schedule-slot--out {
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.schedule-slot--in {
+  animation: scheduleSlotIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes scheduleSlotIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .schedule-slot--out {
+    transition: none;
+  }
+
+  .schedule-slot--in {
+    animation: none;
+  }
+}
+
+/* One slot at a time needs no room kept between it and the next */
+.schedule--tabbed {
+  gap: 30px;
+  margin-top: 22px;
 }
 
 /* ===================== ROOMS WITHIN A SLOT ===================== */

@@ -3,11 +3,19 @@
 // sheet it reads - in one place, so the home page and s.html show the same
 // thing without either one having to render the other.
 //
+// There are two ways of reading the same set of sessions. The schedule is the
+// day as it runs, an hour at a time; the session list is the bill split by
+// format. The home page shows both behind a switch, s.html shows the list
+// alone. Either way the sheet is read once and both views are filled from it,
+// so a row in one and the same row in the other are the one object and open
+// the one panel.
+//
 // A page says where the section goes:
 //
 //   <div data-sessions></div>
 //
-// and includes this file BEFORE shared.js. shared.js reads the session panel's
+// and includes js/tabs.js and this file BEFORE shared.js - js/schedule.js too,
+// for a page asking for the schedule. shared.js reads the session panel's
 // elements as it starts, and both the section and the panel are put in place
 // the moment this file runs.
 //
@@ -23,20 +31,35 @@
 // is how s.html can part ways with the home page without a second copy of
 // any of this:
 //
-//   <div data-sessions data-title="Sessions"
+//   <div data-sessions data-title="Sessions" data-views="schedule"
 //        data-sheet="Sessions2026" data-speakers-sheet="Speakers2026"></div>
 
 const SESSIONS_DEFAULTS = {
   title: 'Sessions',
   sheet: 'Sessions2026',
-  speakersSheet: 'Speakers2026'
+  speakersSheet: 'Speakers2026',
+  // Empty is the session list on its own, which is what s.html wants. Naming
+  // the schedule puts the two behind a switch.
+  views: '',
+  defaultView: 'schedule'
 };
 
 // What the placeholder asked for, over the defaults above
 var sessionsConfig = Object.assign({}, SESSIONS_DEFAULTS);
 
+// The bars and the schedule, kept from when the markup was built so that the
+// filling further down can reach them
+var sessionsViewBar = null;
+var sessionsFormatBar = null;
+var sessionsScheduleView = null;
+
+const SESSION_VIEWS = {
+  schedule: 'Schedule View',
+  sessions: 'Session View'
+};
+
 // ===================== MARKUP =====================
-// The tabs and the list are built empty. What goes in them waits on the sheet,
+// The tabs and the lists are built empty. What goes in them waits on the sheet,
 // which is buildSessions below.
 function buildSessionsSection(config) {
   const section = document.createElement('section');
@@ -50,26 +73,57 @@ function buildSessionsSection(config) {
     section.appendChild(heading);
   }
 
+  // The schedule is only offered where the page has loaded it
+  const wantsSchedule =
+    String(config.views || '').indexOf('schedule') !== -1 &&
+    typeof buildScheduleView === 'function';
+
+  // One pane per view, one showing at a time. The box is what carries the
+  // height while the two are swapped, so neither one's arrival jolts the page.
+  const views = document.createElement('div');
+  views.className = 'session-views';
+  views.id = 'sessionViews';
+
+  if (wantsSchedule) {
+    // Above the sub-options, so the switch reads as the question asked first
+    sessionsViewBar = tabBar({
+      id: 'viewTabs',
+      label: 'How to read the sessions',
+      controls: 'sessionViews',
+      className: 'session-tabs--views'
+    });
+    section.appendChild(sessionsViewBar.element);
+
+    const pane = document.createElement('div');
+    pane.className = 'session-view';
+    pane.id = 'sessionView-schedule';
+    pane.hidden = true;
+    sessionsScheduleView = buildScheduleView(pane);
+    views.appendChild(pane);
+  }
+
+  const pane = document.createElement('div');
+  pane.className = 'session-view';
+  pane.id = 'sessionView-sessions';
+  if (wantsSchedule) pane.hidden = true;
+
   // One button per format, filled in once the sheet says which formats are on
   // the bill. The pill behind the buttons is placed by script.
-  const tabs = document.createElement('div');
-  tabs.className = 'session-tabs';
-  tabs.id = 'sessionTabs';
-  tabs.setAttribute('role', 'tablist');
-  tabs.setAttribute('aria-label', 'Session formats');
-  tabs.hidden = true;
-
-  const glider = document.createElement('span');
-  glider.className = 'session-tabs__glider';
-  glider.id = 'sessionTabsGlider';
-  glider.setAttribute('aria-hidden', 'true');
-  tabs.appendChild(glider);
-  section.appendChild(tabs);
+  sessionsFormatBar = tabBar({
+    id: 'sessionTabs',
+    label: 'Session formats',
+    controls: 'sessionsList'
+  });
+  pane.appendChild(sessionsFormatBar.element);
 
   const list = document.createElement('div');
   list.className = 'sessions-list';
   list.id = 'sessionsList';
-  section.appendChild(list);
+  list.setAttribute('role', 'tabpanel');
+  pane.appendChild(list);
+
+  views.appendChild(pane);
+  section.appendChild(views);
 
   return section;
 }
@@ -124,7 +178,7 @@ function buildSessionPanel() {
 
   if (placeholder) {
     const asked = placeholder.dataset;
-    ['title', 'sheet', 'speakersSheet'].forEach(function(key) {
+    ['title', 'sheet', 'speakersSheet', 'views', 'defaultView'].forEach(function(key) {
       if (asked[key] !== undefined) sessionsConfig[key] = asked[key];
     });
 
@@ -138,17 +192,15 @@ function buildSessionPanel() {
   }
 })();
 
-// ===================== FILLING IT IN =====================
-// A session is listed when the sheet gives it a synopsis and at least one seat
-// names a speaker we imported. There are far too many for one list, so they
-// are split by format behind a row of tabs. A row still shows only the title -
-// the format and the lineup wait for the panel.
-function buildSessions(speakers) {
-  const section = document.getElementById('sessions');
+// ===================== THE SESSION LIST =====================
+// There are far too many sessions for one list, so they are split by format
+// behind a row of tabs. A row shows only the title and the line-up - the format
+// and the faces wait for the panel.
+//
+// Returns whether there was anything to show.
+function fillSessionList(sessions) {
   const list = document.getElementById('sessionsList');
-  const tabsEl = document.getElementById('sessionTabs');
-  const glider = document.getElementById('sessionTabsGlider');
-  if (!section || !list) return;
+  if (!list || !sessions.length) return false;
 
   // The tabs we expect, in the order they are shown. A format the sheet has
   // picked up since gets a tab of its own after these, rather than dropping
@@ -161,28 +213,9 @@ function buildSessions(speakers) {
   ];
   const DEFAULT_FORMAT = 'panel';
 
-  // How long the rows take to leave, the step between the ones arriving,
-  // and how long the list spends resizing between the two sets.
-  const OUT_MS = 120;
-  const STAGGER_MS = 24;
-  const STAGGER_MAX_MS = 180;
-  const HEIGHT_MS = 350;
-
-  function hideSection() {
-    section.style.display = 'none';
-    const divider = section.nextElementSibling;
-    if (divider && divider.classList.contains('divider')) {
-      divider.style.display = 'none';
-    }
-  }
-
-  // No speakers means nothing can pass the seat check
-  if (!speakers || !speakers.length) {
-    hideSection();
-    return;
-  }
-
-  // "Micro-talk", "micro talk" and "Microtalks" are all the one format
+  // "Micro-talk", "micro talk" and "Microtalks" are all the one format. The
+  // schedule has the same rule, spelled out again rather than borrowed - this
+  // file has to work on a page that never loads that one.
   function formatKey(format) {
     return String(format || '').toLowerCase().replace(/[^a-z]/g, '').replace(/s$/, '');
   }
@@ -242,58 +275,35 @@ function buildSessions(speakers) {
   }
 
   const groups = new Map();
-  let tabs = [];
-  let activeKey = '';
-  let outTimer = 0;
-  let settleTimer = 0;
-  let gliderPending = false;
+  let swapping = null;
 
-  function reducedMotion() {
-    return window.matchMedia &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  }
+  sessions.forEach(function(session) {
+    const key = formatKey(session.format);
+    let group = groups.get(key);
 
-  // The pill is placed from the button it sits behind, so it follows
-  // whatever the labels have wrapped to at this width. Instant while the
-  // window is being resized - it has no move of its own to make there.
-  function moveGlider(instant) {
-    if (!glider || !tabs.length) return;
-
-    const active = tabs.filter(function(tab) {
-      return tab.dataset.formatKey === activeKey;
-    })[0];
-    if (!active || !active.offsetWidth) return;
-
-    if (instant) glider.style.transition = 'none';
-    glider.style.width = active.offsetWidth + 'px';
-    glider.style.height = active.offsetHeight + 'px';
-    glider.style.transform =
-      'translate(' + active.offsetLeft + 'px, ' + active.offsetTop + 'px)';
-    if (instant) {
-      void glider.offsetWidth;
-      glider.style.transition = '';
+    if (!group) {
+      group = { key: key, label: formatLabel(session.format), rows: [] };
+      groups.set(key, group);
     }
 
-    tabsEl.classList.add('session-tabs--glide');
-  }
+    const row = buildRow(session);
+    group.rows.push(row);
+    list.appendChild(row);
+  });
 
-  function syncTabs(instant) {
-    tabs.forEach(function(tab) {
-      const on = tab.dataset.formatKey === activeKey;
-      tab.classList.toggle('is-active', on);
-      tab.setAttribute('aria-selected', on ? 'true' : 'false');
-      // Roving focus: Tab reaches the row of buttons, the arrow keys move
-      // along it.
-      tab.tabIndex = on ? 0 : -1;
-      if (on) list.setAttribute('aria-labelledby', tab.id);
-    });
-
-    moveGlider(instant);
-  }
+  // The formats we know about first, then anything else in sheet order
+  const ordered = [];
+  KNOWN_FORMATS.forEach(function(entry) {
+    const group = groups.get(entry.key);
+    if (group) ordered.push(group);
+  });
+  groups.forEach(function(group) {
+    if (ordered.indexOf(group) === -1) ordered.push(group);
+  });
 
   // Show one format's rows and hide the rest. The arriving rows are stepped
   // in one after another, which is what the delay is for.
-  function showRows(key, animate) {
+  function show(key, animate) {
     let shown = 0;
 
     groups.forEach(function(group) {
@@ -307,8 +317,7 @@ function buildSessions(speakers) {
         if (!on) return;
 
         if (animate) {
-          row.style.animationDelay =
-            Math.min(shown * STAGGER_MS, STAGGER_MAX_MS) + 'ms';
+          row.style.animationDelay = tabSwapDelay(shown);
           row.classList.add('session-row--in');
         }
         shown++;
@@ -316,151 +325,157 @@ function buildSessions(speakers) {
     });
   }
 
-  function swapTo(key, animate) {
-    if (!groups.has(key) || key === activeKey) return;
-
-    activeKey = key;
-    syncTabs(!animate);
-
-    clearTimeout(outTimer);
-    clearTimeout(settleTimer);
-
-    if (!animate || reducedMotion()) {
-      list.classList.remove('is-swapping');
-      list.style.height = '';
-      showRows(key, false);
-      return;
-    }
-
-    // What the list stands at now. The next format is only measured once
-    // the old rows have gone, so the two heights are the ends of the move.
-    const startHeight = list.offsetHeight;
-
-    list.querySelectorAll('.session-row:not([hidden])').forEach(function(row) {
-      row.classList.remove('session-row--in');
-      row.style.animationDelay = '';
-      row.classList.add('session-row--out');
-    });
-
-    outTimer = setTimeout(function() {
-      list.classList.remove('is-swapping');
-      list.style.height = '';
-      showRows(key, true);
-
-      const endHeight = list.offsetHeight;
-      list.classList.add('is-swapping');
-      list.style.height = startHeight + 'px';
-      void list.offsetHeight;
-      list.style.height = endHeight + 'px';
-
-      // Clipping is only wanted while the height is moving - at rest the
-      // rows need the room outside the box for their hover glow. A timer
-      // rather than transitionend, which goes missing when a second tab is
-      // pressed part way through.
-      settleTimer = setTimeout(function() {
-        list.classList.remove('is-swapping');
-        list.style.height = '';
-      }, HEIGHT_MS + 60);
-    }, OUT_MS);
+  // A bar holding one button is just a label, so leave it off and show the
+  // whole list.
+  if (!sessionsFormatBar || ordered.length < 2) {
+    show(ordered[0].key, false);
+    return true;
   }
 
-  function buildTabs(ordered) {
-    ordered.forEach(function(group) {
-      const tab = document.createElement('button');
-      tab.type = 'button';
-      tab.className = 'session-tab';
-      tab.id = 'sessionTab-' + (group.key || 'other');
-      tab.dataset.formatKey = group.key;
-      tab.textContent = group.label;
-      tab.setAttribute('role', 'tab');
-      tab.setAttribute('aria-selected', 'false');
-      tab.setAttribute('aria-controls', 'sessionsList');
-      tab.tabIndex = -1;
-
-      tab.addEventListener('click', function() {
-        swapTo(group.key, true);
+  sessionsFormatBar.setTabs(
+    ordered.map(function(group) {
+      return { key: group.key, label: group.label };
+    }),
+    function(key, animate) {
+      tabSwapCancel(swapping);
+      swapping = tabSwap(list, function(stagger) {
+        show(key, stagger);
+      }, {
+        animate: animate,
+        itemSelector: '.session-row',
+        outClass: 'session-row--out'
       });
+    }
+  );
 
-      tabsEl.appendChild(tab);
-      tabs.push(tab);
+  sessionsFormatBar.select(
+    groups.has(DEFAULT_FORMAT) ? DEFAULT_FORMAT : ordered[0].key, false);
+  return true;
+}
+
+// ===================== THE SWITCH =====================
+// One pane leaves and the other arrives, sub-options and all. The bar inside
+// the arriving pane has been sitting hidden with nothing to measure, so its
+// pill is placed the moment the pane is on screen and before its buttons are
+// stepped in.
+function setUpSessionViews(views) {
+  const box = document.getElementById('sessionViews');
+  if (!box) return;
+
+  const panes = views.filter(function(view) {
+    view.pane = document.getElementById('sessionView-' + view.key);
+    return view.pane;
+  });
+
+  if (!panes.length) return;
+
+  let swapping = null;
+
+  function show(key, animate) {
+    panes.forEach(function(view) {
+      const on = view.key === key;
+
+      view.pane.classList.remove('session-view--out');
+      view.pane.classList.remove('session-view--in');
+      view.pane.hidden = !on;
+      if (!on) return;
+
+      if (view.arrive) view.arrive(animate);
+      if (animate) view.pane.classList.add('session-view--in');
     });
+  }
 
-    list.setAttribute('role', 'tabpanel');
-    tabsEl.hidden = false;
+  // Only one to show, so the switch would be a label rather than a choice
+  if (panes.length < 2 || !sessionsViewBar) {
+    show(panes[0].key, false);
+    return;
+  }
 
-    tabsEl.addEventListener('keydown', function(e) {
-      const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-      if (!step) return;
-      e.preventDefault();
-
-      let at = 0;
-      tabs.forEach(function(tab, i) {
-        if (tab.dataset.formatKey === activeKey) at = i;
+  sessionsViewBar.setTabs(
+    panes.map(function(view) {
+      return { key: view.key, label: SESSION_VIEWS[view.key] || view.key };
+    }),
+    function(key, animate) {
+      tabSwapCancel(swapping);
+      swapping = tabSwap(box, function(stagger) {
+        show(key, stagger);
+      }, {
+        animate: animate,
+        itemSelector: '.session-view',
+        outClass: 'session-view--out'
       });
+    }
+  );
 
-      const next = tabs[(at + step + tabs.length) % tabs.length];
-      next.focus();
-      swapTo(next.dataset.formatKey, true);
-    });
+  const asked = sessionsConfig.defaultView;
+  const wanted = panes.filter(function(view) { return view.key === asked; })[0];
+  sessionsViewBar.select(wanted ? wanted.key : panes[0].key, false);
+}
 
-    // The buttons move when the row rewraps, and again when Bungee arrives
-    // and every label changes width, so the pill is placed again for both.
-    window.addEventListener('resize', function() {
-      if (gliderPending) return;
-      gliderPending = true;
-      window.requestAnimationFrame(function() {
-        gliderPending = false;
-        moveGlider(true);
-      });
-    });
+// ===================== FILLING IT IN =====================
+// A session is kept when at least one seat names a speaker we imported. The
+// sheet is read the forgiving way, without insisting on a synopsis, because the
+// schedule would rather show a room's session with nothing written about it yet
+// than leave a hole in the day. The list, which is nothing but descriptions,
+// keeps the stricter rule for itself.
+function buildSessions(speakers) {
+  const section = document.getElementById('sessions');
+  const list = document.getElementById('sessionsList');
+  if (!section || !list) return;
 
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(function() {
-        moveGlider(true);
-      });
+  function hideSection() {
+    section.style.display = 'none';
+    const divider = section.nextElementSibling;
+    if (divider && divider.classList.contains('divider')) {
+      divider.style.display = 'none';
     }
   }
 
-  const loading = loadSessions(sessionsConfig.sheet, speakers, function(sessions) {
-    if (!sessions.length) {
+  // No speakers means nothing can pass the seat check
+  if (!speakers || !speakers.length) {
+    hideSection();
+    return;
+  }
+
+  const loading = loadSessions(sessionsConfig.sheet, speakers, function(all) {
+    if (!all.length) {
       hideSection();
       return;
     }
 
-    sessions.forEach(function(session) {
-      const key = formatKey(session.format);
-      let group = groups.get(key);
+    const described = all.filter(function(session) { return session.synopsis; });
+    const views = [];
 
-      if (!group) {
-        group = { key: key, label: formatLabel(session.format), rows: [] };
-        groups.set(key, group);
-      }
+    if (sessionsScheduleView && sessionsScheduleView.fill(all)) {
+      views.push({
+        key: 'schedule',
+        arrive: function(animate) {
+          sessionsScheduleView.reflow();
+          if (animate) sessionsScheduleView.playIn();
+        }
+      });
+    }
 
-      const row = buildRow(session);
-      group.rows.push(row);
-      list.appendChild(row);
-    });
+    if (fillSessionList(described)) {
+      views.push({
+        key: 'sessions',
+        arrive: function(animate) {
+          if (!sessionsFormatBar) return;
+          sessionsFormatBar.reflow();
+          if (animate) {
+            sessionsFormatBar.playIn(TAB_SWAP.staggerMs, TAB_SWAP.staggerMaxMs);
+          }
+        }
+      });
+    }
 
-    // The formats we know about first, then anything else in sheet order
-    const ordered = [];
-    KNOWN_FORMATS.forEach(function(entry) {
-      const group = groups.get(entry.key);
-      if (group) ordered.push(group);
-    });
-    groups.forEach(function(group) {
-      if (ordered.indexOf(group) === -1) ordered.push(group);
-    });
-
-    // A bar holding one button is just a label, so leave it off and show
-    // the whole list.
-    if (!tabsEl || ordered.length < 2) {
-      showRows(ordered[0].key, false);
+    if (!views.length) {
+      hideSection();
       return;
     }
 
-    buildTabs(ordered);
-    swapTo(groups.has(DEFAULT_FORMAT) ? DEFAULT_FORMAT : ordered[0].key, false);
-  });
+    setUpSessionViews(views);
+  }, { requireSynopsis: false });
 
   if (loading && typeof loading.catch === 'function') {
     loading.catch(function(err) {

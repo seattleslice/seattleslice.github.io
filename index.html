@@ -89,7 +89,9 @@
        fresh page is how the speaker and session lists silently come up empty. -->
   <link rel="stylesheet" href="styles/shared.css?v=2026-08-10">
   <!-- The Sessions section, shared with s.html. See js/sessions.js. -->
-  <link rel="stylesheet" href="styles/sessions.css?v=2026-08-07">
+  <link rel="stylesheet" href="styles/sessions.css?v=2026-08-19">
+  <!-- Its Schedule view, shared with schedulepreview.html -->
+  <link rel="stylesheet" href="styles/schedule.css?v=2026-08-19">
   <style>
     /* ===================== HERO SECTION ===================== */
     .hero {
@@ -2225,8 +2227,11 @@
 
     <!-- Sessions. The section is built by js/sessions.js, which s.html uses
          too, so the two pages cannot drift apart. Anything this page wants to
-         say differently goes on the placeholder as a data attribute. -->
-    <div data-sessions></div>
+         say differently goes on the placeholder as a data attribute.
+
+         This page shows both ways of reading the bill - the day as it runs and
+         the list split by format - behind a switch, and opens on the day. -->
+    <div data-sessions data-views="schedule" data-default-view="schedule"></div>
 
     <div class="divider"></div>
 
@@ -2748,8 +2753,10 @@
 
   <!-- Ahead of shared.js: it puts the Sessions section and the session panel
        in place, and shared.js reads both as it starts. -->
-  <script src="js/sessions.js?v=2026-08-07"></script>
-  <script src="js/shared.js?v=2026-08-17"></script>
+  <script src="js/tabs.js?v=2026-08-19"></script>
+  <script src="js/schedule.js?v=2026-08-19"></script>
+  <script src="js/sessions.js?v=2026-08-19"></script>
+  <script src="js/shared.js?v=2026-08-19"></script>
   <script>
     // Show scroll indicator after 5 seconds
     setTimeout(() => {

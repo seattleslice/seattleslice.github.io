@@ -205,7 +205,7 @@
 /* The rows leave together and arrive one after another. The list carries
    its own height across the swap, so nothing below it jumps when a format
    has more sessions than the last one did. */
-.sessions-list.is-swapping {
+.is-swapping {
   overflow: hidden;
   transition: height 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -239,10 +239,27 @@
 .session-panel__format {
   font-family: 'Bungee', cursive;
   font-size: 12px;
+  line-height: 1.6;
   letter-spacing: 3px;
   text-transform: uppercase;
   color: #BB3EFD;
   margin-bottom: 10px;
+}
+
+/* What follows the format on that line - when it runs and where. Read rather
+   than glanced at, so it drops Bungee's caps and tracking for the body face,
+   in the same quiet blue the times on a schedule row wear. */
+.session-panel__where {
+  font-family: 'Lato', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #8ab4e0;
+}
+
+.session-panel__sep {
+  margin: 0 8px;
+  color: #4d84c4;
 }
 
 .session-panel__rule {
@@ -304,17 +321,130 @@
   color: #a0c4e8;
 }
 
+/* ===================== THE TWO VIEWS =====================
+   The same sessions read two ways - the day as it runs, or the bill split by
+   format. The switch between them wears the format tabs' pill, one size up,
+   since it is the question asked before theirs. */
+.session-tabs--views {
+  margin-top: 36px;
+}
+
+/* The sub-options belong to the switch above them, so they sit straight under
+   it. Only where the switch is actually there - on a page showing the session
+   list alone the bar is the first thing under the title and keeps its room. */
+.session-tabs--views + .session-views .session-tabs {
+  margin-top: 0;
+}
+
+/* The same height as the sub-options under it - the padding and the line box
+   both match .session-tabs--slots, so the two bars sit as one. Bungee rather
+   than the times' Lato, which is what keeps it reading as the senior of the
+   two without taking any more room. */
+.session-tabs--views .session-tab {
+  padding: 9px 16px;
+  font-size: 13px;
+}
+
+/* Held to two on a line at any width - there are only ever two */
+@media (max-width: 560px) {
+  .session-tabs--views .session-tab {
+    flex: 1 1 calc(50% - 2px);
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+}
+
+/* The pane the switch picks. Only one is on the page at a time, so there is
+   nothing to lay out here - the box above it carries the height across the
+   swap and the panes themselves just come and go. */
+.session-view[hidden] {
+  display: none;
+}
+
+/* The sub-options and the list under them leaving together, and arriving
+   together a moment later. Quick either way: the switch should feel like a
+   switch, not like the page rebuilding itself. */
+.session-view--out {
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.session-view--in {
+  animation: sessionViewIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes sessionViewIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The buttons of an arriving bar, stepped in one after another the way the
+   rows under them are. backwards, so a button still waiting on its delay is
+   not shown at full strength before it has started. */
+.session-tab--in {
+  animation: sessionTabIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes sessionTabIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ===================== THE TIME SLOTS =====================
+   Thirteen of them, so they wrap over two or three lines rather than being
+   stretched to fill one. Smaller than the format tabs, and set in the body face
+   - a run of times is read as numbers, and Bungee's caps make hard work of it
+   at this size. */
+.session-tabs--slots {
+  justify-content: center;
+  gap: 5px;
+}
+
+.session-tabs--slots .session-tab {
+  flex: 0 1 auto;
+  padding: 9px 13px;
+  font-family: 'Lato', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+@media (max-width: 560px) {
+  .session-tabs--slots .session-tab {
+    flex: 0 1 auto;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .session-tabs__glider,
-  .sessions-list.is-swapping {
+  .is-swapping {
     transition: none;
   }
 
-  .session-row--out {
+  .session-row--out,
+  .session-view--out {
     transition: none;
   }
 
-  .session-row--in {
+  .session-row--in,
+  .session-view--in,
+  .session-tab--in {
     animation: none;
   }
 }

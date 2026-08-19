@@ -23,12 +23,11 @@
 // is how s.html can part ways with the home page without a second copy of
 // any of this:
 //
-//   <div data-sessions data-title="Sessions" data-note="More soon!"
+//   <div data-sessions data-title="Sessions"
 //        data-sheet="Sessions2026" data-speakers-sheet="Speakers2026"></div>
 
 const SESSIONS_DEFAULTS = {
   title: 'Sessions',
-  note: 'With more announced soon!',
   sheet: 'Sessions2026',
   speakersSheet: 'Speakers2026'
 };
@@ -71,13 +70,6 @@ function buildSessionsSection(config) {
   list.className = 'sessions-list';
   list.id = 'sessionsList';
   section.appendChild(list);
-
-  if (config.note) {
-    const note = document.createElement('p');
-    note.className = 'section-note sessions-note';
-    note.textContent = config.note;
-    section.appendChild(note);
-  }
 
   return section;
 }
@@ -132,7 +124,7 @@ function buildSessionPanel() {
 
   if (placeholder) {
     const asked = placeholder.dataset;
-    ['title', 'note', 'sheet', 'speakersSheet'].forEach(function(key) {
+    ['title', 'sheet', 'speakersSheet'].forEach(function(key) {
       if (asked[key] !== undefined) sessionsConfig[key] = asked[key];
     });
 

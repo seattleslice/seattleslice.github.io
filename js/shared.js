@@ -242,7 +242,8 @@ function loadSessions(sheetName, speakerList, callback, options) {
           format: (result["Format"] || '').trim(),
           // Where and when, as the sheet writes them. Only the schedule reads
           // these, and it does its own parsing - a roundtable that runs twice
-          // carries both of its starts in the one cell.
+          // carries both of its starts in the one cell, and both of its tables
+          // in the other when the two sittings are not at the same one.
           time: (result["Time"] || '').trim(),
           room: (result["Room"] || '').trim(),
           synopsis: synopsis,

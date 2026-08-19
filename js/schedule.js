@@ -115,17 +115,42 @@ function scheduleMinutes(text) {
   return hour * 60 + minute;
 }
 
-// A roundtable runs twice and carries both of its starts in the one cell -
-// "1:45 PM, 2:45 PM" - and means it is on the schedule at both.
-function scheduleStarts(cell) {
+// The rooms a session runs in, in the order the sheet lists them
+function scheduleRooms(cell) {
+  return String(cell || '').split(',')
+    .map(function(part) { return part.trim(); })
+    .filter(Boolean);
+}
+
+// A roundtable runs twice and carries both of its sittings in the one pair of
+// cells: Time "10:30 AM, 11:30 AM" against Room "5A, 5D" means 10:30 at 5A and
+// 11:30 at 5D. A single room is the same room for every sitting, which is the
+// usual case - one table, twice. Returns one sitting per start the Time cell
+// can be read for, paired off by position and then put in clock order, so a
+// cell written back to front still hands each start the room beside it.
+function scheduleSittings(timeCell, roomCell) {
+  const rooms = scheduleRooms(roomCell);
   const found = [];
 
-  String(cell || '').split(',').forEach(function(part) {
-    const at = scheduleMinutes(part);
-    if (at !== null && found.indexOf(at) === -1) found.push(at);
+  String(timeCell || '').split(',').forEach(function(part, at) {
+    const startsAt = scheduleMinutes(part);
+    if (startsAt === null) return;
+
+    const already = found.some(function(sitting) {
+      return sitting.startsAt === startsAt;
+    });
+    if (already) return;
+
+    found.push({
+      startsAt: startsAt,
+      // One room covers the lot. Several and they are taken in turn, and a
+      // sheet naming fewer rooms than sittings stays put in the last of them.
+      room: rooms.length < 2 ? (rooms[0] || '') :
+        (rooms[at] || rooms[rooms.length - 1])
+    });
   });
 
-  return found.sort(function(a, b) { return a - b; });
+  return found.sort(function(a, b) { return a.startsAt - b.startsAt; });
 }
 
 function scheduleClock(minutes) {
@@ -293,8 +318,9 @@ function buildSchedule(speakers) {
     return found;
   }
 
-  function placeIn(slot, session, startsAt, sitting, sittings) {
-    const room = session.room || '';
+  // The room comes in with the sitting rather than off the session: the two
+  // sittings of a roundtable can be at different tables.
+  function placeIn(slot, session, startsAt, room, sitting, sittings) {
     const key = blockKey(room);
     let block = slot.rooms.get(key);
 
@@ -306,6 +332,7 @@ function buildSchedule(speakers) {
     block.items.push({
       session: session,
       startsAt: startsAt,
+      room: room,
       sitting: sitting,
       sittings: sittings
     });
@@ -320,12 +347,12 @@ function buildSchedule(speakers) {
     row.type = 'button';
     row.className = 'session-row schedule-row';
 
-    if (session.room) {
+    if (item.room) {
       const badge = document.createElement('span');
       badge.className = 'schedule-row__room';
-      badge.textContent = roomBadge(session.room);
+      badge.textContent = roomBadge(item.room);
 
-      const name = roomName(session.room);
+      const name = roomName(item.room);
       if (name) badge.title = name;
       row.appendChild(badge);
     }
@@ -414,7 +441,7 @@ function buildSchedule(speakers) {
     group.items.sort(function(a, b) {
       if (a.startsAt !== b.startsAt) return a.startsAt - b.startsAt;
 
-      const rooms = String(a.session.room).localeCompare(String(b.session.room));
+      const rooms = String(a.room).localeCompare(String(b.room));
       if (rooms) return rooms;
 
       return a.session.title.localeCompare(b.session.title);
@@ -492,8 +519,13 @@ function buildSchedule(speakers) {
     untimed
       .sort(function(a, b) { return a.title.localeCompare(b.title); })
       .forEach(function(session) {
-        rows.appendChild(buildRow(
-          { session: session, startsAt: null, sitting: 1, sittings: 1 }, false));
+        rows.appendChild(buildRow({
+          session: session,
+          startsAt: null,
+          room: scheduleRooms(session.room)[0] || '',
+          sitting: 1,
+          sittings: 1
+        }, false));
       });
 
     return block;
@@ -537,18 +569,20 @@ function buildSchedule(speakers) {
     }
 
     sessions.forEach(function(session) {
-      const starts = scheduleStarts(session.time);
+      const sittings = scheduleSittings(session.time, session.room);
 
-      if (!starts.length) {
+      if (!sittings.length) {
         untimed.push(session);
         return;
       }
 
       // A roundtable that runs twice is the one session in two slots, so both
       // rows open the same panel. Each row is told which of the sittings it is,
-      // so somebody who misses the first can see there is a second.
-      starts.forEach(function(startsAt, at) {
-        placeIn(slotFor(startsAt), session, startsAt, at + 1, starts.length);
+      // so somebody who misses the first can see there is a second, and carries
+      // the room that sitting is in - the two need not be the same table.
+      sittings.forEach(function(sitting, at) {
+        placeIn(slotFor(sitting.startsAt), session, sitting.startsAt,
+          sitting.room, at + 1, sittings.length);
       });
     });
 
@@ -567,15 +601,22 @@ function buildSchedule(speakers) {
     // on this page should be the order the page is read in. Sorting in place -
     // it is the same array shared.js keeps as `sessions`.
     sessions.sort(function(a, b) {
-      const at = scheduleStarts(a.time);
-      const bt = scheduleStarts(b.time);
-      const first = (at.length ? at[0] : Infinity) - (bt.length ? bt[0] : Infinity);
-      if (first) return first;
+      // Where each one first turns up on the page, which for a roundtable is
+      // the earlier of its two sittings and the table that one is at.
+      const at = scheduleSittings(a.time, a.room)[0];
+      const bt = scheduleSittings(b.time, b.room)[0];
 
-      const blocks = blockOrder(a.room) - blockOrder(b.room);
+      const aStarts = at ? at.startsAt : Infinity;
+      const bStarts = bt ? bt.startsAt : Infinity;
+      if (aStarts !== bStarts) return aStarts - bStarts;
+
+      const aRoom = at ? at.room : '';
+      const bRoom = bt ? bt.room : '';
+
+      const blocks = blockOrder(aRoom) - blockOrder(bRoom);
       if (blocks) return blocks;
 
-      const rooms = String(a.room).localeCompare(String(b.room));
+      const rooms = aRoom.localeCompare(bRoom);
       if (rooms) return rooms;
 
       return a.title.localeCompare(b.title);

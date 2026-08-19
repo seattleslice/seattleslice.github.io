@@ -201,10 +201,6 @@
   }
 }
 
-.sessions-note {
-  margin-top: 28px;
-}
-
 /* ===================== SWAPPING FORMATS ===================== */
 /* The rows leave together and arrive one after another. The list carries
    its own height across the swap, so nothing below it jumps when a format

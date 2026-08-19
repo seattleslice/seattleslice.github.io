@@ -1120,12 +1120,6 @@
       margin-top: 32px;
     }
 
-    /* Shown with the full speaker list, above the collapse button */
-    .speakers-note {
-      margin-bottom: 16px;
-      animation: speakerCardIn 0.45s ease;
-    }
-
     /* .btn sets a display, which would otherwise beat the browser's rule for
        [hidden] and show it before the sheet has loaded. */
     .speakers-actions [hidden] {
@@ -2143,7 +2137,6 @@
         <div class="speakers-grid" id="speakersGrid"></div>
       </div>
       <div class="speakers-actions">
-        <p class="section-note speakers-note" id="speakersNote" hidden>With more announced soon!</p>
         <button class="btn btn--outline" id="speakersToggle" type="button" hidden>See All Speakers</button>
       </div>
     </section>
@@ -2773,7 +2766,6 @@
       const wrap = document.getElementById('speakersReveal');
       const grid = document.getElementById('speakersGrid');
       const toggle = document.getElementById('speakersToggle');
-      const note = document.getElementById('speakersNote');
       if (!section || !wrap || !grid || !toggle) return;
 
       let expanded = false;
@@ -2866,7 +2858,6 @@
         expanded = next;
         wrap.classList.toggle('is-expanded', expanded);
         toggle.textContent = expanded ? 'Collapse Speakers' : 'See All Speakers';
-        if (note) note.hidden = !expanded;
 
         // Nothing to animate when the visitor asked for less motion
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {

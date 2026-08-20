@@ -36,7 +36,10 @@ function tabBar(config) {
   element.appendChild(glider);
 
   let tabs = [];
-  let activeKey = '';
+  // null rather than '', which is a key a tab can genuinely have: a session
+  // with nothing in its Format cell groups under the empty string, and a
+  // sentinel that collided with it would leave that tab unable to be selected.
+  let activeKey = null;
   let onSelect = null;
   let pending = false;
 
@@ -106,7 +109,7 @@ function tabBar(config) {
 
     tabs.forEach(function(tab) { element.removeChild(tab); });
     tabs = [];
-    activeKey = '';
+    activeKey = null;
     element.classList.remove('session-tabs--glide');
 
     list.forEach(function(entry) {

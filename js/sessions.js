@@ -58,6 +58,20 @@ const SESSION_VIEWS = {
   sessions: 'Session View'
 };
 
+// The breakfast tables run in the Café before the day proper opens, and are a
+// different event to the Level 5 tables they share the Roundtable format with.
+// The schedule separates them with a heading of its own; the list has no
+// headings to work with, so it says so on the row and keeps them together at
+// the end. Spelled out here rather than borrowed from the schedule - this file
+// has to work on a page that never loads that one.
+const SESSION_BREAKFAST_ROOMS = /^1[A-D]$/;
+const SESSION_BREAKFAST_NOTE = 'Women in Games Breakfast';
+
+function sessionBreakfastNote(session) {
+  const first = String(session.room || '').split(',')[0].trim();
+  return SESSION_BREAKFAST_ROOMS.test(first) ? SESSION_BREAKFAST_NOTE : '';
+}
+
 // ===================== MARKUP =====================
 // The tabs and the lists are built empty. What goes in them waits on the sheet,
 // which is buildSessions below.
@@ -72,6 +86,18 @@ function buildSessionsSection(config) {
     heading.textContent = config.title;
     section.appendChild(heading);
   }
+
+  // Up from the moment this runs, which is while the page is still parsing, and
+  // down once both views are filled. Two sheets have to be fetched and read
+  // before there is anything to show, and a couple of seconds of nothing under
+  // a heading reads as a section that has broken. role=status so it is spoken
+  // as well as shown.
+  const status = document.createElement('p');
+  status.className = 'section-status';
+  status.id = 'sessionsStatus';
+  status.setAttribute('role', 'status');
+  status.textContent = 'Loading...';
+  section.appendChild(status);
 
   // The schedule is only offered where the page has loaded it
   const wantsSchedule =
@@ -260,6 +286,18 @@ function fillSessionList(sessions) {
       text.appendChild(lineup);
     }
 
+    // Which event this one belongs to, where the format alone does not say
+    const event = sessionBreakfastNote(session);
+    if (event) {
+      row.dataset.event = event;
+      text.appendChild(document.createTextNode(' '));
+
+      const note = document.createElement('span');
+      note.className = 'session-row__event';
+      note.textContent = '(' + event + ')';
+      text.appendChild(note);
+    }
+
     row.appendChild(text);
 
     const chevron = document.createElement('span');
@@ -286,9 +324,7 @@ function fillSessionList(sessions) {
       groups.set(key, group);
     }
 
-    const row = buildRow(session);
-    group.rows.push(row);
-    list.appendChild(row);
+    group.rows.push(buildRow(session));
   });
 
   // The formats we know about first, then anything else in sheet order
@@ -299,6 +335,17 @@ function fillSessionList(sessions) {
   });
   groups.forEach(function(group) {
     if (ordered.indexOf(group) === -1) ordered.push(group);
+  });
+
+  // Now the order is settled. Within a format the sheet's order stands, except
+  // that the breakfast tables go to the end of the roundtables - they are a
+  // different event, and reading past them to reach the day's own is backwards.
+  ordered.forEach(function(group) {
+    group.rows.sort(function(a, b) {
+      return (a.dataset.event ? 1 : 0) - (b.dataset.event ? 1 : 0);
+    });
+
+    group.rows.forEach(function(row) { list.appendChild(row); });
   });
 
   // Show one format's rows and hide the rest. The arriving rows are stepped
@@ -475,6 +522,10 @@ function buildSessions(speakers) {
     }
 
     setUpSessionViews(views);
+
+    // Both views are filled, so the wait is over
+    const statusEl = document.getElementById('sessionsStatus');
+    if (statusEl) statusEl.hidden = true;
   }, { requireSynopsis: false });
 
   if (loading && typeof loading.catch === 'function') {

@@ -78,9 +78,13 @@ const SCHEDULE_ROOMS = [
   // The breakfast tables, 1A through 1D, run in the Cafe before the day proper
   // opens. Roundtables by format, but they are their own event and say so
   // rather than answering to the word the Level 5 tables go under.
+  //
+  // 1A to 1D and no further: the rest of Level 1 is other rooms holding other
+  // things, and 1F is the Creative Clinic. js/sessions.js keeps a copy of this
+  // range for the session list, and the two have to say the same thing.
   {
     key: 'L1',
-    rooms: /^1[A-Z]$/,
+    rooms: /^1[A-D]$/,
     badge: '1A-D',
     name: 'Café, Level 1',
     place: 'Café Table ',
@@ -100,6 +104,94 @@ const SCHEDULE_GROUPS = {
   microtalk: 'Micro-talks',
   roundtable: 'Roundtables'
 };
+
+// ===================== FIXTURES =====================
+// What the day holds that the sheet does not. Nobody is speaking at these, so
+// they carry their own room, place and hours rather than being looked up -
+// which is also what keeps them out of the room key and out of the session
+// list, where they would be noise rather than sessions.
+//
+// `at` names the slots a fixture sits in and which end of each it sits at.
+// `everySlot` puts one at the foot of every slot except the ones it names, and
+// `from`/`until` narrow that to the slots starting inside a stretch of the day.
+//
+// Fixtures sharing a `group` share a block, in the order they are written here,
+// which is how the Creative Clinic comes to sit under the playtest floor. The
+// standing group is gathered into a section of its own at the foot of a day
+// shown whole, rather than repeating under all twelve slots.
+const SCHEDULE_FIXTURES = [
+  {
+    title: 'Coffee in the 2nd Floor Lobby',
+    synopsis: 'Coffee is sponsored by Phantom Friends and is available from ' +
+      '8:00-10:30am in the second floor lobby outside of the Auditorium doors.',
+    room: 'L2',
+    place: 'Level 2 Lobby',
+    when: '8:00-10:30am',
+    at: [
+      { start: '8:00 AM', edge: 'top' },
+      { start: '9:00 AM', edge: 'bottom' },
+      // The one slot where it needs saying which of the blocks is which
+      { start: '9:30 AM', edge: 'bottom', heading: 'Coffee' }
+    ]
+  },
+  {
+    title: 'Playtesting Club / Bring Your Own Laptop Area',
+    synopsis: "Bring your own laptop and show off what you've been working " +
+      "on, or just come stroll around and check out what the community's been " +
+      "up to. This is first-come, first served, and there's plenty of space. " +
+      "If you can't find a spot, try again later, as there's plenty else to " +
+      "enjoy at the conference!",
+    room: 'L1',
+    place: 'Level 1 Lobby',
+    when: '8:00am-9:30pm',
+    heading: 'All Day',
+    group: 'standing',
+    everySlot: true,
+    // Lunch has the note below to make instead
+    except: ['12:15 PM']
+  },
+  {
+    title: 'Creative Clinic',
+    synopsis: 'Have a game, pitch, or prototype in the works? Stop by the Creative ' +
+      'Clinic for an opportunity to get dedicated, 1-on-1 consultations with ' +
+      'seasoned industry veterans. Whether you need hands-on feedback on game ' +
+      'design, strategic advice on business and publishing, marketing ' +
+      'direction, or production guidance, our roster of experts are here to ' +
+      'help you solve tough roadblocks and bring your vision to life.\n' +
+      'Take advantage of this unique opportunity to get tailored, actionable ' +
+      'feedback - whether you schedule a session in advance or drop in during ' +
+      'the event!',
+    room: '1F',
+    when: '10:00am-5:00pm',
+    // Under the playtest floor, in the slots that start inside its hours
+    group: 'standing',
+    everySlot: true,
+    except: ['12:15 PM'],
+    from: '10:00 AM',
+    until: '5:00 PM'
+  },
+  {
+    title: 'Speed Networking',
+    room: '1A',
+    place: 'Level 1 Café',
+    when: '7:00-8:00pm',
+    at: [{ start: '6:30 PM', edge: 'bottom' }]
+  }
+];
+
+// The fixtures gathered under one heading at the foot of a day shown whole
+const SCHEDULE_STANDING = { group: 'standing', heading: 'All Day' };
+
+// A slot with something to say and nothing on. Page text rather than a card,
+// since there is nothing to open.
+const SCHEDULE_NOTES = [
+  {
+    start: '12:15 PM',
+    text: 'Lunch is not served within McCaw Hall, so we encourage you to ' +
+      'check out some of the wonderful options nearby! Want a quick bite? ' +
+      'Check out the many food service venues within the Seattle Center Armory.'
+  }
+];
 
 // What the placeholder asked for, over the defaults above
 var scheduleConfig = Object.assign({}, SCHEDULE_DEFAULTS);
@@ -235,7 +327,7 @@ function buildScheduleSection(config) {
   // there is anything to show, and a couple of seconds of empty page reads as a
   // broken one. role=status so it is spoken as well as shown.
   const status = document.createElement('p');
-  status.className = 'schedule-status';
+  status.className = 'section-status';
   status.id = 'scheduleStatus';
   status.setAttribute('role', 'status');
   status.textContent = 'Loading...';
@@ -326,6 +418,12 @@ function scheduleSlotFor(minutes) {
 // Empty for anything the sheet has not placed yet, which is how the panel knows
 // to show nothing rather than a gap.
 function scheduleWhenAndWhere(session) {
+  // A fixture is not in the sheet and has no sittings to read off it - it was
+  // written down knowing when and where it is.
+  if (session.when || session.place) {
+    return [session.when, session.place].filter(Boolean);
+  }
+
   const sittings = scheduleSittings(session.time, session.room);
   if (!sittings.length) return [];
 
@@ -382,6 +480,105 @@ function scheduleRender(sessions, list, legendEl) {
 
   // The room comes in with the sitting rather than off the session: the two
   // sittings of a roundtable can be at different tables.
+  // One session object per fixture, so every row of one opens the same panel
+  const fixtureSessions = new Map();
+
+  function fixtureSession(fixture) {
+    let made = fixtureSessions.get(fixture);
+
+    if (!made) {
+      // The shape the panel expects of a session, with nobody on the bill
+      made = {
+        title: fixture.title,
+        format: '',
+        synopsis: fixture.synopsis || '',
+        time: '',
+        room: fixture.room || '',
+        speakers: [],
+        when: fixture.when || '',
+        place: fixture.place || ''
+      };
+      fixtureSessions.set(fixture, made);
+    }
+
+    return made;
+  }
+
+  function fixtureItem(fixture) {
+    return {
+      session: fixtureSession(fixture),
+      startsAt: null,
+      room: fixture.room || '',
+      when: fixture.when || '',
+      place: fixture.place || '',
+      fixture: true,
+      sitting: 1,
+      sittings: 1
+    };
+  }
+
+  // Before every room, or after every room. The standing one goes after even
+  // that, so a slot reads rooms first, then what is going on around them.
+  const FIXTURE_TOP = -1;
+  const FIXTURE_BOTTOM = 1000;
+  const FIXTURE_STANDING = 2000;
+
+  function placeFixtures() {
+    slots.forEach(function(slot) {
+      SCHEDULE_FIXTURES.forEach(function(fixture, at) {
+        const key = 'fixture-' + at;
+
+        // Fixtures naming the same group land in the one block, in the order
+        // they are written, so the Clinic follows the playtest floor.
+        function put(edge, heading) {
+          const at = fixture.group ? 'fixture-' + fixture.group : key;
+          let block = slot.rooms.get(at);
+
+          if (!block) {
+            block = {
+              key: at,
+              order: edge === 'top' ? FIXTURE_TOP :
+                (fixture.everySlot ? FIXTURE_STANDING : FIXTURE_BOTTOM),
+              heading: heading || '',
+              allDay: fixture.group === SCHEDULE_STANDING.group,
+              fixture: true,
+              items: []
+            };
+            slot.rooms.set(at, block);
+          }
+
+          block.items.push(fixtureItem(fixture));
+        }
+
+        if (fixture.everySlot) {
+          const spared = (fixture.except || []).indexOf(slot.def.start) !== -1;
+          if (spared) return;
+
+          // Only the slots that start inside the stretch it runs for
+          if (fixture.from) {
+            const opens = scheduleMinutes(slot.def.start);
+            const from = scheduleMinutes(fixture.from);
+            const until = scheduleMinutes(fixture.until);
+            if (opens === null || opens < from || opens >= until) return;
+          }
+
+          put('bottom', fixture.heading);
+          return;
+        }
+
+        (fixture.at || []).forEach(function(where) {
+          if (where.start === slot.def.start) put(where.edge, where.heading);
+        });
+      });
+    });
+  }
+
+  function slotNote(def) {
+    return SCHEDULE_NOTES.filter(function(note) {
+      return note.start === def.start;
+    })[0];
+  }
+
   function placeIn(slot, session, startsAt, room, sitting, sittings) {
     const key = scheduleBlockKey(room);
     let block = slot.rooms.get(key);
@@ -409,20 +606,27 @@ function scheduleRender(sessions, list, legendEl) {
     row.type = 'button';
     row.className = 'session-row schedule-row';
 
+    if (item.fixture) row.classList.add('schedule-row--fixture');
+
     if (item.room) {
       const badge = document.createElement('span');
       badge.className = 'schedule-row__room';
       badge.textContent = scheduleRoomBadge(item.room);
 
-      const name = scheduleRoomName(item.room);
+      // A fixture says where it is outright or says nothing. Going through the
+      // room table would have 1A read as a breakfast table at the after-party
+      // and 1F as one at four in the afternoon.
+      const name = item.fixture ? item.place : scheduleRoomName(item.room);
       if (name) badge.title = name;
       row.appendChild(badge);
     }
 
     const at = document.createElement('span');
     at.className = 'schedule-row__time';
-    at.textContent = showTime && item.startsAt !== null ?
-      scheduleClock(item.startsAt) : '';
+    // A fixture runs for a stretch rather than starting at a moment, so it
+    // brings its own hours along and shows them whatever the block is doing.
+    at.textContent = item.when ? item.when :
+      (showTime && item.startsAt !== null ? scheduleClock(item.startsAt) : '');
     row.appendChild(at);
 
     const text = document.createElement('span');
@@ -500,7 +704,10 @@ function scheduleRender(sessions, list, legendEl) {
     // The clock leads, since that is what a slot is read down. Rooms break the
     // tie, so a block covering several of them - the roundtable tables all
     // going at once - runs 5A, 5B, 5C rather than however the sheet was typed.
-    group.items.sort(function(a, b) {
+    //
+    // A block of fixtures is left alone: they were written in the order they
+    // are meant to be read, and have no clock to be sorted by.
+    if (!group.fixture) group.items.sort(function(a, b) {
       if (a.startsAt !== b.startsAt) return a.startsAt - b.startsAt;
 
       const rooms = String(a.room).localeCompare(String(b.room));
@@ -516,6 +723,14 @@ function scheduleRender(sessions, list, legendEl) {
     const block = document.createElement('div');
     block.className = 'schedule-room';
     if (showTimes) block.classList.add('schedule-room--timed');
+
+    // The standing fixture belongs to a slot read on its own. With the whole
+    // day on screen it is the section at the foot instead, so it starts down
+    // and the tabs raise it when a single slot is picked.
+    if (group.allDay) {
+      block.classList.add('schedule-room--allday');
+      block.hidden = true;
+    }
 
     const heading = groupHeading(group);
     if (heading) {
@@ -537,6 +752,9 @@ function scheduleRender(sessions, list, legendEl) {
   // that one format - the odd lecture sharing a room should not put the rest
   // under the wrong word.
   function groupHeading(group) {
+    // A fixture block was told what it is called when it was put there
+    if (group.heading !== undefined) return group.heading;
+
     const entry = scheduleRoomEntry(group.key);
     if (entry && entry.heading) return entry.heading;
 
@@ -562,8 +780,42 @@ function scheduleRender(sessions, list, legendEl) {
     block.appendChild(buildHead(
       slot.def.start + ' - ' + slot.def.end, slot.def.label));
 
+    const note = slotNote(slot.def);
+    if (note) {
+      const text = document.createElement('p');
+      text.className = 'schedule-slot__note';
+      text.textContent = note.text;
+      block.appendChild(text);
+    }
+
     rooms.forEach(function(room) {
       block.appendChild(buildRoomBlock(room, slot));
+    });
+
+    return block;
+  }
+
+  // The standing fixtures once more, under a heading of their own, for the foot
+  // of a day shown whole. Saying them twelve times over, once per slot, would be
+  // a drum beat rather than information.
+  function buildStandingSlot() {
+    const members = SCHEDULE_FIXTURES.filter(function(fixture) {
+      return fixture.group === SCHEDULE_STANDING.group;
+    });
+    if (!members.length) return null;
+
+    const block = document.createElement('section');
+    block.className = 'schedule-slot schedule-slot--standing';
+    block.appendChild(buildHead(SCHEDULE_STANDING.heading, ''));
+
+    // --timed like every other block holding a fixture: it is what orders the
+    // badge ahead of the hours once a phone stacks the two onto their own line.
+    const rows = document.createElement('div');
+    rows.className = 'schedule-room schedule-room--timed';
+    block.appendChild(rows);
+
+    members.forEach(function(fixture) {
+      rows.appendChild(buildRow(fixtureItem(fixture), true));
     });
 
     return block;
@@ -628,6 +880,15 @@ function scheduleRender(sessions, list, legendEl) {
 
     if (!sittings.length) {
       untimed.push(session);
+
+      // It still shows a badge, so the key still has to explain it. Only
+      // placeIn registers a room, and an untimed session never reaches it.
+      const room = scheduleRooms(session.room)[0] || '';
+      const block = scheduleBlockKey(room);
+      if (room && !blocksSeen.has(block)) {
+        blocksSeen.set(block, scheduleBlockOrder(room));
+      }
+
       return;
     }
 
@@ -642,6 +903,7 @@ function scheduleRender(sessions, list, legendEl) {
   });
 
   buildLegend();
+  placeFixtures();
 
   const laid = [];
 
@@ -652,7 +914,11 @@ function scheduleRender(sessions, list, legendEl) {
       key: block.id,
       label: scheduleSlotLabel(slot.def),
       block: block,
-      rows: block.querySelectorAll('.schedule-row').length
+      // What the sheet put here, which is what decides where the day opens.
+      // The coffee and the playtest floor stand in nearly every slot, so
+      // counting them would make every slot look like it has something on.
+      rows: block.querySelectorAll(
+        '.schedule-row:not(.schedule-row--fixture)').length
     });
   });
 
@@ -667,6 +933,21 @@ function scheduleRender(sessions, list, legendEl) {
       label: 'Time TBA',
       block: block,
       rows: untimed.length
+    });
+  }
+
+  // Last of all, after even the untimed, so it reads as a footnote to the day
+  // rather than a part of it
+  const standing = buildStandingSlot();
+  if (standing) {
+    standing.id = 'slot-standing';
+    list.appendChild(standing);
+    laid.push({
+      key: standing.id,
+      label: SCHEDULE_STANDING.heading,
+      block: standing,
+      rows: 0,
+      standing: true
     });
   }
 
@@ -718,7 +999,7 @@ function buildSchedule(speakers) {
   function failStatus() {
     if (!statusEl) return;
     statusEl.hidden = false;
-    statusEl.classList.add('schedule-status--failed');
+    statusEl.classList.add('section-status--failed');
     statusEl.textContent =
       'The schedule could not be loaded. Please try again in a moment.';
   }
@@ -805,9 +1086,15 @@ function buildScheduleView(host) {
   // which is what the delay is for.
   function show(key, animate) {
     let shown = 0;
+    const whole = key === SCHEDULE_ALL;
 
     laid.forEach(function(entry) {
-      const on = key === SCHEDULE_ALL || entry.key === key;
+      // The standing fixture is a section of its own only when the day is shown
+      // whole; read a slot at a time, it belongs to the foot of each slot.
+      const on = entry.standing ? whole : (whole || entry.key === key);
+
+      entry.block.querySelectorAll('.schedule-room--allday')
+        .forEach(function(block) { block.hidden = whole; });
 
       entry.block.classList.remove('schedule-slot--out');
       entry.block.classList.remove('schedule-slot--in');
@@ -827,8 +1114,10 @@ function buildScheduleView(host) {
     laid = scheduleRender(sessions, list, legend);
     if (!laid.length) return false;
 
+    const pickable = laid.filter(function(entry) { return !entry.standing; });
+
     bar.setTabs(
-      laid.map(function(entry) {
+      pickable.map(function(entry) {
         return { key: entry.key, label: entry.label };
       }).concat([{ key: SCHEDULE_ALL, label: 'Show All' }]),
       function(key, animate) {
@@ -844,8 +1133,8 @@ function buildScheduleView(host) {
     );
 
     // The day opens where the day opens: the first slot with anything in it.
-    const first = laid.filter(function(entry) { return entry.rows; })[0];
-    bar.select(first ? first.key : laid[0].key, false);
+    const first = pickable.filter(function(entry) { return entry.rows; })[0];
+    bar.select(first ? first.key : pickable[0].key, false);
     return true;
   }
 

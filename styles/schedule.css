@@ -7,43 +7,6 @@
    shared.css for .section, .section__title and .section-note, sessions.css for
    .session-row and the panel a row opens. */
 
-/* ===================== WAITING ON THE SHEET =====================
-   The two sheets take a second or two to fetch and read, and until they are in
-   there is a title over an empty page. The breath in and out says the page is
-   working rather than finished.
-
-   No display of its own, so the hidden attribute takes it down on its own. */
-.schedule-status {
-  margin-top: 34px;
-  font-family: 'Bungee', cursive;
-  font-size: 15px;
-  line-height: 1.3;
-  letter-spacing: 2px;
-  color: #8ab4e0;
-  animation: scheduleStatusPulse 1.4s ease-in-out infinite;
-}
-
-@keyframes scheduleStatusPulse {
-  0%, 100% { opacity: 0.45; }
-  50% { opacity: 1; }
-}
-
-/* Nothing is still being waited for, so it holds still and says so in the
-   body face - this one is a sentence to read, not a word to glance at. */
-.schedule-status--failed {
-  font-family: 'Lato', sans-serif;
-  font-size: 17px;
-  letter-spacing: 0;
-  color: #f5ee1d;
-  animation: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .schedule-status {
-    animation: none;
-  }
-}
-
 /* ===================== ROOM KEY ===================== */
 /* Built from the rooms the sheet actually used, so the badges on the rows can
    stay as short as the signs at the venue.
@@ -236,6 +199,12 @@
   gap: 8px;
 }
 
+/* .schedule-room sets a display of its own, which would otherwise beat the
+   browser's rule for [hidden] */
+.schedule-room[hidden] {
+  display: none;
+}
+
 /* What a run of one format is called. Quieter than the purple on the slot
    heading above it, so the two do not read as the same rank. */
 .schedule-room__head {
@@ -260,16 +229,6 @@
   /* The badge and the time sit against the first line of the title rather than
      the middle of a row that now runs to two or three of them */
   align-items: flex-start;
-}
-
-/* The Sessions list holds a row to one line and trims whatever is left over,
-   which costs it nothing but the tail of a long title. Here the line-up is half
-   of what the row is for, so a name is never the thing that gets cut: the text
-   wraps and the row grows to hold it. */
-.schedule-row .session-row__text {
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
 }
 
 /* Centred down a row that is now as tall as its title needs - it is the way
@@ -329,6 +288,35 @@
 
 .schedule-room--timed .schedule-row__time {
   display: block;
+}
+
+/* A fixture runs for a stretch rather than starting at a moment, so its hours
+   are always worth showing and are wider than a clock time - the column sizes
+   to what it has to say rather than to the 66px "4:56 PM" needs. */
+.schedule-row--fixture .schedule-row__time {
+  display: block;
+  width: auto;
+  min-width: 66px;
+  white-space: nowrap;
+}
+
+/* What a slot has to say for itself. The lunch hour has nothing on and a
+   neighbourhood to point at, so it talks in page text rather than in cards. */
+.schedule-slot__note {
+  max-width: 68ch;
+  /* Centred in the slot, and centred within itself - it is an aside to the
+     hour rather than the first item in a list of them */
+  margin: 0 auto;
+  font-size: 17px;
+  line-height: 1.7;
+  text-align: center;
+  color: #c0c0c0;
+}
+
+@media (max-width: 520px) {
+  .schedule-slot__note {
+    font-size: 15px;
+  }
 }
 
 @media (max-width: 640px) {

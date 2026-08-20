@@ -781,6 +781,10 @@ revealEls.forEach(el => revealObserver.observe(el));
   const sessionTitleEl = document.getElementById('sessionTitle');
   const sessionSynopsisEl = document.getElementById('sessionSynopsis');
   const sessionLineupEl = document.getElementById('sessionLineup');
+  // Read off the panel rather than by id, so the pages that write the panel out
+  // by hand do not each need one adding
+  const sessionRuleEl = sessionPanel ?
+    sessionPanel.querySelector('.session-panel__rule') : null;
 
   if (!overlay || !closeBtn) return;
 
@@ -921,7 +925,7 @@ revealEls.forEach(el => revealObserver.observe(el));
   // sheet carries in its own Sessions column.
   function fillSpeakerSessions(speaker) {
     const theirs = sessionsForSpeaker(speaker);
-    const label = speaker.year ? 'SLICE ' + speaker.year : 'Sessions';
+    const label = 'Sessions';
 
     sessionsEl.innerHTML = '';
 
@@ -930,11 +934,23 @@ revealEls.forEach(el => revealObserver.observe(el));
       heading.textContent = label;
       sessionsEl.appendChild(heading);
 
+      // Built the way a session is shown everywhere else - the same card with
+      // the same chevron, rather than a line of underlined text
       theirs.forEach(session => {
         const link = document.createElement('button');
         link.type = 'button';
         link.className = 'speaker-overlay__session-link';
-        link.textContent = session.title;
+
+        const title = document.createElement('span');
+        title.className = 'speaker-overlay__session-title';
+        title.textContent = session.title;
+        link.appendChild(title);
+
+        const chevron = document.createElement('span');
+        chevron.className = 'speaker-overlay__session-chevron';
+        chevron.innerHTML = '&#9654;';
+        link.appendChild(chevron);
+
         link.addEventListener('click', (e) => {
           e.stopPropagation();
           openSessionOverlay(session);
@@ -971,11 +987,16 @@ revealEls.forEach(el => revealObserver.observe(el));
     // 5:45-6:30pm - Table 5D". The when and the where come from the schedule,
     // so a page that has not loaded it shows the format alone, as before.
     if (sessionFormatEl) {
+      // Marked by what each part is rather than by where it falls, so the
+      // hours of something with no format - the coffee, the playtest floor -
+      // are still read as hours and not as the name of a format.
       const parts = [];
-      if (session.format) parts.push(session.format);
+      if (session.format) parts.push({ text: session.format, aside: false });
 
       if (typeof scheduleWhenAndWhere === 'function') {
-        scheduleWhenAndWhere(session).forEach(part => parts.push(part));
+        scheduleWhenAndWhere(session).forEach(part => {
+          parts.push({ text: part, aside: true });
+        });
       }
 
       sessionFormatEl.innerHTML = '';
@@ -988,12 +1009,12 @@ revealEls.forEach(el => revealObserver.observe(el));
           sessionFormatEl.appendChild(sep);
         }
 
-        // The format keeps the line's own look. What follows it is read rather
-        // than glanced at, so it is set in the body face and the quieter blue
-        // the times on a schedule row already use.
+        // The format keeps the line's own look. When and where are read rather
+        // than glanced at, so they are set in the body face and the quieter
+        // blue the times on a schedule row already use.
         const span = document.createElement('span');
-        if (at) span.className = 'session-panel__where';
-        span.textContent = part;
+        if (part.aside) span.className = 'session-panel__where';
+        span.textContent = part.text;
         sessionFormatEl.appendChild(span);
       });
 
@@ -1002,6 +1023,10 @@ revealEls.forEach(el => revealObserver.observe(el));
 
     sessionTitleEl.textContent = session.title;
     sessionSynopsisEl.textContent = session.synopsis || '';
+
+    // The rule is the line-up's divider. Nothing is on the bill for the coffee
+    // or the playtest floor, so there is nothing for it to divide.
+    if (sessionRuleEl) sessionRuleEl.hidden = !session.speakers.length;
 
     sessionLineupEl.innerHTML = '';
     session.speakers.forEach(speaker => {

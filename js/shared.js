@@ -1012,9 +1012,10 @@ revealEls.forEach(el => revealObserver.observe(el));
   function fillSessionPanel(session) {
     if (!sessionPanel) return;
 
-    // What it is, when it runs and where - "Roundtable - 4:45-5:30pm &
-    // 5:45-6:30pm - Table 5D". The when and the where come from the schedule,
-    // so a page that has not loaded it shows the format alone, as before.
+    // What it is, when it runs and where - "Panel - 9:30 - 10:15am - Auditorium"
+    // for something running the once, "Roundtable - 4:45 & 5:45pm - Table 5D" for
+    // something the day holds twice. The when and the where come from the
+    // schedule, so a page that has not loaded it shows the format alone.
     if (sessionFormatEl) {
       // Marked by what each part is rather than by where it falls, so the
       // hours of something with no format - the coffee, the playtest floor -
@@ -1088,7 +1089,38 @@ revealEls.forEach(el => revealObserver.observe(el));
       sessionLineupEl.appendChild(card);
     });
 
+    balanceLineup();
     sessionPanel.scrollTop = 0;
+  }
+
+  // Four faces in a panel with room for three read as three and a straggler.
+  // Once the line-up has had to wrap at all, the rows are levelled instead: the
+  // block is capped at what an even share needs, and stays centred in the
+  // panel. Measured rather than worked out from widths, so it follows whatever
+  // the stylesheet has the cards doing at this size.
+  function balanceLineup() {
+    if (!sessionLineupEl) return;
+
+    // Cleared first, so what is measured is where the cards fall on their own
+    sessionLineupEl.style.maxWidth = '';
+
+    const cards = Array.prototype.slice.call(sessionLineupEl.children);
+    if (cards.length < 3) return;
+
+    const rows = new Set(cards.map(card => card.offsetTop)).size;
+    if (rows < 2) return;
+
+    const perRow = Math.ceil(cards.length / rows);
+    if (perRow >= cards.length) return;
+
+    // The widest card, not the first: a name with a long unbroken word in it -
+    // "Khatchatourians" - pushes its card past the width the others settle at,
+    // and a cap measured off a narrow one cannot hold a row that includes it.
+    const widest = cards.reduce((most, card) =>
+      Math.max(most, card.offsetWidth), 0);
+
+    const gap = parseFloat(getComputedStyle(sessionLineupEl).columnGap) || 0;
+    sessionLineupEl.style.maxWidth = (perRow * widest + (perRow - 1) * gap) + 'px';
   }
 
   // What the arrows may reach, and where in it the panel currently is. The
@@ -1244,6 +1276,14 @@ revealEls.forEach(el => revealObserver.observe(el));
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay || e.target === overlay.querySelector('::before')) {
       closeOverlay();
+    }
+  });
+
+  // A panel open while the window changes size has to be levelled again - the
+  // number of cards a row holds is the whole basis for it.
+  window.addEventListener('resize', () => {
+    if (mode === 'session' && overlay.classList.contains('is-shown')) {
+      balanceLineup();
     }
   });
 

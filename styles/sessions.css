@@ -338,12 +338,17 @@
   background: linear-gradient(90deg, transparent, #BB3EFD, #f5ee1d, #BB3EFD, transparent);
 }
 
-/* The line-up sits in one row, wrapping only when the panel is too narrow */
+/* The line-up sits in one row, wrapping only when the panel is too narrow.
+   Once it does wrap, script caps the width so the rows come out even rather
+   than three and a straggler - see balanceLineup in js/shared.js. The auto
+   margins are what keep the narrowed block in the middle of the panel. */
 .session-panel__lineup {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 14px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .session-speaker {

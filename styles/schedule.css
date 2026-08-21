@@ -205,6 +205,28 @@
   display: none;
 }
 
+/* Which room a block is in, where there is nothing else to call it. Only a
+   phone needs it: everywhere else the badge on each row has already said so,
+   and in less room. */
+.schedule-room__head--room {
+  display: none;
+}
+
+/* And where the block is called something already, the room is added to the
+   end of that name instead of taking a line of its own. Same rule: only where
+   the badges have gone. */
+.schedule-room__where {
+  display: none;
+}
+
+/* Which table, in front of the title, for the blocks that hold several. Same
+   job as the badge and shown only where the badge is not. */
+.schedule-row__table {
+  display: none;
+  font-weight: 700;
+  color: #dcb0ff;
+}
+
 /* What a run of one format is called. Quieter than the purple on the slot
    heading above it, so the two do not read as the same rank. */
 .schedule-room__head {
@@ -365,39 +387,49 @@
   }
 }
 
-/* On a phone the two columns in front of the title leave it about half a row
-   to wrap in, so they take a line of their own above it and hand the title the
-   full width. The chevron rides up with them, at the end of the line. */
-@media (max-width: 480px) {
-  .schedule-row {
-    flex-wrap: wrap;
-    row-gap: 5px;
-    /* Applies within each wrapped line now, and the badge, the time and the
-       chevron sharing the first one all want to sit level */
-    align-items: center;
-  }
+/* ===================== ON A PHONE =====================
+   A card here was carrying a room badge, a chevron and a key at the foot of the
+   window, and running two or three lines longer than the title needed. All of
+   that goes. What the badge was saying is said instead by a heading over the
+   block, or - where a block holds several tables - by a letter in front of the
+   title, both of which cost no width at all.
 
-  .schedule-row__time {
-    padding-top: 0;
-  }
-
+   This is also why the badge and the chevron no longer need a line of their own
+   above the title: there is nothing left up there to crowd it. */
+@media (max-width: 520px) {
   .schedule-row__room {
-    order: 1;
+    display: none;
   }
 
-  .schedule-room--timed .schedule-row__time {
-    order: 2;
-    width: auto;
+  .schedule-legend {
+    display: none;
   }
 
-  .schedule-row .session-row__chevron {
-    order: 3;
-    margin-left: auto;
+  /* The key at the foot of the window has gone, so the room it was given back */
+  #schedule {
+    padding-bottom: 80px;
   }
 
-  .schedule-row .session-row__text {
-    order: 4;
-    flex: 1 0 100%;
+  .schedule-room__head--room {
+    display: block;
+  }
+
+  .schedule-room__where {
+    display: inline;
+  }
+
+  .schedule-row__table {
+    display: inline;
+    /* The space in the text is a word space, which is narrower than the letter
+       wants. The rest of the gap is made up here, where it costs nothing when
+       the label is not being shown. */
+    margin-right: 0.2em;
+  }
+
+  /* The one block with every room in it and so no heading able to name them.
+     It keeps the badges the rest of the day has given up. */
+  .schedule-room--mixed .schedule-row__room {
+    display: block;
   }
 }
 

@@ -102,7 +102,7 @@ function scheduleFormatKey(format) {
 // session in them is, and the title already says what that is.
 const SCHEDULE_GROUPS = {
   microtalk: 'Micro-talks',
-  roundtable: 'Roundtables'
+  roundtable: 'Roundtables - Level 5 Lobby'
 };
 
 // ===================== FIXTURES =====================
@@ -292,6 +292,15 @@ function scheduleRoomBadge(room) {
   const known = scheduleRoomEntry(room);
   if (!known || known.rooms) return room;
   return known.badge || known.key;
+}
+
+// Which table within a block that holds several - 5A becomes A, 1C becomes C.
+// The badge is the only thing on a row saying which one it is, and the badge
+// goes on a phone, so the letter moves inside the row instead.
+function scheduleTableLetter(room) {
+  const known = scheduleRoomEntry(room);
+  if (!known || !known.rooms) return '';
+  return String(room).replace(/^\d+/, '');
 }
 
 // Where a session is, said the way somebody would say it out loud: the room's
@@ -636,6 +645,18 @@ function scheduleRender(sessions, list, legendEl) {
     const text = document.createElement('span');
     text.className = 'session-row__text';
 
+    // Which table, for a block holding several of them. Hidden at any width
+    // where the badge is still doing that job - see .schedule-row__table.
+    const letter = item.fixture ? '' : scheduleTableLetter(item.room);
+    if (letter) {
+      const table = document.createElement('span');
+      table.className = 'schedule-row__table';
+      // The space is in the text rather than left to a margin, so the row still
+      // reads as "A: Lead with authenticity" when it is spoken or copied out
+      table.textContent = letter + ': ';
+      text.appendChild(table);
+    }
+
     const title = document.createElement('span');
     title.className = 'session-row__title';
     title.textContent = session.title;
@@ -763,10 +784,32 @@ function scheduleRender(sessions, list, legendEl) {
     }
 
     const heading = groupHeading(group);
+    const room = roomHeading(group);
+
     if (heading) {
       const head = document.createElement('p');
       head.className = 'schedule-room__head';
       head.textContent = heading;
+
+      // What a block is called says nothing about where it is, and on a phone
+      // the badges that did say so are gone. So the heading picks the room up
+      // too - "Micro-talks - Norcliffe Room" - at the width where it is needed
+      // and nowhere else.
+      if (room) {
+        const where = document.createElement('span');
+        where.className = 'schedule-room__where';
+        where.textContent = ' - ' + room;
+        head.appendChild(where);
+      }
+
+      block.appendChild(head);
+    } else if (room) {
+      // Nothing to call the run, so the room's name is the whole heading. Only
+      // a phone shows it: at any wider width the badge on each row says the
+      // same thing in less space.
+      const head = document.createElement('p');
+      head.className = 'schedule-room__head schedule-room__head--room';
+      head.textContent = room;
       block.appendChild(head);
     }
 
@@ -775,6 +818,24 @@ function scheduleRender(sessions, list, legendEl) {
     });
 
     return block;
+  }
+
+  // The room a block is in, for a block that is one room. The ones covering
+  // several are named for what they are instead, and a fixture says where it is
+  // on the row rather than over it.
+  function roomHeading(group) {
+    // A fixture says where it is on the row and in the panel, not over the block
+    if (group.fixture) return '';
+
+    const entry = scheduleRoomEntry(group.key);
+
+    // A block holding several rooms is named for what it is rather than where,
+    // and each of its rows carries its own table letter
+    if (entry && entry.rooms) return '';
+
+    // A room the table has never heard of still says its code, the same way its
+    // badge does, rather than leaving a phone with nothing at all
+    return entry ? (entry.name || entry.key) : String(group.key || '');
   }
 
   // A block that is an event in its own right carries the name it was given.
@@ -838,10 +899,10 @@ function scheduleRender(sessions, list, legendEl) {
     block.className = 'schedule-slot schedule-slot--standing';
     block.appendChild(buildHead(SCHEDULE_STANDING.heading, ''));
 
-    // --timed like every other block holding a fixture: it is what orders the
-    // badge ahead of the hours once a phone stacks the two onto their own line.
+    // No --timed needed: every row in here is a fixture, and a fixture shows
+    // its own hours whatever the block around it is doing.
     const rows = document.createElement('div');
-    rows.className = 'schedule-room schedule-room--timed';
+    rows.className = 'schedule-room';
     block.appendChild(rows);
 
     members.forEach(function(fixture) {
@@ -856,8 +917,12 @@ function scheduleRender(sessions, list, legendEl) {
     block.className = 'schedule-slot';
     block.appendChild(buildHead('Time to be announced', ''));
 
+    // Every room pooled into the one list, so no heading over it could name
+    // them all. It keeps its badges at every width instead - the rest of the
+    // day can drop them because a heading has taken the job on, and here
+    // nothing has.
     const rows = document.createElement('div');
-    rows.className = 'schedule-room';
+    rows.className = 'schedule-room schedule-room--mixed';
     block.appendChild(rows);
 
     untimed

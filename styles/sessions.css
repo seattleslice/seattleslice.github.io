@@ -262,6 +262,13 @@
   .session-row__text {
     font-size: 14px;
   }
+
+  /* The whole row opens the panel, and on a phone that is the only thing a tap
+     can do to it. The arrow was pointing out something already obvious and
+     taking width the titles wanted. */
+  .session-row__chevron {
+    display: none;
+  }
 }
 
 /* ===================== SWAPPING FORMATS ===================== */

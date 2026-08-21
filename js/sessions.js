@@ -275,31 +275,48 @@ function fillSessionList(sessions) {
     title.textContent = session.title;
     text.appendChild(title);
 
+    // Everything that follows the title travels together - see
+    // .session-row__meta, which is what keeps it from being split up.
+    const meta = document.createElement('span');
+    meta.className = 'session-row__meta';
+
     const names = session.speakers.map(function(speaker) {
       return speaker.name;
     }).join(', ');
 
     if (names) {
-      // A plain space between the two, so a row too narrow to hold both
-      // can still break where the title ends
-      text.appendChild(document.createTextNode(' '));
-
       const lineup = document.createElement('span');
       lineup.className = 'session-row__speakers';
       lineup.textContent = names;
-      text.appendChild(lineup);
+      meta.appendChild(lineup);
     }
 
     // Which event this one belongs to, where the format alone does not say
     const event = sessionBreakfastNote(session);
     if (event) {
       row.dataset.event = event;
-      text.appendChild(document.createTextNode(' '));
+      if (meta.childNodes.length) meta.appendChild(document.createTextNode(' '));
 
       const note = document.createElement('span');
       note.className = 'session-row__event';
       note.textContent = '(' + event + ')';
-      text.appendChild(note);
+      meta.appendChild(note);
+    }
+
+    if (meta.childNodes.length) {
+      // The gap between the title and what follows, carried as white space
+      // rather than as a margin on the title. A margin at the end of a line is
+      // still charged to that line, so a title near the edge would wrap a word
+      // early to leave room for a gap that has gone down with the block anyway
+      // - and a row with no metadata at all would pay for a gap separating it
+      // from nothing. White space hangs at a break instead, and is also what
+      // lets the line break here in the first place.
+      const gap = document.createElement('span');
+      gap.className = 'session-row__gap';
+      gap.textContent = ' ';
+      text.appendChild(gap);
+
+      text.appendChild(meta);
     }
 
     row.appendChild(text);

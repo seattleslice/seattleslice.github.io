@@ -237,20 +237,17 @@
   align-self: center;
 }
 
-/* Which sitting of a repeated session this row is. It takes the gap that
-   normally holds the line-up off the title, and the names follow it at a plain
-   word space - blue rather than the names' grey, so it reads as a note about
-   the row and not as somebody on the bill. */
+/* Which sitting of a repeated session this row is. It leads the block that
+   follows the title, with the names after it at a plain word space - blue
+   rather than the names' grey, so it reads as a note about the row and not as
+   somebody on the bill. */
 .schedule-row__sitting {
-  margin-left: 1.05em;
+  /* Kept whole, so a break can never land between the brackets */
+  white-space: nowrap;
   /* Relative, so it stays the same shade smaller than the names it sits in
      front of once the row drops to 14px on a phone */
   font-size: 0.88em;
   color: #8ab4e0;
-}
-
-.schedule-row__sitting + .session-row__speakers {
-  margin-left: 0;
 }
 
 .schedule-row__room {

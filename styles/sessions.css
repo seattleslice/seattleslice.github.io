@@ -206,11 +206,31 @@
   color: #f5ee1d;
 }
 
-/* Held off the title by about five spaces of Lato, counting the one space in
-   the markup that lets a narrow row break between the two. Body text grey and
-   weight, so the names read as the quieter half of the line. */
+/* The gap between a title and what follows it, about five spaces of Lato. It is
+   the one space in the markup, widened - white space rather than a margin on
+   either side of it, for two reasons. A margin on the title is charged to the
+   title's line whether or not the block ever lands there, so a title near the
+   edge wraps a word early and a row with no metadata pays for a gap separating
+   it from nothing. A margin on the block is worse: it survives the line break
+   and leaves the names indented on a line of their own. White space does
+   neither - it hangs at a break and disappears with it. */
+.session-row__gap {
+  word-spacing: 1.05em;
+}
+
+/* Everything after the title, held together. An inline-block is put on a line
+   whole or not at all, so the names either all fit after the title or all begin
+   the next line - never a name and a half up here and the rest below. Capped at
+   the row's width so a run too long for any one line still wraps within itself
+   once it has moved down. */
+.session-row__meta {
+  display: inline-block;
+  max-width: 100%;
+}
+
+/* Body text grey and weight, so the names read as the quieter half of the
+   line */
 .session-row__speakers {
-  margin-left: 1.05em;
   font-weight: 400;
   color: #c0c0c0;
 }
@@ -219,6 +239,10 @@
    the wrong crowd. Blue rather than the names' grey, so it reads as a note
    about the row and not as somebody else on the bill. */
 .session-row__event {
+  /* Kept whole. The block it sits in wraps freely once it is too long for one
+     line, and a break landing inside the brackets - "(Women in Games" over
+     "Breakfast)" - reads as a mistake where wrapped names read as prose. */
+  white-space: nowrap;
   font-size: 0.88em;
   color: #8ab4e0;
 }

@@ -2785,6 +2785,10 @@
 
       let expanded = false;
 
+      // Which speaker a card stands for, so a click can work out who else was
+      // on offer beside them
+      const speakerByCard = new Map();
+
       function buildCard(speaker) {
         const card = document.createElement('div');
         card.className = 'speaker-card';
@@ -2804,8 +2808,19 @@
         role.textContent = speaker.shortDescriptor || speaker.title || speaker.company || '';
         card.appendChild(role);
 
+        speakerByCard.set(card, speaker);
+
         card.addEventListener('click', function() {
-          openSpeakerOverlay(speaker);
+          // The whole grid, not just the cards on screen. Show more is not a
+          // view of its own the way a format tab is - it is the same one list
+          // with the tail folded away - so everyone listed in the section is
+          // someone the arrows can reach, in the order the grid holds them.
+          const cards = Array.prototype.slice.call(
+            grid.querySelectorAll('.speaker-card'));
+
+          openSpeakerOverlay(speaker, cards.map(function(el) {
+            return speakerByCard.get(el);
+          }), cards.indexOf(card));
         });
 
         return card;

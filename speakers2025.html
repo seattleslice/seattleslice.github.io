@@ -154,6 +154,9 @@
   <script>
     loadSpeakers('Speakers2025', function(speakers) {
       var grid = document.getElementById('speakersGrid');
+      // Which speaker a card stands for, so a click knows who else is beside it
+      var speakerByCard = new Map();
+
       speakers.forEach(function(speaker) {
         var card = document.createElement('div');
         card.className = 'speaker-card';
@@ -173,8 +176,17 @@
         role.textContent = speaker.shortDescriptor || speaker.title || '';
         card.appendChild(role);
 
+        speakerByCard.set(card, speaker);
+
         card.addEventListener('click', function() {
-          openSpeakerOverlay(speaker);
+          // The whole grid, the same as the home page: a speaker grid is one
+          // list, not a set of views to be kept apart.
+          var cards = Array.prototype.slice.call(
+            grid.querySelectorAll('.speaker-card'));
+
+          openSpeakerOverlay(speaker, cards.map(function(el) {
+            return speakerByCard.get(el);
+          }), cards.indexOf(card));
         });
 
         grid.appendChild(card);

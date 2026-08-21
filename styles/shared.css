@@ -209,6 +209,16 @@ body {
   opacity: 1;
 }
 
+/* Closed, it is out of the way of the eye and the mouse but was still in the
+   tab order, so tabbing through the page walked an invisible close button and a
+   pair of arrows. visibility rather than display, because the open sequence
+   measures the overlay before raising it and display:none has nothing to
+   measure. The fades are all driven by .is-shown on the children, so nothing
+   about the animation changes. */
+.speaker-overlay:not(.active) {
+  visibility: hidden;
+}
+
 /* Blur backdrop */
 .speaker-overlay::before {
   content: '';

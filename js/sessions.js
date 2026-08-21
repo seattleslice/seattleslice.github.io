@@ -258,6 +258,10 @@ function fillSessionList(sessions) {
     return /s$/i.test(raw) ? raw : raw + 's';
   }
 
+  // Which session a row stands for, so a click can work out what else was on
+  // offer beside it
+  const rowSessions = new Map();
+
   function buildRow(session) {
     const row = document.createElement('button');
     row.type = 'button';
@@ -305,8 +309,16 @@ function fillSessionList(sessions) {
     chevron.innerHTML = '&#9654;';
     row.appendChild(chevron);
 
+    rowSessions.set(row, session);
+
     row.addEventListener('click', function() {
-      openSessionOverlay(session);
+      // Only the format on screen. Reading past the tab you are on is not
+      // something a second click could have done.
+      const shown = overlayVisible(list, '.session-row');
+
+      openSessionOverlay(session, shown.map(function(el) {
+        return rowSessions.get(el);
+      }), shown.indexOf(row));
     });
 
     return row;

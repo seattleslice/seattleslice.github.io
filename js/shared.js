@@ -257,10 +257,35 @@ function loadSessions(sheetName, speakerList, callback, options) {
   );
 }
 
-// The sessions a speaker appears in, in sheet order
+// The sessions a speaker appears in, in whatever order the shared list is
+// currently in - sheet order, or the order the day runs in on a page that has
+// laid a schedule out (see the sort at the end of scheduleRender).
 function sessionsForSpeaker(speaker) {
   if (!speaker) return [];
   return sessions.filter(session => session.speakers.indexOf(speaker) !== -1);
+}
+
+// ===================== WHAT A CLICK BELONGS TO =====================
+// The arrows on the overlay walk the run the panel was opened from, so they can
+// only reach what the reader could have clicked instead. This is how a caller
+// works that run out: the elements matching `selector` inside `box` that are on
+// screen right now, in the order they are shown.
+//
+// offsetParent goes null the moment anything above an element is display:none,
+// so a slot the tabs are not showing, a format that is not the open one and a
+// collapsed half of the speaker grid all drop out of it together, without any
+// of them having to be known about here.
+//
+// Declared here and called from js/schedule.js, js/sessions.js and the page
+// scripts, all of which load before this file. That is fine - nothing calls it
+// until something is clicked.
+function overlayVisible(box, selector) {
+  if (!box) return [];
+
+  return Array.prototype.filter.call(
+    box.querySelectorAll(selector),
+    function(el) { return el.offsetParent !== null; }
+  );
 }
 
 // ===================== SCROLL REVEAL =====================
@@ -788,9 +813,12 @@ revealEls.forEach(el => revealObserver.observe(el));
 
   if (!overlay || !closeBtn) return;
 
-  // Which panel the scrim is showing, and where that item sits in its list.
-  // The arrows walk whichever list is on screen.
+  // Which panel the scrim is showing, the run whoever opened it handed over,
+  // and where in that run the panel currently sits. The arrows walk the run and
+  // nothing else, so they can only reach what was on offer beside the thing
+  // that was clicked.
   let mode = 'speaker';
+  let currentRun = [];
   let currentIndex = -1;
 
   // Steps of the open and close sequences that are still pending. Reopening
@@ -953,7 +981,8 @@ revealEls.forEach(el => revealObserver.observe(el));
 
         link.addEventListener('click', (e) => {
           e.stopPropagation();
-          openSessionOverlay(session);
+          // The others listed on this panel, which is what was on offer
+          openSessionOverlay(session, theirs);
         });
         sessionsEl.appendChild(link);
       });
@@ -1051,7 +1080,9 @@ revealEls.forEach(el => revealObserver.observe(el));
 
       card.addEventListener('click', (e) => {
         e.stopPropagation();
-        openSpeakerOverlay(speaker);
+        // The rest of this line-up and no further. A session with one name on
+        // it hands over a run of one, which is to say no arrows.
+        openSpeakerOverlay(speaker, session.speakers);
       });
 
       sessionLineupEl.appendChild(card);
@@ -1060,43 +1091,44 @@ revealEls.forEach(el => revealObserver.observe(el));
     sessionPanel.scrollTop = 0;
   }
 
-  // The lists the arrows step through, in sheet order
-  function speakerList() {
-    return Array.isArray(speakers) ? speakers : [];
-  }
+  // What the arrows may reach, and where in it the panel currently is. The
+  // run comes from whoever opened the panel: the speakers on screen in the
+  // grid, the names on one session's line-up, the rows in the slot being read.
+  // Walking it can therefore never arrive somewhere a second click could not
+  // have, which is the whole point of it.
+  //
+  // `at` is passed by callers that know the position outright. The same session
+  // can appear twice in a run - a roundtable at both its sittings - and indexOf
+  // would always hand back the first of them.
+  function setRun(item, run, at) {
+    currentRun = Array.isArray(run) ? run.filter(Boolean) : [];
 
-  function sessionList() {
-    return Array.isArray(sessions) ? sessions : [];
-  }
+    if (typeof at === 'number' && at >= 0 && at < currentRun.length) {
+      currentIndex = at;
+      return;
+    }
 
-  function activeList() {
-    return mode === 'session' ? sessionList() : speakerList();
-  }
-
-  function indexOfSpeaker(speaker) {
-    const list = speakerList();
-    const direct = list.indexOf(speaker);
-    if (direct !== -1) return direct;
-    return list.findIndex(s => s.name === speaker.name);
+    currentIndex = currentRun.indexOf(item);
   }
 
   function updateNav() {
-    const show = activeList().length > 1 && currentIndex !== -1;
+    const show = currentRun.length > 1 && currentIndex !== -1;
     if (prevBtn) prevBtn.hidden = !show;
     if (nextBtn) nextBtn.hidden = !show;
   }
 
-  // Step to another item in whichever list is showing, wrapping at either end
+  // Step along the run the panel was opened from, wrapping at either end. The
+  // run itself does not change - stepping is reading further along the same
+  // shelf, not moving to another one.
   function stepItem(delta) {
-    const list = activeList();
-    if (!list.length || currentIndex === -1) return;
+    if (currentRun.length < 2 || currentIndex === -1) return;
 
-    currentIndex = (currentIndex + delta + list.length) % list.length;
+    currentIndex = (currentIndex + delta + currentRun.length) % currentRun.length;
 
     if (mode === 'session') {
-      fillSessionPanel(list[currentIndex]);
+      fillSessionPanel(currentRun[currentIndex]);
     } else {
-      fillPanel(list[currentIndex]);
+      fillPanel(currentRun[currentIndex]);
     }
   }
 
@@ -1104,6 +1136,12 @@ revealEls.forEach(el => revealObserver.observe(el));
     mode = nextMode;
     if (panel) panel.hidden = nextMode !== 'speaker';
     if (sessionPanel) sessionPanel.hidden = nextMode !== 'session';
+
+    // One pair of arrows serves both panels, so what a screen reader is told
+    // they step through has to change with the panel under them.
+    const what = nextMode === 'session' ? 'session' : 'speaker';
+    if (prevBtn) prevBtn.setAttribute('aria-label', 'Previous ' + what);
+    if (nextBtn) nextBtn.setAttribute('aria-label', 'Next ' + what);
   }
 
   function raiseScrim() {
@@ -1116,23 +1154,26 @@ revealEls.forEach(el => revealObserver.observe(el));
     overlay.classList.add('is-shown');
   }
 
-  function openSpeakerOverlay(speaker) {
+  // `run` is what the arrows may reach from here and `at` where in it this one
+  // sits. Opening without a run - a lone card written into the page - means no
+  // arrows, which is right: there is nothing beside it to reach.
+  function openSpeakerOverlay(speaker, run, at) {
     clearAnimTimers();
     showPanelFor('speaker');
     fillPanel(speaker);
-    currentIndex = indexOfSpeaker(speaker);
+    setRun(speaker, run, at);
     updateNav();
     raiseScrim();
   }
   window.openSpeakerOverlay = openSpeakerOverlay;
 
-  function openSessionOverlay(session) {
+  function openSessionOverlay(session, run, at) {
     if (!sessionPanel) return;
 
     clearAnimTimers();
     showPanelFor('session');
     fillSessionPanel(session);
-    currentIndex = sessionList().indexOf(session);
+    setRun(session, run, at);
     updateNav();
     raiseScrim();
   }
@@ -1159,11 +1200,21 @@ revealEls.forEach(el => revealObserver.observe(el));
   // The panel and the backdrop fade out together. 'active' comes off only once
   // that has finished, since it is what makes the overlay visible at all.
   function closeOverlay() {
+    // Already leaving. Without this a held Escape re-arms the timer on every
+    // repeat, and the scrim - which is what swallows clicks on the page behind
+    // it - can be kept up for as long as the key is down.
+    if (!overlay.classList.contains('is-shown')) return;
+
     clearAnimTimers();
     overlay.classList.remove('is-shown');
+
+    // The run goes now rather than with the fade. Nothing should be able to
+    // step a panel that is on its way out.
+    currentRun = [];
+    currentIndex = -1;
+
     animTimers.push(setTimeout(() => {
       overlay.classList.remove('active');
-      currentIndex = -1;
     }, 120));
   }
 
@@ -1196,18 +1247,24 @@ revealEls.forEach(el => revealObserver.observe(el));
     }
   });
 
+  // Capture phase, and the press is stopped once it has been used. The tab bars
+  // do their own arrow handling, and while a panel is open one press must step
+  // the panel rather than also moving a bar the reader cannot see behind the
+  // scrim - which would leave the panel walking a slot that is no longer up.
   document.addEventListener('keydown', (e) => {
-    if (!overlay.classList.contains('active')) return;
+    // 'is-shown' comes off the moment closing starts, where 'active' hangs on
+    // for the fade. Gating on it stops the arrows walking a panel that is
+    // already leaving.
+    if (!overlay.classList.contains('is-shown')) return;
 
-    if (e.key === 'Escape' || e.key === 'Backspace') {
-      e.preventDefault();
-      closeOverlay();
-    } else if (e.key === 'ArrowLeft') {
-      e.preventDefault();
-      stepItem(-1);
-    } else if (e.key === 'ArrowRight') {
-      e.preventDefault();
-      stepItem(1);
-    }
-  });
+    const step = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0;
+    const closing = e.key === 'Escape' || e.key === 'Backspace';
+    if (!step && !closing) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (closing) closeOverlay();
+    else stepItem(step);
+  }, true);
 })();

@@ -599,6 +599,10 @@ function scheduleRender(sessions, list, legendEl) {
     if (room && !blocksSeen.has(key)) blocksSeen.set(key, scheduleBlockOrder(room));
   }
 
+  // Which session a row on the page stands for, so a click can work out what
+  // else was on offer beside it
+  const rowSessions = new Map();
+
   function buildRow(item, showTime) {
     const session = item.session;
 
@@ -670,8 +674,17 @@ function scheduleRender(sessions, list, legendEl) {
     chevron.innerHTML = '&#9654;';
     row.appendChild(chevron);
 
+    rowSessions.set(row, session);
+
     row.addEventListener('click', function() {
-      openSessionOverlay(session);
+      // The rows on screen right now, which is to say the slot being read, or
+      // the whole day under Show All. Worked out when the row is pressed
+      // rather than when it was built - which slot is showing decides it.
+      const shown = overlayVisible(list, '.schedule-row');
+
+      openSessionOverlay(session, shown.map(function(el) {
+        return rowSessions.get(el);
+      }), shown.indexOf(row));
     });
 
     return row;
@@ -951,9 +964,11 @@ function scheduleRender(sessions, list, legendEl) {
     });
   }
 
-  // The arrows on the panel step through the sessions in sheet order, which
-  // here should be the order the page is read in. Sorting in place - it is the
-  // same array shared.js keeps as `sessions`.
+  // Put the shared list into the order the day runs in. The arrows no longer
+  // walk this array - they walk the run they were opened from - but the list of
+  // a speaker's own sessions on their panel is filtered straight out of it, and
+  // reading those down the day beats reading them in sheet order. In place: it
+  // is the same array shared.js keeps as `sessions`.
   sessions.sort(function(a, b) {
     // Where each one first turns up on the page, which for a roundtable is
     // the earlier of its two sittings and the table that one is at.

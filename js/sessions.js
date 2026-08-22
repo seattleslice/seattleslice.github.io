@@ -154,6 +154,17 @@ function buildSessionsSection(config) {
   return section;
 }
 
+// A folded map with a marker on the middle panel. Drawn rather than fetched,
+// so the panel has no image to wait on, and in currentColor so the button can
+// fill it in on hover with nothing else to keep in step.
+const SESSION_MAP_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"' +
+  ' stroke-linejoin="round" stroke-linecap="round" aria-hidden="true" focusable="false">' +
+  '<path d="M3 6.5 L9 4 L15 6.5 L21 4 V17 L15 19.5 L9 17 L3 19.5 Z"/>' +
+  '<path d="M9 4 V17"/><path d="M15 6.5 V19.5"/>' +
+  '<circle cx="12" cy="11.6" r="1.9" fill="currentColor" stroke="none"/>' +
+  '</svg>';
+
 // The panel a row opens. It shares the scrim with the speaker panel, so it is
 // hung off the same overlay rather than given one of its own.
 function buildSessionPanel() {
@@ -162,13 +173,22 @@ function buildSessionPanel() {
   panel.id = 'sessionPanel';
   panel.hidden = true;
 
-  const close = document.createElement('button');
-  close.type = 'button';
-  close.className = 'speaker-overlay__close';
-  close.id = 'sessionClose';
-  close.setAttribute('aria-label', 'Close');
-  close.innerHTML = '&times;';
-  panel.appendChild(close);
+  // The corner used to hold a way out, which the scrim already is: a tap
+  // anywhere off the panel closes it, and so does Escape. A session has
+  // somewhere to be instead, so the corner carries the map button - it shuts
+  // the panel and takes the reader to the room on the venue map.
+  //
+  // It ships hidden. js/shared.js raises it only where the page carries the
+  // map and the map knows the room, so the pages that show sessions without a
+  // map of their own - s.html, schedulepreview.html - simply have no button.
+  const map = document.createElement('button');
+  map.type = 'button';
+  map.className = 'session-panel__map';
+  map.id = 'sessionMap';
+  map.hidden = true;
+  map.setAttribute('aria-label', 'Show this room on the venue map');
+  map.innerHTML = SESSION_MAP_ICON;
+  panel.appendChild(map);
 
   const format = document.createElement('p');
   format.className = 'session-panel__format';

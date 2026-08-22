@@ -801,6 +801,10 @@ revealEls.forEach(el => revealObserver.observe(el));
 
   // The session side of the same scrim
   const sessionPanel = document.getElementById('sessionPanel');
+  // The session panel's corner is a map button rather than a way out - see
+  // buildSessionPanel in js/sessions.js. sessionClose is only still read for a
+  // page held in a cache with the older markup, where it is the way out again.
+  const sessionMapBtn = document.getElementById('sessionMap');
   const sessionCloseBtn = document.getElementById('sessionClose');
   const sessionFormatEl = document.getElementById('sessionFormat');
   const sessionTitleEl = document.getElementById('sessionTitle');
@@ -1008,6 +1012,25 @@ revealEls.forEach(el => revealObserver.observe(el));
     }
   }
 
+  // Where a session's map button would send the reader, and what the map calls
+  // the place when it gets there. An empty place means there is nowhere to send
+  // anybody and no button to show.
+  //
+  // The sheet writes a room per sitting - "5A, 5D" for a roundtable the day
+  // holds twice - and the first of them is where it opens.
+  //
+  // The map answers for itself. The lookup lives beside the markers, in the
+  // floor map's own script on the home page, so the schedule's word for a room
+  // and the map's word for it never have to be kept in step here; a page
+  // carrying no map answers nothing at all, and shows no button.
+  function sessionMapAim(session) {
+    const room = String((session && session.room) || '').split(',')[0].trim();
+    if (!room || typeof window.sliceMapPlaceFor !== 'function') {
+      return { room: '', place: '' };
+    }
+    return { room: room, place: window.sliceMapPlaceFor(room) };
+  }
+
   // Fill the session side of the scrim: what it is, then who is on it
   function fillSessionPanel(session) {
     if (!sessionPanel) return;
@@ -1049,6 +1072,23 @@ revealEls.forEach(el => revealObserver.observe(el));
       });
 
       sessionFormatEl.style.display = parts.length ? '' : 'none';
+    }
+
+    // The map button, which is only worth showing where this page has the map
+    // and the map has the room. The room travels on the button rather than in
+    // a variable out here, so a panel stepped along with the arrows carries its
+    // own destination and cannot be left pointing at the session before it.
+    if (sessionMapBtn) {
+      const aim = sessionMapAim(session);
+      sessionMapBtn.hidden = !aim.place;
+      sessionMapBtn.dataset.room = aim.place ? aim.room : '';
+
+      if (aim.place) {
+        // "Show Allen Room on the venue map", "Show the Cafe on the venue map"
+        const label = 'Show ' + aim.place + ' on the venue map';
+        sessionMapBtn.setAttribute('aria-label', label);
+        sessionMapBtn.title = label;
+      }
     }
 
     sessionTitleEl.textContent = session.title;
@@ -1257,6 +1297,24 @@ revealEls.forEach(el => revealObserver.observe(el));
 
   closeBtn.addEventListener('click', closeOverlay);
   if (sessionCloseBtn) sessionCloseBtn.addEventListener('click', closeOverlay);
+
+  // The map button puts the panel away and hands the room to the floor map,
+  // which opens itself on the level it is on, pins its marker and brings the
+  // whole plan into view - the same thing a card under the map does.
+  //
+  // stopPropagation matters twice over: the scrim behind takes a click as a
+  // close, and the map's own document listener takes a click landing outside
+  // the plan as a dismissal, which would throw away the popup just pinned.
+  if (sessionMapBtn) {
+    sessionMapBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const room = sessionMapBtn.dataset.room;
+      closeOverlay();
+      if (room && typeof window.sliceMapShowRoom === 'function') {
+        window.sliceMapShowRoom(room);
+      }
+    });
+  }
 
   if (prevBtn) {
     prevBtn.addEventListener('click', (e) => {

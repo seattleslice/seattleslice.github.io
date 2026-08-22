@@ -306,6 +306,75 @@
 
 /* ===================== SESSION PANEL ===================== */
 /* What a row opens, on the same scrim the speaker panel uses */
+
+/* The corner button. The speaker panel keeps a quiet X there because a way out
+   is all it has to offer; a session has somewhere to be, so this one closes the
+   panel and takes the reader to the room on the venue map. Closing is still the
+   scrim's job - a tap off the panel, or Escape - which leaves the corner free
+   to be loud, in the same yellow the map's own markers and floor tabs wear.
+   Built in js/sessions.js, raised and aimed in js/shared.js. */
+.speaker-overlay__panel--session {
+  /* Clear of the button, which is taller than the X it replaced */
+  padding-top: 64px;
+}
+
+.session-panel__map {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid #f5ee1d;
+  background: rgba(245, 238, 29, 0.14);
+  color: #f5ee1d;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 14px rgba(245, 238, 29, 0.28);
+  transition: background 0.2s, color 0.2s, border-color 0.2s,
+    transform 0.2s, box-shadow 0.2s;
+}
+
+/* display:flex above beats the browser's own [hidden] rule, so say it again */
+.session-panel__map[hidden] {
+  display: none;
+}
+
+.session-panel__map svg {
+  display: block;
+  width: 25px;
+  height: 25px;
+}
+
+.session-panel__map:hover,
+.session-panel__map:focus-visible {
+  background: #f5ee1d;
+  color: #00367B;
+  transform: translateY(-1px) scale(1.06);
+  box-shadow: 0 5px 20px rgba(245, 238, 29, 0.5);
+}
+
+/* The brand focus ring the session tabs and the map's own cards wear */
+.session-panel__map:focus-visible {
+  outline: 2px solid #BB3EFD;
+  outline-offset: 3px;
+}
+
+.session-panel__map:active {
+  transform: translateY(0) scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .session-panel__map:hover,
+  .session-panel__map:focus-visible,
+  .session-panel__map:active {
+    transform: none;
+  }
+}
+
 .session-panel__format {
   font-family: 'Bungee', cursive;
   font-size: 12px;

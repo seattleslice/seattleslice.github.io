@@ -26,11 +26,11 @@
   <!-- Bump ?v= whenever these change. GitHub Pages serves them with
        max-age=600, and a phone holding a stale schedule.js next to a fresh
        page is how the schedule silently comes up empty. -->
-  <link rel="stylesheet" href="styles/shared.css?v=2026-08-20">
+  <link rel="stylesheet" href="styles/shared.css?v=2026-08-21">
   <!-- The rows are the session rows, so the schedule wears the same stylesheet
        the Sessions section does and adds only its own chrome on top. -->
-  <link rel="stylesheet" href="styles/sessions.css?v=2026-08-20">
-  <link rel="stylesheet" href="styles/schedule.css?v=2026-08-20">
+  <link rel="stylesheet" href="styles/sessions.css?v=2026-08-21">
+  <link rel="stylesheet" href="styles/schedule.css?v=2026-08-21">
 </head>
 <body>
 
@@ -63,7 +63,11 @@
 
     <!-- The same panel js/sessions.js builds for the home page -->
     <div class="speaker-overlay__panel speaker-overlay__panel--session" id="sessionPanel" hidden>
-      <button class="speaker-overlay__close" id="sessionClose" type="button" aria-label="Close">&times;</button>
+      <!-- The corner carries a map button rather than a way out: a tap off the
+           panel closes it, and so does Escape. js/shared.js raises it only
+           where the page has the venue map to send the reader to, which this
+           one does not, so here it stays hidden. -->
+      <button class="session-panel__map" id="sessionMap" type="button" aria-label="Show this room on the venue map" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M3 6.5 L9 4 L15 6.5 L21 4 V17 L15 19.5 L9 17 L3 19.5 Z"/><path d="M9 4 V17"/><path d="M15 6.5 V19.5"/><circle cx="12" cy="11.6" r="1.9" fill="currentColor" stroke="none"/></svg></button>
       <p class="session-panel__format" id="sessionFormat"></p>
       <h2 class="speaker-overlay__name" id="sessionTitle"></h2>
       <p class="speaker-overlay__bio" id="sessionSynopsis"></p>
@@ -74,9 +78,9 @@
 
   <!-- Ahead of shared.js: it puts the Schedule section in place, and shared.js
        reads the page as it starts. -->
-  <script src="js/tabs.js?v=2026-08-20"></script>
-  <script src="js/schedule.js?v=2026-08-20"></script>
-  <script src="js/shared.js?v=2026-08-20"></script>
+  <script src="js/tabs.js?v=2026-08-21"></script>
+  <script src="js/schedule.js?v=2026-08-21"></script>
+  <script src="js/shared.js?v=2026-08-21"></script>
   <script>
     // No speaker grid on this page to load the list for us, so the section
     // fetches the speakers its sessions are checked against itself.

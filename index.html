@@ -87,11 +87,11 @@
   <!-- Bump ?v= whenever shared.css or shared.js changes. GitHub Pages serves
        both with max-age=600, and a phone holding a stale shared.js next to a
        fresh page is how the speaker and session lists silently come up empty. -->
-  <link rel="stylesheet" href="styles/shared.css?v=2026-08-20">
+  <link rel="stylesheet" href="styles/shared.css?v=2026-08-21">
   <!-- The Sessions section, shared with s.html. See js/sessions.js. -->
-  <link rel="stylesheet" href="styles/sessions.css?v=2026-08-20">
+  <link rel="stylesheet" href="styles/sessions.css?v=2026-08-21">
   <!-- Its Schedule view, shared with schedulepreview.html -->
-  <link rel="stylesheet" href="styles/schedule.css?v=2026-08-20">
+  <link rel="stylesheet" href="styles/schedule.css?v=2026-08-21">
   <style>
     /* ===================== HERO SECTION ===================== */
     .hero {
@@ -2781,10 +2781,10 @@
 
   <!-- Ahead of shared.js: it puts the Sessions section and the session panel
        in place, and shared.js reads both as it starts. -->
-  <script src="js/tabs.js?v=2026-08-20"></script>
-  <script src="js/schedule.js?v=2026-08-20"></script>
-  <script src="js/sessions.js?v=2026-08-20"></script>
-  <script src="js/shared.js?v=2026-08-20"></script>
+  <script src="js/tabs.js?v=2026-08-21"></script>
+  <script src="js/schedule.js?v=2026-08-21"></script>
+  <script src="js/sessions.js?v=2026-08-21"></script>
+  <script src="js/shared.js?v=2026-08-21"></script>
   <script>
     // Show scroll indicator after 5 seconds
     setTimeout(() => {
@@ -3283,10 +3283,14 @@
       // Distance from the top of the document, off the offset chain. A client
       // rect would do except that the venue section fades in under a translateY
       // and one read mid-reveal comes back short by exactly that much.
-      function panelPageTop() {
+      function pageTop(el) {
         let y = 0;
-        for (let n = panel; n; n = n.offsetParent) y += n.offsetTop;
+        for (let n = el; n; n = n.offsetParent) y += n.offsetTop;
         return y;
+      }
+
+      function panelPageTop() {
+        return pageTop(panel);
       }
 
       function framedScrollTop() {
@@ -3372,6 +3376,52 @@
           // page back on a timer too, or the mode could never be scrolled off.
           window.setTimeout(function() { if (seq === frameSeq) framing = false; }, 1000);
         }
+      }
+
+      // shared.css sets scroll-behavior: smooth on html, which animates
+      // programmatic scrolls too, so a reader who has asked for less motion
+      // has to have it turned off for the one call rather than simply being
+      // handed the two argument form.
+      function scrollPageTo(target) {
+        const reduce = window.matchMedia &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!reduce && ('scrollBehavior' in document.documentElement.style)) {
+          window.scrollTo({ top: target, behavior: 'smooth' });
+          return;
+        }
+        const root = document.documentElement;
+        const was = root.style.scrollBehavior;
+        root.style.scrollBehavior = 'auto';
+        window.scrollTo(0, target);
+        root.style.scrollBehavior = was;
+      }
+
+      // Putting the map in front of whoever has just asked for it - the map
+      // button on a session panel, from anywhere else on the page.
+      //
+      // A phone gets the framing above: the panel is already sized to the
+      // screen there, so it takes the screen, and the mascot and the menu stow
+      // themselves while it holds. A desktop has room for the map inside the
+      // page and nothing in the way of it, so all it wants is the page scrolled
+      // far enough down to show the plan whole - the characters stay where they
+      // are and the section reads as a section rather than as a mode.
+      function frameMapInView() {
+        if (mapViewAllowed()) { frameMap(); return; }
+
+        const floor = floors.filter(function(fl) { return !fl.hidden; })[0];
+        const inner = floor && floor.querySelector('.floormap__inner');
+        if (!inner) return;
+
+        // The tabs say which level is up, so they belong in the frame with it
+        const top = panelPageTop();
+        const span = pageTop(inner) + inner.offsetHeight - top;
+        const vh = window.innerHeight;
+        // Centre what fits; anything taller than the screen leads with the tabs
+        const target = span <= vh - 24
+          ? top - Math.round((vh - span) / 2)
+          : top - 16;
+        const max = Math.max(0, document.documentElement.scrollHeight - vh);
+        scrollPageTo(Math.max(0, Math.min(target, max)));
       }
 
       // Deliberately not throttled through requestAnimationFrame. WebKit can
@@ -3692,6 +3742,35 @@
         });
       });
 
+      // Bringing a marker up, wherever the asking came from. A card under the
+      // map can belong to a floor that is not on screen, so the floor is
+      // switched first, then the plan is panned across to the marker and its
+      // popup is pinned open. The map button on a session panel asks for
+      // exactly this, from the other end of the page.
+      function goToSpot(spot) {
+        const floorBlock = spot.closest('.floormap-floor');
+        if (floorBlock && floorBlock.hidden) {
+          const tab = tabs.filter(function(t) {
+            return t.getAttribute('aria-controls') === floorBlock.id;
+          })[0];
+          if (tab) activateTab(tab);
+        }
+        const scroller = spot.closest('.floormap__scroll');
+        const inner = spot.closest('.floormap__inner');
+        const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        // After a floor switch, centreFloor has queued its own scroll for
+        // the next frame; queue ours after it so the marker wins.
+        window.requestAnimationFrame(function() {
+          window.requestAnimationFrame(function() {
+            const vb = viewBoxOf(inner);
+            const x = ((parseFloat(spot.getAttribute('data-x')) - vb[0]) / vb[2]) * inner.clientWidth;
+            scroller.scrollTo({ left: x - scroller.clientWidth / 2, behavior: reduce ? 'auto' : 'smooth' });
+          });
+        });
+        pinned = spot;
+        showPop(spot);
+      }
+
       panel.querySelectorAll('.floormap-area').forEach(function(card) {
         const group = spotsFor(card);
         const spot = group[0];
@@ -3705,29 +3784,7 @@
         card.addEventListener('click', function(e) {
           e.stopPropagation();
           frameMap();
-          // A card can belong to a floor that is not on screen: switch to
-          // that floor first, then bring the marker into view and pin it.
-          const floorBlock = spot.closest('.floormap-floor');
-          if (floorBlock.hidden) {
-            const tab = tabs.filter(function(t) {
-              return t.getAttribute('aria-controls') === floorBlock.id;
-            })[0];
-            if (tab) activateTab(tab);
-          }
-          const scroller = spot.closest('.floormap__scroll');
-          const inner = spot.closest('.floormap__inner');
-          const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-          // After a floor switch, centreFloor has queued its own scroll for
-          // the next frame; queue ours after it so the marker wins.
-          window.requestAnimationFrame(function() {
-            window.requestAnimationFrame(function() {
-              const vb = viewBoxOf(inner);
-              const x = ((parseFloat(spot.getAttribute('data-x')) - vb[0]) / vb[2]) * inner.clientWidth;
-              scroller.scrollTo({ left: x - scroller.clientWidth / 2, behavior: reduce ? 'auto' : 'smooth' });
-            });
-          });
-          pinned = spot;
-          showPop(spot);
+          goToSpot(spot);
         });
       });
 
@@ -3781,6 +3838,90 @@
       document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') hidePop();
       });
+
+      // ---- reaching the map from elsewhere on the page ----
+      // A session panel's map button hands over the room the sheet wrote and
+      // expects the reader to end up looking at it. Which marker that is is the
+      // map's own business, so the lookup lives here beside the markers rather
+      // than with the schedule that names the rooms.
+      //
+      // The keys are what the sheet's Room column holds - see SCHEDULE_ROOMS in
+      // js/schedule.js - along with the rooms the schedule's fixtures carry.
+      const ROOM_SPOTS = {
+        A: 'l2-A',    // the Auditorium is entered off the Level 2 lobby
+        LH: 'l1-C',   // the Lecture Hall is down the stairs beside 1C
+        AR: 'l4-A',   // Allen Room
+        NR: 'l4-B',   // Norcliffe Room
+        L1: 'l1-D',   // the playtest floor, along the Level 1 lobby
+        L2: 'l2-C'    // coffee in the Level 2 lobby
+      };
+
+      function spotForRoom(room) {
+        const key = String(room || '').trim().toUpperCase();
+        if (!key) return null;
+
+        let id = ROOM_SPOTS[key] || '';
+        // 1A to 1D are the breakfast tables and 1A is where the speed
+        // networking runs: all of them are the Cafe, which is the one marker
+        if (!id && /^1[A-D]$/.test(key)) id = 'l1-E';
+        // Anything else written the way the markers are - 5D, 1F, 2B - is taken
+        // as it comes, so a room the sheet picks up later finds its own spot
+        // without a line here. An id no marker answers to falls through to null
+        // and the button that asked simply does not appear.
+        if (!id) {
+          const parts = key.match(/^(\d)([A-Z])$/);
+          if (parts) id = 'l' + parts[1] + '-' + parts[2];
+        }
+
+        return id ? panel.querySelector('.floormap-spot[data-spot="' + id + '"]') : null;
+      }
+
+      // A marker standing for more than one thing is named for the place
+      // rather than for whichever of them its own label leads with: 1E carries
+      // the breakfast, the pitch competition and the speed networking, and a
+      // session at any of them is being sent to the Cafe.
+      const SPOT_PLACES = { 'l1-E': 'the Caf\u00e9' };
+
+      // What the map calls the place a room lands on, or '' where the map has
+      // no marker for it. A panel elsewhere asks this for both things it needs:
+      // whether it has anywhere to send anybody, and what to call it. Named off
+      // the marker rather than off the schedule's own word for the room, so the
+      // button says what the reader will be looking at when they get there.
+      window.sliceMapPlaceFor = function(room) {
+        const spot = spotForRoom(room);
+        if (!spot) return '';
+        return SPOT_PLACES[spot.getAttribute('data-spot')] ||
+          spot.getAttribute('data-name') || '';
+      };
+
+      // Open the map on a room. Answers whether there was a marker to open it
+      // on, so a caller can tell the difference between done and nothing to do.
+      window.sliceMapShowRoom = function(room) {
+        const spot = spotForRoom(room);
+        if (!spot) return false;
+
+        // The map shares the venue section with parking and transit, and on a
+        // phone it starts shut. Its own button is what opens it - that closes
+        // whichever panel was up, sizes the portrait layout against the window
+        // as it is now, and centres the floor - so press that rather than
+        // repeating any of it here.
+        if (panel.hidden && mapToggle) mapToggle.click();
+
+        goToSpot(spot);
+        // The card carries the detail the popup leaves out, and on a phone the
+        // list is short enough that it needs scrolling to
+        revealCard(spot);
+        frameMapInView();
+
+        // Whoever pressed the button by keyboard was standing on it, and it
+        // has just gone with the panel - which would drop them back at the top
+        // of the page. The marker takes tab focus, so hand them that instead.
+        // preventScroll: the framing above is already taking them to it, and
+        // the browser's own scroll-into-view would fight it.
+        try { spot.focus({ preventScroll: true }); } catch (e) { /* older focus() */ }
+
+        return true;
+      };
     })();
 
     // ===================== DRAG SCROLLER =====================

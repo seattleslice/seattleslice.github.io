@@ -3481,10 +3481,18 @@
         const pop = inner.querySelector('.floormap-pop:not(.floormap-pop--b)');
         const popB = inner.querySelector('.floormap-pop--b');
         pop.classList.toggle('is-pinned', pinned === spot);
+        // A spot with data-pop2 answers with two indicators at once on
+        // desktop, where there is room around the marker to read them. On a
+        // phone the pair crowds the little pane, so the second indicator's
+        // names fold back into the main popup as more stacked lines instead.
+        const dual = !!(popB && spot.getAttribute('data-pop2')) &&
+          !(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
         // Tooltips stay terse - just the names, stacked, for the spots that
         // cover more than one thing (the cards below carry the detail).
-        fillPop(pop, spot.getAttribute('data-name'),
-          [spot.getAttribute('data-name2'), spot.getAttribute('data-name3')]);
+        fillPop(pop, spot.getAttribute('data-name'), dual
+          ? [spot.getAttribute('data-name2'), spot.getAttribute('data-name3')]
+          : [spot.getAttribute('data-name2') || spot.getAttribute('data-pop2'),
+             spot.getAttribute('data-name3') || spot.getAttribute('data-pop2b')]);
 
         // Measure the marker where it actually lands on screen, so the popup
         // follows the map through any transform - the portrait layout turns
@@ -3495,10 +3503,6 @@
         const ib = inner.getBoundingClientRect();
         const x = mb.left + mb.width / 2 - ib.left;
         const y = mb.top + mb.height / 2 - ib.top;
-
-        // A spot with data-pop2 answers with two indicators at once: the main
-        // one above the marker and the second below it.
-        const dual = !!(popB && spot.getAttribute('data-pop2'));
 
         // Measure invisibly, then clamp inside the plan. An absolutely
         // positioned box can only grow rightward to its containing block's

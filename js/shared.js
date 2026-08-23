@@ -1036,7 +1036,7 @@ revealEls.forEach(el => revealObserver.observe(el));
     if (!sessionPanel) return;
 
     // What it is, when it runs and where - "Panel - 9:30 - 10:15am - Auditorium"
-    // for something running the once, "Roundtable - 4:45 & 5:45pm - Table 5D" for
+    // for something running the once, "Roundtable - 4:45 - 5:30pm & 5:45 - 6:30pm - Table 5D" for
     // something the day holds twice. The when and the where come from the
     // schedule, so a page that has not loaded it shows the format alone.
     if (sessionFormatEl) {

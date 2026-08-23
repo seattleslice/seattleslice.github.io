@@ -405,13 +405,6 @@ function scheduleSlotEnd(def) {
   return String(def.end).trim().split(/\s+/).join('').toLowerCase();
 }
 
-// When a sitting opens, for a session listing several of them: '1:45', or
-// '1:45pm' where which half of the day it falls in needs saying.
-function scheduleOpens(minutes, marked) {
-  const clock = scheduleClock(minutes).split(' ');
-  return marked ? clock[0] + clock[1].toLowerCase() : clock[0];
-}
-
 // The hours a fixture keeps, opened out for the panel. A row's time column
 // wants them tight - it is one of three things sharing a line - and a panel has
 // the room to let them breathe.
@@ -437,18 +430,16 @@ function scheduleSlotFor(minutes) {
 }
 
 // When and where a session runs, for the line above its title in the panel.
-// Something running the once gives the whole span it runs for; something the
-// day holds more than once gives only when each sitting opens, since two full
-// spans of clock is more than anybody is asking for:
+// Every sitting gives the whole span it runs for, however many there are:
 //
 //   ['10:30 - 11:15am', 'Allen Room']
-//   ['4:45 & 5:45pm', 'Table 5D']
+//   ['4:45 - 5:30pm & 5:45 - 6:30pm', 'Table 5D']
 //
 // A session moving rooms between its sittings cannot say the one place for
 // both, so that one says where beside each time instead and comes back as a
 // single part:
 //
-//   ['4:45 (Table 5C) & 5:45pm (Table 5A)']
+//   ['4:45 - 5:30pm (Table 5C) & 5:45 - 6:30pm (Table 5A)']
 //
 // Empty for anything the sheet has not placed yet, which is how the panel knows
 // to show nothing rather than a gap.
@@ -462,31 +453,11 @@ function scheduleWhenAndWhere(session) {
   const sittings = scheduleSittings(session.time, session.room);
   if (!sittings.length) return [];
 
-  // Something that runs more than once - a roundtable holding its hour twice -
-  // says only when each sitting opens: two full spans of clock is more than
-  // anybody is asking for. Something running the once has room to give the
-  // whole span, and is the poorer for not doing so.
-  const opensOnly = sittings.length > 1;
-
-  // Where several are listed, each says which half of the day it falls in -
-  // unless they all fall in the one half, and then saying it once at the end
-  // carries back over the rest: '1:45 & 2:45pm', but '11:30am & 5:45pm'.
-  //
-  // Read off the sitting's own clock rather than the label of the slot it lands
-  // in. A slot only writes am or pm when it crosses noon itself, which is a
-  // question about the slot and not about the pair being listed.
-  const halves = sittings.map(function(sitting) {
-    return sitting.startsAt < 12 * 60 ? 'am' : 'pm';
-  });
-
-  const straddles = halves.some(function(half) { return half !== halves[0]; });
-
-  const times = sittings.map(function(sitting, at) {
-    if (opensOnly) {
-      return scheduleOpens(sitting.startsAt,
-        straddles || at === sittings.length - 1);
-    }
-
+  // The whole span, every time. Listing a roundtable by its start times alone
+  // was shorter and read as a riddle: two bare clock times with nothing saying
+  // how long either one lasts. A span says it outright and carries its own am
+  // or pm, so a pair of them needs nothing doing to it.
+  const times = sittings.map(function(sitting) {
     const def = scheduleSlotFor(sitting.startsAt);
     return scheduleSlotStart(def) + ' - ' + scheduleSlotEnd(def);
   });

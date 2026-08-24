@@ -689,26 +689,33 @@ function scheduleRender(sessions, list, legendEl) {
     const meta = document.createElement('span');
     meta.className = 'session-row__meta';
 
-    // Which sitting this row is, for a session the day holds more than once.
-    // Nothing to say about the ones that run the once, so nothing is said.
-    if (item.sittings > 1) {
-      const sitting = document.createElement('span');
-      sitting.className = 'schedule-row__sitting';
-      sitting.textContent = '(' + item.sitting + ' of ' + item.sittings + ')';
-      meta.appendChild(sitting);
-    }
-
     const names = session.speakers.map(function(speaker) {
       return speaker.name;
     }).join(', ');
 
     if (names) {
-      if (meta.childNodes.length) meta.appendChild(document.createTextNode(' '));
-
       const lineup = document.createElement('span');
       lineup.className = 'session-row__speakers';
       lineup.textContent = names;
       meta.appendChild(lineup);
+    }
+
+    // A session the day holds more than once says so on its first row, after
+    // the names, by saying when it comes round again. The later rows say
+    // nothing - by then the note would be about the past.
+    if (item.sitting === 1 && item.sittings > 1) {
+      const again = scheduleSittings(session.time, session.room).slice(1)
+        .map(function(sitting) { return scheduleClock(sitting.startsAt); })
+        .join(' & ');
+
+      if (again) {
+        if (meta.childNodes.length) meta.appendChild(document.createTextNode(' '));
+
+        const sitting = document.createElement('span');
+        sitting.className = 'schedule-row__sitting';
+        sitting.textContent = '(also at ' + again + ')';
+        meta.appendChild(sitting);
+      }
     }
 
     if (meta.childNodes.length) {

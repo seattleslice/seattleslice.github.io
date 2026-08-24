@@ -1314,6 +1314,14 @@
       align-items: center;
       gap: 44px;
       padding: 12px 0 8px;
+      /* The halo below reaches 14% of each logo's width past its box, which on
+         the widest logo is about 41px, and on a narrow phone that is width the
+         whole page would otherwise inherit. Keep the decoration to the field:
+         clip stops it reaching the document while the clip margin leaves it
+         enough room to finish painting, so nothing visible is trimmed. */
+      overflow-x: clip;
+      overflow-y: visible;
+      overflow-clip-margin: 60px;
     }
 
     .sponsors-row {
@@ -1945,8 +1953,22 @@
       .ticket-card__price {
         font-size: 32px;
       }
+      /* The track is a flex item between the two arrows, so on a phone it is
+         only as wide as they leave it - well under the 392px below. The cards
+         still swing out past its edges on their way off, and a rightward swing
+         with nothing to stop it is width the whole page inherits. Give the
+         carousel the full screen to play in and clip it there: the exit runs
+         to the edge the reader can see and no further. The negative margins
+         cancel the section's side padding and the matching padding puts the
+         flex row back where it was, so nothing else moves. */
       .events-carousel {
         gap: 12px;
+        overflow-x: clip;
+        overflow-y: visible;
+        margin-left: -24px;
+        margin-right: -24px;
+        padding-left: 24px;
+        padding-right: 24px;
       }
       .events-carousel__track {
         width: 392px;
@@ -1980,6 +2002,16 @@
       }
       .event-card--stack-back-2 {
         transform: translateX(-70px) scale(0.87);
+      }
+      /* The stack offsets above are the desktop ones brought down to the
+         smaller card. The exit was left behind at its desktop distance, which
+         on a phone throws the card most of its own width clear of the track.
+         Bring it down by the same amount as the rest. */
+      .event-card--exit-left {
+        transform: translateX(-118px) scale(0.8);
+      }
+      .event-card--exit-right {
+        transform: translateX(118px) scale(0.8);
       }
       .venue-toggle {
         font-size: 14px;

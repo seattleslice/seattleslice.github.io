@@ -5,8 +5,21 @@
   box-sizing: border-box;
 }
 
+/* The page is never allowed to grow wider than the screen. overflow-x on the
+   body alone does not buy that: the root has no overflow of its own, so the
+   body's value is handed to the viewport and the body itself falls back to
+   visible. A stray rightward transform anywhere still stretches the document
+   and hands the reader a sideways scroll. Naming the root as well pins the
+   width for real.
+
+   clip rather than hidden because clip does not turn either element into a
+   scroll container - vertical scrolling stays on the viewport, where
+   scroll-behavior below expects it. hidden is listed first for browsers old
+   enough to drop clip; they get the blunter version of the same guard. */
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -14,6 +27,7 @@ body {
   background: #00367B;
   color: #e0e0e0;
   overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* ===================== CONTENT SECTIONS ===================== */
@@ -170,18 +184,28 @@ body {
   margin: 0 auto 14px;
 }
 
+/* A surname that runs on without a space - Khatchatourians - is one
+   unbreakable word, and a 1fr grid track will not shrink below the widest word
+   it has to hold. Two of those in the two-column phone layout push the grid
+   wider than the screen. Letting the long ones break mid-word puts the floor
+   back where the track can reach it. It has to be anywhere rather than
+   break-word: break-word is ignored while the track's minimum is being worked
+   out, so it would leave the same floor in place. Names that already fit are
+   unaffected either way. */
 .speaker-card__name {
   font-family: 'Bungee', cursive;
   font-size: 15px;
   line-height: 1.25;
   color: #f5ee1d;
   margin-bottom: 6px;
+  overflow-wrap: anywhere;
 }
 
 .speaker-card__role {
   font-size: 13px;
   line-height: 1.4;
   color: #a0c4e8;
+  overflow-wrap: anywhere;
 }
 
 /* The Sessions section - its list, its tabs and its panel - lives in

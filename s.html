@@ -322,7 +322,15 @@
       white-space: nowrap;
       cursor: pointer;
       box-shadow: 0 6px 20px rgba(0, 5, 15, 0.5), 0 0 24px rgba(245, 238, 29, 0.22);
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: transform 0.2s, left 0.2s, box-shadow 0.2s;
+    }
+
+    /* Where the centred label would crowd the switch button, it hugs the
+       left edge instead, with the switch's own margin. The page script
+       measures and picks - see placeJump. */
+    .app-jump--left {
+      left: calc(18px + env(safe-area-inset-left, 0px));
+      transform: none;
     }
 
     .app-jump[hidden] {
@@ -337,6 +345,10 @@
       transform: translateX(-50%) scale(0.94);
     }
 
+    .app-jump--left:active {
+      transform: scale(0.94);
+    }
+
     .app-jump:focus-visible {
       outline: 2px solid #BB3EFD;
       outline-offset: 3px;
@@ -347,14 +359,18 @@
       display: none;
     }
 
-    /* A phone has no room for the label centred against the whole screen
-       with the switch button in the corner, so it centres in the room the
-       switch leaves instead */
+    /* Smaller type on a phone, so the label fits beside the switch button
+       as often as it can */
     @media (max-width: 560px) {
       .app-jump {
-        left: calc((100% - 90px) / 2);
         font-size: 12px;
         padding: 11px 16px;
+      }
+    }
+
+    @media (max-width: 340px) {
+      .app-jump {
+        font-size: 11px;
       }
     }
 
@@ -2039,6 +2055,19 @@
       // callback - see the same choice in the home page's map scroll work.
       let watchedBlock = null;
 
+      // Centred when the label has room; otherwise against the left edge,
+      // with the same margin the switch button keeps on the right. Measured
+      // rather than broken by width, since the label changes with the day.
+      function placeJump() {
+        if (!jumpBtn || jumpBtn.hidden) return;
+        const fab = document.getElementById('appFab');
+        const fabLeft = fab
+          ? fab.getBoundingClientRect().left
+          : window.innerWidth - 90;
+        const centredRight = (window.innerWidth + jumpBtn.offsetWidth) / 2;
+        jumpBtn.classList.toggle('app-jump--left', centredRight > fabLeft - 12);
+      }
+
       function updateJump() {
         if (!jumpBtn) return;
         if (!watchedBlock) {
@@ -2047,7 +2076,10 @@
         }
         const box = watchedBlock.getBoundingClientRect();
         jumpBtn.hidden = box.bottom > 0 && box.top < window.innerHeight;
+        placeJump();
       }
+
+      window.addEventListener('resize', placeJump);
 
       function watchLive(state) {
         if (!jumpBtn) return;

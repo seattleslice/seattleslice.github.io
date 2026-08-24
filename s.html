@@ -155,7 +155,7 @@
          and at the sides for a notch in landscape */
       padding: 16px
         calc(18px + env(safe-area-inset-right, 0px))
-        calc(96px + env(safe-area-inset-bottom, 0px))
+        calc(108px + env(safe-area-inset-bottom, 0px))
         calc(18px + env(safe-area-inset-left, 0px));
     }
 
@@ -179,31 +179,9 @@
       text-align: center;
     }
 
-    /* ---- the live block: what is on right now, or on next ---- */
-    /* The heading and the slot's own hours share the line, hanging off the
-       one baseline the way a slot head's time and label do. The hours keep
-       the slot head's classes and so its size - smaller than the heading -
-       and wrap under it when a long countdown leaves them no room. */
-    .live__top {
-      display: flex;
-      align-items: baseline;
-      flex-wrap: wrap;
-      gap: 4px 12px;
-    }
-
-    /* Lato rather than the slot head's Bungee, and no meridiems: this line
-       is shared with the heading, and at Bungee's width the hours would fall
-       off a phone's screen instead of sitting beside it */
-    .live__top .schedule-slot__time {
-      font-family: 'Lato', sans-serif;
-      font-weight: 700;
-      font-size: 16px;
-    }
-
-    /* The list below starts straight in with the rooms: its own head would
-       say the same hours twice */
-    .live .schedule-slot__head {
-      display: none;
+    /* ---- the day, and the badge on the slot that is live ---- */
+    .day-done {
+      margin-bottom: 26px;
     }
 
     .live__head {
@@ -220,41 +198,41 @@
       font-variant-numeric: tabular-nums;
     }
 
-    .live .schedule {
-      margin-top: 14px;
-    }
-
-    /* The day is over: nothing to list, so say so in page text */
+    /* The day is over: said in page text above the full schedule */
     .live__done {
-      margin-top: 12px;
+      margin-top: 10px;
       font-size: 16px;
       line-height: 1.7;
       color: #c0d8f0;
     }
 
-    /* ---- the time picker and the slot it opens ---- */
-    .browse {
-      margin-top: 36px;
-      /* The same gradient rule the site draws between sections */
-      border-top: 0;
-      background-image:
-        linear-gradient(90deg, transparent, #BB3EFD, #f5ee1d, #BB3EFD, transparent);
-      background-repeat: no-repeat;
-      background-size: 100% 1px;
-      background-position: top center;
-      padding-top: 26px;
+    /* Every slot's head pins to the top of the screen while its slot scrolls
+       past, so the hours a session belongs to are never out of view. The
+       background is the page's own, so the rows slide beneath it cleanly. */
+    #dayList .schedule-slot__head {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: #00367B;
+      padding-top: 10px;
     }
 
-    .browse__head {
+    /* Which slot is on right now - or how long until the next one - leading
+       the pinned head in the site's heading dress, on the same baseline as
+       the hours beside it and at their size. */
+    .day-live-badge {
       font-family: 'Bungee', cursive;
-      font-size: 17px;
-      line-height: 1.3;
+      font-size: 19px;
+      line-height: 1.2;
+      letter-spacing: 1px;
       color: #f5ee1d;
       text-shadow: 2px -2px 0 #BB3EFD;
     }
 
-    .browse .session-tabs {
-      margin-top: 14px;
+    @media (max-width: 640px) {
+      .day-live-badge {
+        font-size: 16px;
+      }
     }
 
     /* ===================== THE MAP PANE ===================== */
@@ -287,7 +265,7 @@
       justify-content: flex-start;
       flex-wrap: nowrap;
       gap: 1.54em;
-      padding-right: calc(78px + env(safe-area-inset-right, 0px));
+      padding-right: calc(90px + env(safe-area-inset-right, 0px));
     }
 
     .app-pane--map .venue-legend {
@@ -315,8 +293,8 @@
       right: calc(18px + env(safe-area-inset-right, 0px));
       bottom: calc(18px + env(safe-area-inset-bottom, 0px));
       z-index: 900;
-      width: 60px;
-      height: 60px;
+      width: 72px;
+      height: 72px;
       padding: 0;
       border-radius: 50%;
       border: 2px solid #BB3EFD;
@@ -353,8 +331,8 @@
 
     .app-fab__icon svg {
       display: block;
-      width: 30px;
-      height: 30px;
+      width: 36px;
+      height: 36px;
     }
 
     .app-fab__icon--sched {
@@ -768,30 +746,21 @@
 
       <p class="section-status" id="appStatus" role="status">Loading...</p>
 
-      <!-- What is on right now, or a countdown to what is on next. Filled in
-           and kept ticking by the page script below. The slot's hours and
-           name ride the same line, in the slot head's own clothes - the head
-           inside the list below is hidden to make way for them. -->
-      <section class="live" id="liveSection" hidden>
-        <div class="live__top">
-          <h2 class="live__head" id="liveHead">Happening Now</h2>
-          <span class="schedule-slot__time" id="liveWhen" hidden></span>
-          <span class="schedule-slot__label" id="liveLabel" hidden></span>
-        </div>
-        <p class="live__done" id="liveDone" hidden>
-          SLICE 2026 has wrapped for the day. Thank you for coming! Tap
-          Show All below to look back at the whole day.
+      <!-- The wrap-up note, hidden until the day is over -->
+      <div class="day-done" id="dayDone" hidden>
+        <h2 class="live__head">That's a wrap!</h2>
+        <p class="live__done">
+          SLICE 2026 has wrapped for the day. Thank you for coming!
         </p>
-        <div class="schedule schedule--tabbed" id="liveList"></div>
-      </section>
+      </div>
 
-      <!-- The whole day behind a row of time tabs, past slots included. Left
-           untouched, the bar sits on whatever follows the live block above;
-           Show All lays the day out in one run. -->
-      <section class="browse" id="browseSection" hidden>
-        <h2 class="browse__head">Full Schedule</h2>
-        <div class="schedule schedule--tabbed" id="browseList" role="tabpanel"></div>
-      </section>
+      <!-- The whole day, always laid out in full. Each slot's head pins to
+           the top of the screen while its sessions scroll past, the slot
+           that is on right now wears a Happening Now badge in its head - or
+           a ticking countdown while the next one is still coming - and the
+           page opens scrolled straight to it. All of it is filled in and
+           kept current by the page script below. -->
+      <div class="schedule schedule--tabbed" id="dayList"></div>
     </div>
   </div>
 
@@ -1016,7 +985,7 @@
        table, the sheet reading and scheduleRender, which the page script
        below builds its two lists with. -->
   <script src="js/tabs.js?v=2026-08-21"></script>
-  <script src="js/schedule.js?v=2026-08-21"></script>
+  <script src="js/schedule.js?v=2026-08-24"></script>
   <script src="js/sessions.js?v=2026-08-21"></script>
   <script src="js/shared.js?v=2026-08-21"></script>
 
@@ -1788,23 +1757,16 @@
     })();
 
     // ===================== THE LIVE SCHEDULE =====================
-    // The day laid out twice from the one sheet: once for the live block up
-    // top, which always shows the slot that is running - or counting down to
-    // the one about to - and once for the browse list under the time picker.
-    // Two layouts rather than one shared one, so a row is always on the page
-    // exactly once wherever the tabs stand, and every row still opens the
-    // same session panel.
+    // The whole day from the one sheet, laid out once and always shown in
+    // full. The slot that is running wears a Happening Now badge in its
+    // pinned head - or a ticking countdown while the next one is still
+    // coming - and the page opens scrolled straight to it.
     (function() {
       const statusEl = document.getElementById('appStatus');
-      const liveSection = document.getElementById('liveSection');
-      const liveHeadEl = document.getElementById('liveHead');
-      const liveWhenEl = document.getElementById('liveWhen');
-      const liveLabelEl = document.getElementById('liveLabel');
-      const liveDoneEl = document.getElementById('liveDone');
-      const liveListEl = document.getElementById('liveList');
-      const browseSection = document.getElementById('browseSection');
-      const browseListEl = document.getElementById('browseList');
-      if (!liveListEl || !browseListEl) return;
+      const doneEl = document.getElementById('dayDone');
+      const listEl = document.getElementById('dayList');
+      const pane = document.getElementById('schedulePane');
+      if (!listEl || !pane) return;
 
       // ---- the clock ----
       // The page is read on the day, so only the time of day matters. ?t=14:05
@@ -1826,30 +1788,14 @@
         return now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
       }
 
-      // The picker, in the slot tabs' own clothes
-      const bar = tabBar({
-        id: 'slotTabs',
-        label: 'Time slots',
-        controls: 'browseList',
-        className: 'session-tabs--slots'
-      });
-      browseSection.insertBefore(bar.element, browseListEl);
-
-      const APP_ALL = 'all';
-      let laidLive = [];
-      let laidBrowse = [];
-      let swapping = null;
-
-      // Whether the bar's selection was the reader's own doing. A pick they
-      // made survives every rebuild; left untouched, the bar follows the day.
-      let pickedByUser = false;
-      let selectingDefault = false;
-
-      // What the live block last showed, so a tick that changes nothing
-      // rebuilds nothing
+      let laid = [];
+      // What the badge last said, so a tick that changes nothing redoes nothing
       let liveKey = null;
-      // The ticking half of the countdown heading
+      // The ticking half of the countdown badge
       let clockEl = null;
+      // Where the opening scroll parked the pane, so a later reflow can tell
+      // whether the reader has moved off it since
+      let autoScrolledTo = null;
 
       // ---- reading the day ----
       // Where the day stands: the slot running now, the one about to - with
@@ -1859,7 +1805,7 @@
         let running = null;
         let coming = null;
 
-        laidLive.forEach(function(entry) {
+        laid.forEach(function(entry) {
           if (!entry.time) return;
           // The last slot to have started and not ended, matching how the
           // schedule itself files a session into slots
@@ -1887,153 +1833,38 @@
       }
 
       // ---- showing it ----
-      function showLive(state) {
-        laidLive.forEach(function(entry) {
-          const on = entry === state.entry;
-          entry.block.hidden = !on;
-          if (on) {
-            // The all-day fixtures ship hidden for the whole-day layout; a
-            // slot shown on its own carries them at its foot
-            entry.block.querySelectorAll('.schedule-room--allday')
-              .forEach(function(block) { block.hidden = false; });
-          }
+      // The badge lives in the head of the slot it is about, so it pins to
+      // the top of the screen along with the hours it belongs to
+      function setLiveBadge(state) {
+        listEl.querySelectorAll('.day-live-badge').forEach(function(badge) {
+          badge.parentNode.removeChild(badge);
         });
-      }
-
-      function showBrowse(key, animate) {
-        let shown = 0;
-        const whole = key === APP_ALL;
-
-        laidBrowse.forEach(function(entry) {
-          // The standing section only belongs to the day shown whole; read a
-          // slot at a time its fixtures sit at the foot of each slot. No key
-          // at all - the picker standing empty - shows nothing.
-          const on = key !== null &&
-            (entry.standing ? whole : (whole || entry.key === key));
-
-          entry.block.querySelectorAll('.schedule-room--allday')
-            .forEach(function(block) { block.hidden = whole; });
-
-          entry.block.classList.remove('schedule-slot--out');
-          entry.block.classList.remove('schedule-slot--in');
-          entry.block.style.animationDelay = '';
-          entry.block.hidden = !on;
-          if (!on) return;
-
-          if (animate) {
-            entry.block.style.animationDelay = tabSwapDelay(shown);
-            entry.block.classList.add('schedule-slot--in');
-          }
-          shown++;
-        });
-      }
-
-      // What the bar sits on when the reader has not picked: the slot after
-      // the one the live block is showing, so now is up top and next is down
-      // here. Once nothing follows - the after-party is on, or the day is
-      // over - there is no next to offer and nothing is highlighted.
-      function pickerDefault(state) {
-        if (!state.entry || !state.entry.time) return null;
-        const after = laidBrowse.filter(function(entry) {
-          return entry.time && entry.time.start > state.entry.time.start;
-        })[0];
-        return after ? after.key : null;
-      }
-
-      // The whole day's tabs, past slots included, plus Show All
-      function buildPicker(state) {
-        // A swap armed by a tap just before the boundary must not fire into
-        // the rebuilt list. The cancel alone can strand the list mid-swap, so
-        // the swap styling goes with it.
-        tabSwapCancel(swapping);
-        swapping = null;
-        browseListEl.classList.remove('is-swapping');
-        browseListEl.style.height = '';
-
-        const tabs = laidBrowse.filter(function(entry) {
-          return !entry.standing;
-        }).map(function(entry) {
-          return { key: entry.key, label: entry.label };
-        });
-
-        tabs.push({ key: APP_ALL, label: 'Show All' });
-
-        const had = bar.active();
-
-        bar.setTabs(tabs, function(key, animate) {
-          // The default is put here by bar.select below; anything else is
-          // the reader's own hand
-          if (!selectingDefault) pickedByUser = true;
-          tabSwapCancel(swapping);
-          swapping = tabSwap(browseListEl, function(stagger) {
-            showBrowse(key, stagger);
-          }, {
-            animate: animate,
-            itemSelector: '.schedule-slot',
-            outClass: 'schedule-slot--out'
-          });
-        });
-
-        // A slot the reader picked stays picked across the rebuild; left
-        // untouched, the highlight follows the day to whatever comes next,
-        // and once there is no next it settles on nothing at all
-        selectingDefault = true;
-        const fallback = pickerDefault(state);
-        if (pickedByUser && had &&
-            tabs.some(function(tab) { return tab.key === had; })) {
-          bar.select(had, false);
-        } else if (fallback) {
-          bar.select(fallback, false);
-        } else {
-          showBrowse(null, false);
-          // With nothing selected the roving tabindex has nowhere to rove and
-          // the whole bar would fall out of the keyboard's reach - the first
-          // tab holds the door open until a pick is made
-          const first = bar.element.querySelector('.session-tab');
-          if (first) first.tabIndex = 0;
-        }
-        selectingDefault = false;
-
-        bar.reflow();
-      }
-
-      function applyState(state) {
-        liveHeadEl.textContent = '';
         clockEl = null;
 
+        if (!state.entry) return;
+        const head = state.entry.block.querySelector('.schedule-slot__head');
+        if (!head) return;
+
+        const badge = document.createElement('span');
+        badge.className = 'day-live-badge';
+
         if (state.mode === 'now') {
-          liveHeadEl.textContent = 'Happening Now';
-        } else if (state.mode === 'next') {
-          liveHeadEl.appendChild(document.createTextNode('Coming up in '));
+          badge.textContent = 'Happening Now';
+        } else {
+          badge.appendChild(document.createTextNode('Coming up in '));
           clockEl = document.createElement('span');
           clockEl.className = 'live__clock';
           clockEl.textContent = clockText(state.wait);
-          liveHeadEl.appendChild(clockEl);
-          liveHeadEl.appendChild(document.createTextNode('...'));
-        } else {
-          liveHeadEl.textContent = "That's a wrap!";
+          badge.appendChild(clockEl);
+          badge.appendChild(document.createTextNode('...'));
         }
 
-        if (liveDoneEl) liveDoneEl.hidden = state.mode !== 'done';
+        head.insertBefore(badge, head.firstChild);
+      }
 
-        // The slot's hours and name, on the heading's own line. The list's
-        // copy of them is hidden by the stylesheet.
-        const def = state.entry ? state.entry.def : null;
-        if (liveWhenEl) {
-          // The bare clock times, without their AM and PM: the reader is
-          // standing inside the day these hours belong to
-          liveWhenEl.textContent = def
-            ? def.start.split(' ')[0] + '-' + def.end.split(' ')[0]
-            : '';
-          liveWhenEl.hidden = !def;
-        }
-        if (liveLabelEl) {
-          liveLabelEl.textContent = (def && def.label) || '';
-          liveLabelEl.hidden = !(def && def.label);
-        }
-
-        showLive(state);
-        buildPicker(state);
+      function applyState(state) {
+        if (doneEl) doneEl.hidden = state.mode !== 'done';
+        setLiveBadge(state);
       }
 
       function tick() {
@@ -2048,6 +1879,24 @@
         }
       }
 
+      // The whole day on screen the way Show All read it: the standing
+      // fixtures gathered at the foot rather than repeated under every slot
+      function showWholeDay() {
+        laid.forEach(function(entry) {
+          entry.block.hidden = false;
+          entry.block.querySelectorAll('.schedule-room--allday')
+            .forEach(function(block) { block.hidden = true; });
+        });
+      }
+
+      // Park the pane so the live slot's head is pinned at the top
+      function scrollToLive() {
+        const state = liveState();
+        if (!state.entry) return;
+        autoScrolledTo = state.entry.block.offsetTop;
+        pane.scrollTop = autoScrolledTo;
+      }
+
       // ---- filling it from the sheet ----
       function fail() {
         if (!statusEl) return;
@@ -2058,42 +1907,55 @@
       }
 
       function fill(sessions) {
-        laidLive = scheduleRender(sessions, liveListEl, null);
-        // The same day twice on the one page: the live copy's ids step aside
-        // so the browse copy's stay the real ones
-        liveListEl.querySelectorAll('[id]').forEach(function(el) {
-          el.id = 'live-' + el.id;
-        });
-        laidBrowse = scheduleRender(sessions, browseListEl, null);
+        laid = scheduleRender(sessions, listEl, null);
 
         // Which hours each laid-out slot covers. scheduleRender lays the
         // twelve slots out first and in order, so the pairing is by position;
         // the Time TBA and standing sections that can follow carry no clock.
-        [laidLive, laidBrowse].forEach(function(laid) {
-          laid.forEach(function(entry, at) {
-            entry.at = at;
-            if (!entry.standing && at < SCHEDULE_SLOTS.length) {
-              const def = SCHEDULE_SLOTS[at];
-              entry.def = def;
-              entry.time = {
-                start: scheduleMinutes(def.start) * 60,
-                end: scheduleMinutes(def.end) * 60
-              };
+        laid.forEach(function(entry, at) {
+          entry.at = at;
+          if (!entry.standing && at < SCHEDULE_SLOTS.length) {
+            const def = SCHEDULE_SLOTS[at];
+            entry.def = def;
+            entry.time = {
+              start: scheduleMinutes(def.start) * 60,
+              end: scheduleMinutes(def.end) * 60
+            };
+            // The head speaks the page's compact way with hours -
+            // "3:45 - 4:30pm" - which also leaves the badge room beside them
+            const timeEl = entry.block.querySelector('.schedule-slot__time');
+            if (timeEl) {
+              timeEl.textContent =
+                scheduleSlotStart(def) + ' - ' + scheduleSlotEnd(def);
             }
-          });
+          }
         });
 
+        showWholeDay();
+
         if (statusEl) statusEl.hidden = true;
-        liveSection.hidden = false;
-        browseSection.hidden = false;
 
         tick();
+        scrollToLive();
+
         window.setInterval(tick, 1000);
         // A phone coming back from the lock screen or another app has missed
         // its ticks; catch the page up the moment it is looked at again
         document.addEventListener('visibilitychange', function() {
           if (!document.hidden) tick();
         });
+
+        // Bungee lands after the first layout and moves everything. As long
+        // as the reader has not scrolled off on their own, park the pane on
+        // the live slot again once the type has settled.
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(function() {
+            if (autoScrolledTo !== null &&
+                Math.abs(pane.scrollTop - autoScrolledTo) < 4) {
+              scrollToLive();
+            }
+          });
+        }
       }
 
       const loadingSpeakers = loadSpeakers(SCHEDULE_DEFAULTS.speakersSheet, function(speakers) {

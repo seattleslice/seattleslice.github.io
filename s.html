@@ -92,6 +92,12 @@
          different heights are picked, and each change of width rewraps the
          time tabs. The gutter is held open so nothing ever shifts. */
       scrollbar-gutter: stable;
+      /* Unfolding the past inserts a morning's worth of rows above the
+         reader, and the page re-anchors the scroll itself, to the pixel.
+         Chrome's own anchoring doing the same thing on top of it would
+         push the view off by the whole insertion; Safari has no anchoring
+         at all. Off, so the one manual adjustment is the only one. */
+      overflow-anchor: none;
     }
 
     /* On a phone the plan sizes itself to the screen and nothing needs to
@@ -182,6 +188,19 @@
     /* ---- the day, and the badge on the slot that is live ---- */
     .day-done {
       margin-bottom: 26px;
+    }
+
+    /* The way into the folded-away morning. In the flow above the live
+       slot, so the opening scroll leaves it just off the top of the screen
+       until somebody goes looking. */
+    .day-past {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .day-past__btn {
+      font-size: 13px;
+      padding: 11px 24px;
     }
 
     .live__head {
@@ -281,6 +300,62 @@
     /* The balcony swatch is drawn shorter than the three little signs */
     .app-pane--map .venue-legend:last-child svg {
       height: 0.77em;
+    }
+
+    /* ===================== BACK TO NOW ===================== */
+    /* Floats centred at the foot of the schedule, at the switch button's own
+       height, whenever the live slot has been scrolled out of view */
+    .app-jump {
+      position: fixed;
+      left: 50%;
+      bottom: calc(33px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%);
+      z-index: 890;
+      padding: 11px 20px;
+      border-radius: 999px;
+      border: 2px solid #BB3EFD;
+      background: #f5ee1d;
+      color: #00367B;
+      font-family: 'Bungee', cursive;
+      font-size: 13px;
+      line-height: 1.2;
+      white-space: nowrap;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0, 5, 15, 0.5), 0 0 24px rgba(245, 238, 29, 0.22);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .app-jump[hidden] {
+      display: none;
+    }
+
+    .app-jump:hover {
+      box-shadow: 0 8px 26px rgba(0, 5, 15, 0.55), 0 0 34px rgba(245, 238, 29, 0.35);
+    }
+
+    .app-jump:active {
+      transform: translateX(-50%) scale(0.94);
+    }
+
+    .app-jump:focus-visible {
+      outline: 2px solid #BB3EFD;
+      outline-offset: 3px;
+    }
+
+    /* It belongs to the schedule; the map pane has its own furniture */
+    body.is-map .app-jump {
+      display: none;
+    }
+
+    /* A phone has no room for the label centred against the whole screen
+       with the switch button in the corner, so it centres in the room the
+       switch leaves instead */
+    @media (max-width: 560px) {
+      .app-jump {
+        left: calc((100% - 90px) / 2);
+        font-size: 12px;
+        padding: 11px 16px;
+      }
     }
 
     /* ===================== THE FLOATING SWITCH ===================== */
@@ -754,12 +829,23 @@
         </p>
       </div>
 
-      <!-- The whole day, always laid out in full. Each slot's head pins to
-           the top of the screen while its sessions scroll past, the slot
-           that is on right now wears a Happening Now badge in its head - or
-           a ticking countdown while the next one is still coming - and the
-           page opens scrolled straight to it. All of it is filled in and
-           kept current by the page script below. -->
+      <!-- The morning that has already run, folded away. The page opens
+           scrolled to the live slot, so this sits just above the fold -
+           scrolling up (presumably looking for what was missed) finds it.
+           Once pressed there is no way back short of a refresh. -->
+      <p class="day-past" id="dayPast" hidden>
+        <button class="btn btn--outline day-past__btn" id="dayPastBtn" type="button">
+          Show Past Sessions
+        </button>
+      </p>
+
+      <!-- The day's slots. Each slot's head pins to the top of the screen
+           while its sessions scroll past, the slot that is on right now
+           wears a Happening Now badge in its head - or a ticking countdown
+           while the next one is still coming - and the page opens scrolled
+           straight to it. Slots already over when the page opened hide
+           behind the button above. All of it is filled in and kept current
+           by the page script below. -->
       <div class="schedule schedule--tabbed" id="dayList"></div>
     </div>
   </div>
@@ -952,6 +1038,11 @@
         </div>
       </div>
   </div>
+
+  <!-- ============ BACK TO NOW ============ -->
+  <!-- Floats at the foot of the schedule whenever the slot that is on has
+       been scrolled out of view; one tap comes back to it. -->
+  <button class="app-jump" id="appJump" type="button" hidden>See what's happening now</button>
 
   <!-- ============ SCHEDULE / MAP SWITCH ============ -->
   <button class="app-fab" id="appFab" type="button" aria-label="Show the venue map">
@@ -1693,6 +1784,11 @@
         if (typeof original !== 'function') return;
         window[name] = function() {
           original.apply(this, arguments);
+          // The phone's Back button closes what just opened - see the
+          // history handling in the panes script below
+          if (typeof window.sliceAppOverlayOpened === 'function') {
+            window.sliceAppOverlayOpened();
+          }
           const panel = document.querySelector(
             '#speakerOverlay .speaker-overlay__panel:not([hidden])');
           if (panel) {
@@ -1742,16 +1838,87 @@
         }
       }
 
+      // ---- the phone's Back button ----
+      // Opening the map or a session panel lays one state over the page, and
+      // Back is how a phone puts a layer away. Each layer holds one history
+      // entry, so Back closes it in place - same close the buttons do, no
+      // reload, no navigation - and from the base page Back leaves as normal.
+      // What is on top right now: 'base', 'overlay' or 'map'.
+      let uiTop = 'base';
+
+      // Back never scrolls anything here; the panes keep their own places
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+      }
+
+      function overlayShown() {
+        return !!(overlay && overlay.classList.contains('is-shown'));
+      }
+
+      window.addEventListener('popstate', function() {
+        // Cleared first, so the class watcher below reads these closes as
+        // already accounted for and does not pop a second entry
+        uiTop = 'base';
+        if (overlayShown()) {
+          const close = document.getElementById('speakerClose');
+          if (close) close.click();
+        }
+        if (onMap) showApp('schedule');
+      });
+
+      // A panel closed by hand - the scrim, Escape, the X - takes the
+      // history entry it held with it, so the next Back is not a dud
+      if (overlay && typeof MutationObserver === 'function') {
+        let wasShown = overlayShown();
+        new MutationObserver(function() {
+          const shown = overlayShown();
+          if (wasShown && !shown && uiTop === 'overlay') {
+            uiTop = 'base';
+            window.history.back();
+          }
+          wasShown = shown;
+        }).observe(overlay, { attributes: true, attributeFilter: ['class'] });
+      }
+
+      // The overlay openers say so here as they run - see the wrapping above
+      window.sliceAppOverlayOpened = function() {
+        if (uiTop !== 'base') return;
+        window.history.pushState({ slice: 'overlay' }, '');
+        uiTop = 'overlay';
+      };
+
       fab.addEventListener('click', function() {
         // The scrim covers the button visually, but the keyboard can still
         // reach it - flipping panes under an open panel would be a mystery
-        if (overlay && overlay.classList.contains('is-shown')) return;
-        showApp(onMap ? 'schedule' : 'map');
+        if (overlayShown()) return;
+        if (onMap) {
+          // Out through history, so this button and the phone's Back agree
+          if (uiTop === 'map') {
+            window.history.back();
+            return;
+          }
+          showApp('schedule');
+        } else {
+          window.history.pushState({ slice: 'map' }, '');
+          uiTop = 'map';
+          showApp('map');
+        }
       });
 
       // The session panel's map button asks for this before handing the room
       // to the floor map, so the pane is up by the time the marker is pinned.
       window.sliceAppShowMap = function() {
+        if (uiTop === 'overlay') {
+          // The panel is giving way to the map: one Back should undo the
+          // pair, so the map takes over the panel's entry. The panel's own
+          // close has already run, and the watcher above reads the new top
+          // and leaves the entry to the map.
+          window.history.replaceState({ slice: 'map' }, '');
+          uiTop = 'map';
+        } else if (uiTop !== 'map') {
+          window.history.pushState({ slice: 'map' }, '');
+          uiTop = 'map';
+        }
         showApp('map');
       };
     })();
@@ -1766,6 +1933,9 @@
       const doneEl = document.getElementById('dayDone');
       const listEl = document.getElementById('dayList');
       const pane = document.getElementById('schedulePane');
+      const pastEl = document.getElementById('dayPast');
+      const pastBtn = document.getElementById('dayPastBtn');
+      const jumpBtn = document.getElementById('appJump');
       if (!listEl || !pane) return;
 
       // ---- the clock ----
@@ -1862,9 +2032,53 @@
         head.insertBefore(badge, head.firstChild);
       }
 
+      // ---- the way back to now ----
+      // A floating button at the foot of the screen whenever the slot that
+      // is on has been scrolled out of view; one tap comes back to it. One
+      // rect read per scroll event, deliberately not queued behind a frame
+      // callback - see the same choice in the home page's map scroll work.
+      let watchedBlock = null;
+
+      function updateJump() {
+        if (!jumpBtn) return;
+        if (!watchedBlock) {
+          jumpBtn.hidden = true;
+          return;
+        }
+        const box = watchedBlock.getBoundingClientRect();
+        jumpBtn.hidden = box.bottom > 0 && box.top < window.innerHeight;
+      }
+
+      function watchLive(state) {
+        if (!jumpBtn) return;
+        watchedBlock = state.entry ? state.entry.block : null;
+        if (watchedBlock) {
+          jumpBtn.textContent = state.mode === 'now'
+            ? "See what's happening now"
+            : "See what's coming up";
+        }
+        updateJump();
+      }
+
+      pane.addEventListener('scroll', updateJump, { passive: true });
+
+      if (jumpBtn) {
+        jumpBtn.addEventListener('click', function() {
+          const state = liveState();
+          if (!state.entry) return;
+          const reduce = window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          pane.scrollTo({
+            top: state.entry.block.offsetTop,
+            behavior: reduce ? 'auto' : 'smooth'
+          });
+        });
+      }
+
       function applyState(state) {
         if (doneEl) doneEl.hidden = state.mode !== 'done';
         setLiveBadge(state);
+        watchLive(state);
       }
 
       function tick() {
@@ -1895,6 +2109,43 @@
         if (!state.entry) return;
         autoScrolledTo = state.entry.block.offsetTop;
         pane.scrollTop = autoScrolledTo;
+      }
+
+      // Anything already over when the page opened folds away behind the
+      // Show Past Sessions button, which sits above the live slot - just off
+      // the top of the opening scroll, where scrolling up finds it
+      function foldPast() {
+        const at = daySeconds();
+        const past = laid.filter(function(entry) {
+          return entry.time && entry.time.end <= at;
+        });
+        if (!past.length || !pastEl) return;
+
+        past.forEach(function(entry) {
+          entry.past = true;
+          entry.block.hidden = true;
+        });
+        pastEl.hidden = false;
+      }
+
+      if (pastBtn) {
+        pastBtn.addEventListener('click', function() {
+          // The reader keeps their place: everything unfolds above the first
+          // slot that was already showing, so the pane is moved down by
+          // exactly what grew in above it
+          const anchor = laid.filter(function(entry) {
+            return !entry.past;
+          })[0];
+          const before = anchor ? anchor.block.offsetTop : 0;
+
+          laid.forEach(function(entry) {
+            if (entry.past) entry.block.hidden = false;
+          });
+          if (pastEl) pastEl.hidden = true;
+
+          const after = anchor ? anchor.block.offsetTop : 0;
+          pane.scrollTop += after - before;
+        });
       }
 
       // ---- filling it from the sheet ----
@@ -1932,6 +2183,7 @@
         });
 
         showWholeDay();
+        foldPast();
 
         if (statusEl) statusEl.hidden = true;
 

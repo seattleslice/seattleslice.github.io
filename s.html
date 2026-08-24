@@ -276,11 +276,33 @@
         calc(14px + env(safe-area-inset-left, 0px));
     }
 
-    /* s.html only: the key hugs the left edge instead of centring, and keeps
-       out from under the floating schedule button in the bottom-right */
+    /* s.html only: the key hugs the left edge instead of centring, keeps out
+       from under the floating schedule button in the bottom-right, and holds
+       to one line at any width. Everything about the line - gaps and icons
+       included - is set in em, so the fitter in the map script can shrink
+       the whole of it with one font size where a phone would wrap it. At the
+       stock 13px these ems come out exactly where the home page's pixel
+       values do, so nothing looks different until shrinking starts. */
     .app-pane--map .venue-map__legend {
       justify-content: flex-start;
+      flex-wrap: nowrap;
+      gap: 1.54em;
       padding-right: calc(78px + env(safe-area-inset-right, 0px));
+    }
+
+    .app-pane--map .venue-legend {
+      flex-shrink: 0;
+      gap: 0.62em;
+    }
+
+    .app-pane--map .venue-legend svg {
+      width: auto;
+      height: 1.23em;
+    }
+
+    /* The balcony swatch is drawn shorter than the three little signs */
+    .app-pane--map .venue-legend:last-child svg {
+      height: 0.77em;
     }
 
     /* ===================== THE FLOATING SWITCH ===================== */
@@ -1168,7 +1190,33 @@
       // Width the current portrait sizing was built for; null means unsized
       let sizedForWidth = null;
 
+      // The key holds to one line at any width: everything in it is sized in
+      // em, so where the line would wrap it is refit by lowering the one
+      // font size until the items sit inside the room the padding leaves -
+      // which includes the corner reserved for the floating button.
+      function fitLegend() {
+        if (!legendEl) return;
+        legendEl.style.fontSize = '';
+        const style = window.getComputedStyle(legendEl);
+        const room = legendEl.clientWidth -
+          (parseFloat(style.paddingLeft) || 0) -
+          (parseFloat(style.paddingRight) || 0);
+        if (room <= 0) return;
+
+        const items = Array.from(legendEl.children);
+        let wants = (parseFloat(style.columnGap) || 0) * (items.length - 1);
+        items.forEach(function(item) {
+          wants += item.getBoundingClientRect().width;
+        });
+        if (wants <= room) return;
+
+        const base = parseFloat(style.fontSize) || 13;
+        legendEl.style.fontSize =
+          Math.max(8, Math.floor(base * (room / wants) * 10) / 10) + 'px';
+      }
+
       function layoutPortrait(force) {
+        fitLegend();
         if (!portraitQuery || !portraitQuery.matches) {
           FM_VARS.forEach(function(v) { panel.style.removeProperty(v); });
           applyViewBox(BASE_VB);

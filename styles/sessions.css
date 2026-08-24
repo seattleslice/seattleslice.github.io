@@ -401,6 +401,47 @@
   color: #4d84c4;
 }
 
+/* On a phone the format line was wrapping mid-time beneath the map button.
+   It moves up beside the button instead: left-aligned, sharing the corner
+   band, with its own centre held on the button circle's centre however many
+   lines it takes. Laid as a wrapping flex row so a break can only land
+   between the parts - the hours always start a line whole, never split
+   across two. The dashes go; the gaps and the change of face already say
+   where one part ends and the next begins. */
+@media (max-width: 640px) {
+  .session-panel__format {
+    position: absolute;
+    top: 34px;
+    left: 20px;
+    /* Clear of the map button in the corner */
+    right: 64px;
+    margin: 0;
+    transform: translateY(-50%);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: flex-start;
+    column-gap: 8px;
+    row-gap: 2px;
+    line-height: 1.35;
+    text-align: left;
+  }
+
+  .session-panel__format .session-panel__sep {
+    display: none;
+  }
+
+  /* Each part holds together, so the wrap can only fall between them */
+  .session-panel__format .session-panel__where {
+    white-space: nowrap;
+  }
+
+  /* The whole width when there is no button to stand clear of */
+  .speaker-overlay__panel--session:has(.session-panel__map[hidden]) .session-panel__format {
+    right: 20px;
+  }
+}
+
 .session-panel__rule {
   height: 1px;
   margin: 24px 0 20px;

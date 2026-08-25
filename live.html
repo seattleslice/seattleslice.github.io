@@ -440,6 +440,49 @@
       transform-origin: 34% 74.2%;
     }
 
+    /* ---- lunch, front and centre for its first hour ---- */
+    .tv-lunch {
+      max-width: 72rem;
+      text-align: center;
+    }
+
+    .tv-lunch__title {
+      font-family: 'Bungee', cursive;
+      font-size: 3.2rem;
+      line-height: 1.2;
+      letter-spacing: 0.1em;
+      color: #f5ee1d;
+      text-shadow: 0.14rem -0.14rem 0 #BB3EFD;
+      margin-bottom: 1.2rem;
+    }
+
+    .tv-lunch__note {
+      font-size: 1.9rem;
+      line-height: 1.55;
+      color: #ffffff;
+      text-shadow: 0 0.12rem 0.35rem rgba(0, 10, 30, 0.45);
+    }
+
+    /* The note's restaurant names arrive as links. Nobody can click a
+       hallway TV, so they read as highlighted places instead. */
+    .tv-session__note a,
+    .tv-lunch__note a {
+      color: #f5ee1d;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    /* The goodnight line, once the hall has emptied */
+    .tv-closed {
+      max-width: 60rem;
+      font-size: 2.1rem;
+      font-weight: 700;
+      line-height: 1.4;
+      text-align: center;
+      color: #ffffff;
+      text-shadow: 0 0.12rem 0.35rem rgba(0, 10, 30, 0.45);
+    }
+
     /* ---- waiting on the sheet ---- */
     .tv-status {
       font-family: 'Bungee', cursive;
@@ -555,7 +598,7 @@
       // short names the hallway posters used. Keep the two in step by hand.
       const TV_FIXTURES = [
         { title: 'Playtesting Club', place: 'Level 1 Lobby', from: '8:00 AM', until: '9:30 PM' },
-        { title: 'Creative Clinic', place: 'Room 1F', from: '10:00 AM', until: '5:00 PM' },
+        { title: 'Creative Clinic', place: 'Level 1 - See Map', from: '10:00 AM', until: '5:00 PM' },
         { title: 'Coffee', place: 'Level 2 Lobby', from: '8:00 AM', until: '10:30 AM' },
         { title: 'Speed Networking', place: 'Level 1 Café', from: '7:00 PM', until: '8:00 PM' }
       ];
@@ -852,6 +895,20 @@
         'After-party!': 'Level 2 Lobby'
       };
 
+      // What a slot has to say for itself. The notes are written as markup
+      // these days - the lunch note names its restaurants with directions
+      // attached - with plain text still honoured should one revert.
+      function noteFor(def, className) {
+        const note = SCHEDULE_NOTES.filter(function(n) {
+          return n.start === def.start;
+        })[0];
+        if (!note) return null;
+        const made = el('p', className);
+        if (note.html) made.innerHTML = note.html;
+        else made.textContent = note.text || '';
+        return made;
+      }
+
       // A slot with nothing on the sheet still has a name and a story -
       // Lunch, the after-party - and the fixtures keep it company
       function renderLabelSlot(def, fixtures, host) {
@@ -862,10 +919,8 @@
         if (TV_SLOT_PLACES[def.label]) {
           card.appendChild(el('p', 'tv-session__room', TV_SLOT_PLACES[def.label]));
         }
-        const note = SCHEDULE_NOTES.filter(function(n) {
-          return n.start === def.start;
-        })[0];
-        if (note) card.appendChild(el('p', 'tv-session__note', note.text));
+        const note = noteFor(def, 'tv-session__note');
+        if (note) card.appendChild(note);
         row.appendChild(card);
 
         fixtures.forEach(function(fixture) {
@@ -909,6 +964,16 @@
           row.appendChild(card);
         });
         host.appendChild(row);
+      }
+
+      // Lunch with the whole stage to itself: the name up big and the word
+      // on the neighbourhood written large enough to read from a food line
+      function renderLunchPrime(def, host) {
+        const card = el('article', 'tv-lunch');
+        card.appendChild(el('h3', 'tv-lunch__title', def.label || 'Lunch'));
+        const note = noteFor(def, 'tv-lunch__note');
+        if (note) card.appendChild(note);
+        host.appendChild(card);
       }
 
       // The next slot in one breath: a line per room, a count for the runs
@@ -955,11 +1020,18 @@
         // room, so the next slot speaks in full; so do the gaps
         const nowLite = !running || !runningBlocks.length;
 
-        // The last two minutes before a block of real sessions, met from a
-        // break: the Now section stands down, the countdown takes the top
-        // billing, and the robot rolls in
+        // Lunch leads with the neighbourhood: for its first hour the note
+        // about the restaurants takes the whole Now area, written large,
+        // before the usual layout with the fixtures comes back
+        const lunchPrime = !!running && running.label === 'Lunch' &&
+          minute < scheduleMinutes(running.start) + 60;
+
+        // The last two minutes before a block of real sessions: the Now
+        // section stands down, the countdown takes the top billing, and the
+        // robot rolls in. It outranks even a still-running slot - the 9:00
+        // Introduction counts down over the top of the 8:00 breakfast.
         const waitSec = next ? scheduleMinutes(next.start) * 60 - sec : Infinity;
-        const countdown = nowLite && nextBlocks.length > 0 &&
+        const countdown = nextBlocks.length > 0 &&
           waitSec > 0 && waitSec <= 120;
 
         // What the Now band says about the standing fixtures: the ones
@@ -980,6 +1052,7 @@
           next ? next.start : '-',
           nowLite,
           countdown,
+          lunchPrime,
           sessions.length,
           nowFixtures.map(function(f) { return f.title; }).join('+')
         ].join('|');
@@ -1011,6 +1084,8 @@
             // columns billed like sessions, after the slot's own blocks
             renderColumns(runningBlocks, nowContentEl, scheduleMinutes(running.start),
               nowFixtures.map(fixtureCard));
+          } else if (lunchPrime) {
+            renderLunchPrime(running, nowContentEl);
           } else {
             renderLabelSlot(running, nowFixtures, nowContentEl);
           }
@@ -1066,7 +1141,9 @@
             renderLabelSlot(next,
               fixturesIn(scheduleMinutes(next.start), scheduleMinutes(next.end)),
               comingContentEl);
-          } else if (nowLite) {
+          } else if (nowLite || countdown) {
+            // The whole screen is the preview's whenever the Now section is
+            // out of the way - the breaks, and the countdown takeover
             renderColumns(nextBlocks, comingContentEl, scheduleMinutes(next.start));
           } else {
             renderBrief(nextBlocks, comingContentEl);
@@ -1079,6 +1156,8 @@
         } else {
           comingTitleEl.textContent = 'See You Next Year!';
           comingHoursEl.hidden = true;
+          comingContentEl.appendChild(el('p', 'tv-closed',
+            'McCaw Hall is now closed. Please make your way to the exit.'));
         }
 
         fitScreen();

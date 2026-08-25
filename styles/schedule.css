@@ -332,6 +332,23 @@
   color: #c0c0c0;
 }
 
+/* The word the hour turns on - lunch being somewhere else - in the yellow the
+   rest of the site gives to the one thing a sentence is really saying. */
+.schedule-slot__note strong {
+  color: #f5ee1d;
+}
+
+/* The places named in the note, each a way to the walk there. Purple and
+   underlined only on hover, as inline links read elsewhere on the site. */
+.schedule-slot__note a {
+  color: #BB3EFD;
+  text-decoration: none;
+}
+
+.schedule-slot__note a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 520px) {
   .schedule-slot__note {
     font-size: 15px;

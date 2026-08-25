@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>SLICE 2026 Live Schedule</title>
+  <meta name="description" content="The live SLICE 2026 schedule board: what's happening now and what's coming up.">
+  <!-- A hallway fixture, not a destination -->
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#00367B">
+
+  <link rel="icon" href="favicon.ico" sizes="any">
+
+  <style>
+    /* The faces bundled beside the page rather than fetched from Google:
+       the venue's computers may have no internet, and this board still has
+       to look like SLICE. Same files the Google CSS would have served. */
+    @font-face {
+      font-family: 'Bungee';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('fonts/bungee-400-latin-ext.woff2') format('woff2');
+      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+    }
+
+    @font-face {
+      font-family: 'Bungee';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('fonts/bungee-400-latin.woff2') format('woff2');
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+
+    @font-face {
+      font-family: 'Lato';
+      font-style: italic;
+      font-weight: 400;
+      font-display: swap;
+      src: url('fonts/lato-400-italic-latin-ext.woff2') format('woff2');
+      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+    }
+
+    @font-face {
+      font-family: 'Lato';
+      font-style: italic;
+      font-weight: 400;
+      font-display: swap;
+      src: url('fonts/lato-400-italic-latin.woff2') format('woff2');
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+
+    @font-face {
+      font-family: 'Lato';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('fonts/lato-400-latin-ext.woff2') format('woff2');
+      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+    }
+
+    @font-face {
+      font-family: 'Lato';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('fonts/lato-400-latin.woff2') format('woff2');
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+
+    @font-face {
+      font-family: 'Lato';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url('fonts/lato-700-latin-ext.woff2') format('woff2');
+      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+    }
+
+    @font-face {
+      font-family: 'Lato';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url('fonts/lato-700-latin.woff2') format('woff2');
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+
+    /* ===================== THE BOARD =====================
+       One screen, drawn for the hallway TVs: 16:9 mostly, 16:10 sometimes.
+       Everything is sized in rem, and the rem is a slice of the screen's
+       height scaled by --fit - which the script lowers until the fullest
+       slot of the day sits inside the frame. It is put up at the start of
+       the day and left alone: the script keeps it current on its own. */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: calc(1.9vh * var(--fit, 1));
+    }
+
+    body {
+      font-family: 'Lato', sans-serif;
+      background: #00367B;
+      color: #ffffff;
+      overflow: hidden;
+      /* Nobody is pointing at a hallway TV */
+      cursor: none;
+    }
+
+    .tv {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ---- the two band headers ---- */
+    .tv-band {
+      position: relative;
+      flex: 0 0 auto;
+      padding: 1rem 6rem 1.1rem;
+      background: #001a3d;
+      text-align: center;
+    }
+
+    .tv-band__title {
+      font-family: 'Bungee', cursive;
+      font-size: 2.4rem;
+      line-height: 1.15;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #f5ee1d;
+      text-shadow: 0.12rem -0.12rem 0 #BB3EFD;
+    }
+
+    .tv-band__hours {
+      margin-top: 0.2rem;
+      font-size: 1.15rem;
+      color: #ffffff;
+    }
+
+    .tv-band__hours[hidden] {
+      display: none;
+    }
+
+    /* The ticking half of "starts in 12:34" */
+    .tv-band__hours .tick {
+      font-variant-numeric: tabular-nums;
+      color: #a0c4e8;
+    }
+
+    /* ---- the content areas between the bands ---- */
+    .tv-now,
+    .tv-coming {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem 3rem;
+      min-height: 0;
+      /* Anything the fit floor still cannot hold clips inside its own box
+         rather than painting over the band headers */
+      overflow: hidden;
+    }
+
+    /* Whichever section carries the detail takes the room; see tv--nowlite */
+    .tv-now {
+      flex: 1 1 auto;
+    }
+
+    .tv-coming {
+      flex: 0 0 auto;
+    }
+
+    .tv--nowlite .tv-now {
+      flex: 0 0 auto;
+      padding: 1.6rem 3rem;
+    }
+
+    .tv--nowlite .tv-coming {
+      flex: 1 1 auto;
+    }
+
+    /* ---- a slot laid out in full: balanced columns of cards ---- */
+    .tv-cols {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      gap: 2rem 4rem;
+      width: 100%;
+      max-width: 96rem;
+    }
+
+    .tv-col {
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1.7rem;
+    }
+
+    /* One session, said the way the posters said it: title, room, names */
+    .tv-session {
+      text-align: center;
+    }
+
+    .tv-session__title {
+      font-size: 1.9rem;
+      font-weight: 700;
+      line-height: 1.2;
+      text-shadow: 0 0.12rem 0.35rem rgba(0, 10, 30, 0.45);
+    }
+
+    .tv-session__room {
+      margin-top: 0.15rem;
+      font-size: 1.2rem;
+      line-height: 1.3;
+      color: #f5ee1d;
+    }
+
+    .tv-session__names {
+      margin-top: 0.2rem;
+      font-size: 1.1rem;
+      line-height: 1.35;
+      font-style: italic;
+      color: #c0d8f0;
+    }
+
+    .tv-session__note {
+      margin: 0.5rem auto 0;
+      max-width: 42rem;
+      font-size: 1.15rem;
+      line-height: 1.5;
+      color: #c0d8f0;
+    }
+
+    /* A run of short things under one name - roundtables, micro-talks */
+    .tv-group {
+      text-align: center;
+    }
+
+    .tv-group__list {
+      margin-top: 0.6rem;
+      list-style: none;
+      display: inline-block;
+      text-align: left;
+    }
+
+    .tv-group__list li {
+      font-size: 1.15rem;
+      line-height: 1.35;
+      padding: 0.28rem 0;
+    }
+
+    .tv-group__mark {
+      color: #BB3EFD;
+      font-size: 0.85em;
+      margin-right: 0.45rem;
+    }
+
+    .tv-group__when {
+      color: #f5ee1d;
+      font-variant-numeric: tabular-nums;
+      margin-right: 0.35rem;
+    }
+
+    /* Which table, for the blocks that are a run of them */
+    .tv-group__table {
+      color: #dcb0ff;
+      font-weight: 700;
+    }
+
+    /* The names hold together: either they fit after the title, or the
+       whole run of them starts the next line */
+    .tv-group__who {
+      font-style: italic;
+      color: #c0d8f0;
+      white-space: nowrap;
+    }
+
+    .tv-name {
+      white-space: nowrap;
+    }
+
+    /* ---- the light layouts: fixtures between slots, big single words ---- */
+    .tv-row {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 2rem 7rem;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    /* ---- the other section said small: one line per thing ---- */
+    .tv-brief {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem 3.4rem;
+      max-width: 92rem;
+    }
+
+    .tv-brief li {
+      text-align: center;
+      font-size: 1.35rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .tv-brief .where {
+      font-weight: 400;
+      font-size: 0.85em;
+      color: #f5ee1d;
+      margin-left: 0.55rem;
+      white-space: nowrap;
+    }
+
+    /* ---- the corner clock, riding the centre line of the top band ---- */
+    .tv-clock {
+      position: absolute;
+      top: 50%;
+      right: 1.6rem;
+      transform: translateY(-50%);
+      font-size: 2.3rem;
+      font-variant-numeric: tabular-nums;
+      color: #8ab4e0;
+    }
+
+    /* ---- the week's other shows, pitched through the after-party ---- */
+    /* Three even columns: titles along the top, QR codes along the bottom,
+       whatever their descriptions run to in between */
+    .tv-promos {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      gap: 2rem 4rem;
+      width: 100%;
+      max-width: 92rem;
+    }
+
+    .tv-promo {
+      flex: 1 1 0;
+      max-width: 26rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.4rem;
+    }
+
+    /* The codes carry their own darker ground over this lighter blue, so
+       they get softly rounded corners rather than hard tile edges */
+    .tv-promo__qr {
+      margin-top: auto;
+      width: 12rem;
+      height: 12rem;
+      border-radius: 0.9rem;
+    }
+
+    /* ---- the countdown takeover: the last two minutes before a block ---- */
+    /* The Now section stands down, the countdown takes the top billing at a
+       bigger size, and the next slot keeps the whole screen below it */
+    .tv--countdown .tv-band--now,
+    .tv--countdown .tv-now {
+      display: none;
+    }
+
+    .tv--countdown .tv-coming {
+      flex: 1 1 auto;
+    }
+
+    .tv--countdown .tv-band__title {
+      font-size: 3rem;
+    }
+
+    /* The number: nudged a little larger with every passing second... */
+    .tv-count {
+      display: inline-block;
+      transition: transform 0.3s ease;
+    }
+
+    /* ...and pulsing once per tick on top of that */
+    .tv-count__pulse {
+      display: inline-block;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tv-count__pulse.is-ticking {
+      animation: tvCountPulse 0.45s ease;
+    }
+
+    @keyframes tvCountPulse {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.22); }
+      100% { transform: scale(1); }
+    }
+
+    /* ---- the website's hero robot, in for the countdown ---- */
+    .tv-robot {
+      position: fixed;
+      bottom: -2vh;
+      right: 0;
+      width: clamp(180px, 17vw, 400px);
+      z-index: 10;
+      transform: translateX(115%);
+      transition: transform 1.8s cubic-bezier(0.25, 1, 0.5, 1);
+      pointer-events: none;
+    }
+
+    .tv-robot.entered {
+      transform: translateX(11%);
+    }
+
+    .tv-robot__rig {
+      position: relative;
+      width: 100%;
+      transform-origin: 60.85% 98.7%;
+    }
+
+    .tv-robot__body {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .tv-robot__arm {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: auto;
+      transform-origin: 34% 74.2%;
+    }
+
+    /* ---- waiting on the sheet ---- */
+    .tv-status {
+      font-family: 'Bungee', cursive;
+      font-size: 1.4rem;
+      letter-spacing: 0.15em;
+      color: #8ab4e0;
+      animation: tvPulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes tvPulse {
+      0%, 100% { opacity: 0.45; }
+      50% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="tv" id="stage">
+    <header class="tv-band tv-band--now" id="nowBand">
+      <h1 class="tv-band__title">Happening Now</h1>
+      <p class="tv-band__hours" id="nowHours" hidden></p>
+      <p class="tv-clock" id="tvClock"></p>
+    </header>
+    <section class="tv-now" id="nowContent">
+      <p class="tv-status">Loading...</p>
+    </section>
+    <header class="tv-band" id="comingBand">
+      <h2 class="tv-band__title" id="comingTitle">Coming Up...</h2>
+      <p class="tv-band__hours" id="comingHours" hidden></p>
+    </header>
+    <section class="tv-coming" id="comingContent"></section>
+  </main>
+
+  <!-- The website's hero robot, wheeling in for the last two minutes before
+       a session block starts -->
+  <div class="tv-robot" id="tvRobot" aria-hidden="true">
+    <div class="tv-robot__rig" id="tvRobotRig">
+      <img class="tv-robot__body" src="images/robot/v1/body.png" alt="" draggable="false">
+      <img class="tv-robot__arm" id="tvRobotArm" src="images/robot/v1/arm.png" alt="" draggable="false">
+    </div>
+  </div>
+
+  <!-- schedule.js for the slot table, the sheet parsing and the room names;
+       shared.js for the sheet loaders. Neither builds anything here - this
+       page has none of the elements they go looking for. -->
+  <script src="js/schedule.js?v=2026-08-24"></script>
+  <script src="js/shared.js?v=2026-08-21"></script>
+  <!-- The day frozen to disk, for a venue computer with no internet -->
+  <script src="js/schedule-snapshot.js?v=2026-08-25"></script>
+
+  <script>
+    // ===================== THE LIVE BOARD =====================
+    // Reads the clock, shows the slot that is running in full and the next
+    // one small - or the other way round between slots, when the standing
+    // fixtures hold the fort and the next slot gets the room. Refetches the
+    // sheet every ten minutes so a mid-day edit reaches the hallways, and
+    // keeps whatever it already has when a fetch fails.
+    (function() {
+      const stage = document.getElementById('stage');
+      const nowBandEl = document.getElementById('nowBand');
+      const comingBandEl = document.getElementById('comingBand');
+      const nowHoursEl = document.getElementById('nowHours');
+      const nowContentEl = document.getElementById('nowContent');
+      const comingTitleEl = document.getElementById('comingTitle');
+      const comingHoursEl = document.getElementById('comingHours');
+      const comingContentEl = document.getElementById('comingContent');
+      const clockEl = document.getElementById('tvClock');
+
+      // ---- the clock ----
+      // Only the time of day matters. ?t=14:05 pretends it is that time, for
+      // checking the day's states ahead of the day, and ticks on from there.
+      // ?offline pretends the sheet is unreachable, for checking the
+      // bundled fallback without pulling any cables
+      const offlineTest = /[?&]offline\b/.test(window.location.search);
+
+      const parts = window.location.search.match(/[?&]t=(\d{1,2})(?::|%3[Aa])(\d{1,2})\b/);
+      const asked = parts &&
+        parseInt(parts[1], 10) < 24 && parseInt(parts[2], 10) < 60 ? parts : null;
+      const askedFrom = asked ? Date.now() : 0;
+      const askedBase = asked
+        ? (parseInt(asked[1], 10) * 60 + parseInt(asked[2], 10)) * 60
+        : 0;
+
+      function daySeconds() {
+        if (asked) return askedBase + Math.floor((Date.now() - askedFrom) / 1000);
+        const now = new Date();
+        return now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+      }
+
+      // "2:45 pm", the way the posters wrote it
+      function clockLower(minutes) {
+        return scheduleClock(minutes).toLowerCase();
+      }
+
+      function hoursText(def) {
+        return clockLower(scheduleMinutes(def.start)) + ' - ' +
+          clockLower(scheduleMinutes(def.end));
+      }
+
+      // 12:34, or 1:02:34 across the morning
+      function waitText(seconds) {
+        const wait = Math.max(0, seconds);
+        const h = Math.floor(wait / 3600);
+        const m = Math.floor((wait % 3600) / 60);
+        const s = wait % 60;
+        return (h ? h + ':' : '') +
+          (h && m < 10 ? '0' : '') + m + ':' +
+          (s < 10 ? '0' : '') + s;
+      }
+
+      // ---- the standing fixtures, for the stretches between slots ----
+      // Windows restated from SCHEDULE_FIXTURES in js/schedule.js, with the
+      // short names the hallway posters used. Keep the two in step by hand.
+      const TV_FIXTURES = [
+        { title: 'Playtesting Club', place: 'Level 1 Lobby', from: '8:00 AM', until: '9:30 PM' },
+        { title: 'Creative Clinic', place: 'Room 1F', from: '10:00 AM', until: '5:00 PM' },
+        { title: 'Coffee', place: 'Level 2 Lobby', from: '8:00 AM', until: '10:30 AM' },
+        { title: 'Speed Networking', place: 'Level 1 Café', from: '7:00 PM', until: '8:00 PM' }
+      ];
+
+      function fixturesAt(minute) {
+        return TV_FIXTURES.filter(function(fixture) {
+          return scheduleMinutes(fixture.from) <= minute &&
+            minute < scheduleMinutes(fixture.until);
+        });
+      }
+
+      // The fixtures a stretch of the day will see: anything whose window
+      // overlaps it, for a slot being shown whole rather than at one moment
+      function fixturesIn(fromMinute, toMinute) {
+        return TV_FIXTURES.filter(function(fixture) {
+          return scheduleMinutes(fixture.from) < toMinute &&
+            fromMinute < scheduleMinutes(fixture.until);
+        });
+      }
+
+      // Where a room is, floor included: a hallway TV explains itself or
+      // not at all, and the schedule page's names carry no floors
+      const TV_ROOM_LEVELS = {
+        'Auditorium': 'Auditorium (Level 2)',
+        'Lecture Hall': 'Lecture Hall (Basement)',
+        'Allen Room': 'Allen Room (Level 4)',
+        'Norcliffe Room': 'Norcliffe Room (Level 4)'
+      };
+
+      function tvRoomText(text) {
+        return TV_ROOM_LEVELS[text] || text || '';
+      }
+
+      let sessions = [];
+      let lastKey = null;
+      let tickEl = null;
+      let tickBase = 0;
+      // The two halves of the takeover countdown's number
+      let countEl = null;
+      let countPulseEl = null;
+
+      // ---- the robot ----
+      // The website's hero robot rolls in for the countdown and keeps up the
+      // rock and wave the home page gives it, the whole time it holds
+      const robotEl = document.getElementById('tvRobot');
+      const robotRig = document.getElementById('tvRobotRig');
+      const robotArm = document.getElementById('tvRobotArm');
+      let robotFrame = 0;
+      let robotRest = 0;
+
+      function robotTick(now) {
+        const t = now / 1000;
+        robotRig.style.transform =
+          'rotate(' + (Math.sin(t * 2.1) * 3).toFixed(2) + 'deg)';
+        robotArm.style.transform =
+          'rotate(' + (Math.sin(t * 3.4 + 0.6) * 12 - 5).toFixed(2) + 'deg)';
+        robotFrame = window.requestAnimationFrame(robotTick);
+      }
+
+      function setRobot(on) {
+        if (!robotEl || !robotRig || !robotArm) return;
+        if (on === robotEl.classList.contains('entered')) return;
+        robotEl.classList.toggle('entered', on);
+        window.clearTimeout(robotRest);
+        if (on) {
+          if (!robotFrame) robotFrame = window.requestAnimationFrame(robotTick);
+        } else {
+          // Still waving while he rolls off; the loop rests once he is gone
+          robotRest = window.setTimeout(function() {
+            window.cancelAnimationFrame(robotFrame);
+            robotFrame = 0;
+          }, 2000);
+        }
+      }
+
+      // ---- reading the sheet into a slot ----
+      // The sittings that land in a slot, gathered into the schedule's own
+      // blocks: one per big room, one for the roundtables, one for the
+      // breakfast tables - the same filing scheduleRender does.
+      function gatherSlot(def) {
+        const blocks = new Map();
+
+        sessions.forEach(function(session) {
+          scheduleSittings(session.time, session.room).forEach(function(sitting) {
+            if (scheduleSlotFor(sitting.startsAt) !== def) return;
+
+            const key = scheduleBlockKey(sitting.room);
+            let block = blocks.get(key);
+            if (!block) {
+              block = { key: key, order: scheduleBlockOrder(sitting.room), items: [] };
+              blocks.set(key, block);
+            }
+            block.items.push({
+              session: session,
+              startsAt: sitting.startsAt,
+              room: sitting.room
+            });
+          });
+        });
+
+        const laid = Array.from(blocks.values());
+        laid.forEach(function(block) {
+          block.items.sort(function(a, b) {
+            if (a.startsAt !== b.startsAt) return a.startsAt - b.startsAt;
+            return String(a.room).localeCompare(String(b.room));
+          });
+        });
+        laid.sort(function(a, b) { return a.order - b.order; });
+        return laid;
+      }
+
+      // What a block of several is called, and where it is - "Roundtables"
+      // over "Level 5 Lobby", the breakfast under its own event's name
+      function groupTitle(block) {
+        const entry = scheduleRoomEntry(block.key);
+        if (entry && entry.heading) {
+          return { name: entry.heading, room: entry.name };
+        }
+
+        const format = scheduleFormatKey(block.items[0].session.format);
+        const same = block.items.every(function(item) {
+          return scheduleFormatKey(item.session.format) === format;
+        });
+
+        if (same && SCHEDULE_GROUPS[format]) {
+          const said = SCHEDULE_GROUPS[format].split(' - ');
+          const known = scheduleRoomEntry(block.key);
+          return {
+            name: said[0],
+            // A room the tables know nothing of still says its code, the way
+            // the schedule page does, rather than showing nowhere at all
+            room: tvRoomText(known
+              ? (said[1] || known.name || '')
+              : scheduleRoomPlace(block.items[0].room))
+          };
+        }
+
+        return null;
+      }
+
+      function names(session) {
+        return session.speakers.map(function(speaker) {
+          return speaker.name;
+        }).join(', ');
+      }
+
+      // ---- building the pieces ----
+      function el(tag, className, text) {
+        const made = document.createElement(tag);
+        if (className) made.className = className;
+        if (text) made.textContent = text;
+        return made;
+      }
+
+      function sessionCard(item, withTime) {
+        const card = el('article', 'tv-session');
+        card.appendChild(el('h3', 'tv-session__title', item.session.title));
+
+        const room = tvRoomText(scheduleRoomPlace(item.room));
+        const when = withTime ? clockLower(Math.floor(item.startsAt)) : '';
+        card.appendChild(el('p', 'tv-session__room',
+          room + (when ? ' · ' + when : '')));
+
+        // One unbreakable span per name: a line may break between people,
+        // never through the middle of somebody
+        if (item.session.speakers.length) {
+          const who = el('p', 'tv-session__names');
+          item.session.speakers.forEach(function(speaker, at) {
+            if (at) who.appendChild(document.createTextNode(', '));
+            who.appendChild(el('span', 'tv-name', speaker.name));
+          });
+          card.appendChild(who);
+        }
+        return card;
+      }
+
+      function groupCard(block, title, withTimes) {
+        const card = el('article', 'tv-group');
+        card.appendChild(el('h3', 'tv-session__title', title.name));
+        if (title.room) card.appendChild(el('p', 'tv-session__room', title.room));
+
+        const list = el('ul', 'tv-group__list');
+        block.items.forEach(function(item) {
+          const li = el('li');
+          li.appendChild(el('span', 'tv-group__mark', '▶'));
+          if (withTimes) {
+            li.appendChild(el('span', 'tv-group__when', clockLower(item.startsAt)));
+          }
+          // Which of the tables, for the blocks that are a run of them -
+          // six topics run at once, and the letter is how a reader finds one
+          const letter = scheduleTableLetter(item.room);
+          if (letter) {
+            li.appendChild(el('span', 'tv-group__table', letter + ': '));
+          }
+          li.appendChild(document.createTextNode(item.session.title));
+          const who = names(item.session);
+          if (who) li.appendChild(el('span', 'tv-group__who', ' - ' + who));
+          list.appendChild(li);
+        });
+        card.appendChild(list);
+        return card;
+      }
+
+      function fixtureCard(fixture) {
+        const card = el('article', 'tv-session');
+        card.appendChild(el('h3', 'tv-session__title', fixture.title));
+        card.appendChild(el('p', 'tv-session__room', fixture.place));
+        card.appendChild(el('p', 'tv-session__names',
+          clockLower(scheduleMinutes(fixture.from)) + ' - ' +
+          clockLower(scheduleMinutes(fixture.until))));
+        return card;
+      }
+
+      // A block of one is a card; a run under one name is a list; a run
+      // under no name - two talks sharing a room - is a card per talk with
+      // its start beside the room.
+      function blockCards(block, slotStart) {
+        // Times show whenever something does not start with the slot - the
+        // same rule the schedule page reads by
+        const offStart = block.items.some(function(item) {
+          return item.startsAt !== slotStart;
+        });
+
+        // A block that is a run of tables keeps its heading and letters even
+        // when only one sitting landed in this slot
+        const entry = scheduleRoomEntry(block.key);
+        if (block.items.length === 1 && !(entry && entry.rooms)) {
+          return [sessionCard(block.items[0], offStart)];
+        }
+
+        const title = groupTitle(block);
+        if (title) return [groupCard(block, title, offStart)];
+
+        return block.items.map(function(item) {
+          return sessionCard(item, offStart);
+        });
+      }
+
+      // The cards in two columns, kept in room order and split where the
+      // two come out closest in height; one column when there is little to
+      // hold. Measured rather than guessed: every card goes into the left
+      // column first - the columns share the width evenly however they are
+      // filled, so each card wraps there exactly as it will wherever it
+      // lands - and the real heights pick the cut.
+      function renderColumns(blocks, host, slotStart, extras) {
+        const cards = [];
+        blocks.forEach(function(block) {
+          blockCards(block, slotStart).forEach(function(card) {
+            cards.push(card);
+          });
+        });
+
+        // The standing fixtures ride along after the slot's own blocks,
+        // billed like sessions
+        (extras || []).forEach(function(card) {
+          cards.push(card);
+        });
+
+        const cols = el('div', 'tv-cols');
+        const left = el('div', 'tv-col');
+        cols.appendChild(left);
+        cards.forEach(function(card) { left.appendChild(card); });
+        host.appendChild(cols);
+
+        if (cards.length < 2) return;
+
+        const right = el('div', 'tv-col');
+        cols.appendChild(right);
+
+        // Each card is charged its height plus the column gap it brings
+        const gap = parseFloat(window.getComputedStyle(left).rowGap) || 0;
+        const heights = cards.map(function(card) {
+          return card.offsetHeight + gap;
+        });
+        const total = heights.reduce(function(sum, h) { return sum + h; }, 0);
+
+        let best = 1;
+        let bestDiff = Infinity;
+        let run = 0;
+        for (let cut = 1; cut < cards.length; cut++) {
+          run += heights[cut - 1];
+          const diff = Math.abs(run - (total - run));
+          if (diff < bestDiff) {
+            bestDiff = diff;
+            best = cut;
+          }
+        }
+
+        cards.slice(best).forEach(function(card) { right.appendChild(card); });
+      }
+
+      // Where a label slot itself is held - the after-party's lobby
+      const TV_SLOT_PLACES = {
+        'After-party!': 'Level 2 Lobby'
+      };
+
+      // A slot with nothing on the sheet still has a name and a story -
+      // Lunch, the after-party - and the fixtures keep it company
+      function renderLabelSlot(def, fixtures, host) {
+        const row = el('div', 'tv-row');
+
+        const card = el('article', 'tv-session');
+        card.appendChild(el('h3', 'tv-session__title', def.label || ''));
+        if (TV_SLOT_PLACES[def.label]) {
+          card.appendChild(el('p', 'tv-session__room', TV_SLOT_PLACES[def.label]));
+        }
+        const note = SCHEDULE_NOTES.filter(function(n) {
+          return n.start === def.start;
+        })[0];
+        if (note) card.appendChild(el('p', 'tv-session__note', note.text));
+        row.appendChild(card);
+
+        fixtures.forEach(function(fixture) {
+          row.appendChild(fixtureCard(fixture));
+        });
+
+        host.appendChild(row);
+      }
+
+      // The week's other shows, pitched through the after-party. The QR
+      // files live in images/qr - swap the placeholders for the real codes.
+      const TV_PROMOS = [
+        {
+          title: 'Seattle Indies Expo',
+          desc: 'Play 40+ locally-made games this Sunday @ The Motif',
+          qr: 'images/qr/six.png'
+        },
+        {
+          title: 'Post-PAX Train Party',
+          desc: 'Unwind after a long PAX weekend on Monday night @ Orient Express',
+          qr: 'images/qr/trainparty.png'
+        },
+        {
+          title: 'Media Indie Exchange',
+          desc: 'Happening this Friday evening. Mention SLICE when registering ' +
+            'for an Industry Pass.',
+          qr: 'images/qr/mix.png'
+        }
+      ];
+
+      function renderPromos(host) {
+        const row = el('div', 'tv-promos');
+        TV_PROMOS.forEach(function(promo) {
+          const card = el('article', 'tv-promo');
+          card.appendChild(el('h3', 'tv-session__title', promo.title));
+          card.appendChild(el('p', 'tv-session__note', promo.desc));
+          const qr = el('img', 'tv-promo__qr');
+          qr.src = promo.qr;
+          qr.alt = promo.title + ' QR code';
+          card.appendChild(qr);
+          row.appendChild(card);
+        });
+        host.appendChild(row);
+      }
+
+      // The next slot in one breath: a line per room, a count for the runs
+      function renderBrief(blocks, host) {
+        const list = el('ul', 'tv-brief');
+
+        blocks.forEach(function(block) {
+          if (block.items.length > 1) {
+            const title = groupTitle(block);
+            if (title) {
+              const li = el('li', null, block.items.length + ' ' + title.name);
+              li.appendChild(el('span', 'where', title.room));
+              list.appendChild(li);
+              return;
+            }
+          }
+          block.items.forEach(function(item) {
+            const li = el('li', null, item.session.title);
+            li.appendChild(el('span', 'where', tvRoomText(scheduleRoomPlace(item.room))));
+            list.appendChild(li);
+          });
+        });
+
+        host.appendChild(list);
+      }
+
+      // ---- the whole screen ----
+      function build() {
+        const sec = daySeconds();
+        const minute = Math.floor(sec / 60);
+
+        let running = null;
+        let next = null;
+        SCHEDULE_SLOTS.forEach(function(def) {
+          const opens = scheduleMinutes(def.start);
+          const closes = scheduleMinutes(def.end);
+          if (opens <= minute && minute < closes) running = def;
+          if (opens > minute && (!next || opens < scheduleMinutes(next.start))) next = def;
+        });
+
+        const runningBlocks = running ? gatherSlot(running) : [];
+        const nextBlocks = next ? gatherSlot(next) : [];
+        // A slot that is only its name - Lunch, the after-party - leaves
+        // room, so the next slot speaks in full; so do the gaps
+        const nowLite = !running || !runningBlocks.length;
+
+        // The last two minutes before a block of real sessions, met from a
+        // break: the Now section stands down, the countdown takes the top
+        // billing, and the robot rolls in
+        const waitSec = next ? scheduleMinutes(next.start) * 60 - sec : Infinity;
+        const countdown = nowLite && nextBlocks.length > 0 &&
+          waitSec > 0 && waitSec <= 120;
+
+        // What the Now band says about the standing fixtures: the ones
+        // running through a label slot's remaining stretch, or standing at
+        // this minute - as cards in the gaps, as one quiet line under a full
+        // slot. Their comings and goings join the key below, so the coffee
+        // ending at 10:30 or the speed networking wrapping up at 8pm redraws
+        // an otherwise still board.
+        let nowFixtures;
+        if (running && !runningBlocks.length) {
+          nowFixtures = fixturesIn(minute, scheduleMinutes(running.end));
+        } else {
+          nowFixtures = fixturesAt(minute);
+        }
+
+        const key = [
+          running ? running.start : '-',
+          next ? next.start : '-',
+          nowLite,
+          countdown,
+          sessions.length,
+          nowFixtures.map(function(f) { return f.title; }).join('+')
+        ].join('|');
+        if (key === lastKey) return;
+        lastKey = key;
+
+        tickEl = null;
+        countEl = null;
+        countPulseEl = null;
+        nowContentEl.textContent = '';
+        comingContentEl.textContent = '';
+        stage.classList.toggle('tv--nowlite', nowLite);
+        stage.classList.toggle('tv--countdown', countdown);
+        setRobot(countdown);
+        // The clock rides whichever band is topmost
+        if (clockEl && nowBandEl && comingBandEl) {
+          (countdown ? comingBandEl : nowBandEl).appendChild(clockEl);
+        }
+
+        // -- happening now --
+        if (running) {
+          // The slot's own name rides the hours line where the sessions
+          // take the stage - Coffee Hour, Introduction
+          nowHoursEl.textContent = hoursText(running) +
+            (runningBlocks.length && running.label ? ' · ' + running.label : '');
+          nowHoursEl.hidden = false;
+          if (runningBlocks.length) {
+            // The standing fixtures are real events too: they join the
+            // columns billed like sessions, after the slot's own blocks
+            renderColumns(runningBlocks, nowContentEl, scheduleMinutes(running.start),
+              nowFixtures.map(fixtureCard));
+          } else {
+            renderLabelSlot(running, nowFixtures, nowContentEl);
+          }
+        } else {
+          nowHoursEl.hidden = true;
+          if (nowFixtures.length) {
+            const row = el('div', 'tv-row');
+            nowFixtures.forEach(function(fixture) {
+              row.appendChild(fixtureCard(fixture));
+            });
+            nowContentEl.appendChild(row);
+          } else {
+            const card = el('article', 'tv-session');
+            card.appendChild(el('h3', 'tv-session__title',
+              minute < scheduleMinutes(SCHEDULE_SLOTS[0].start)
+                ? 'Welcome to SLICE 2026!'
+                : "That's a wrap on SLICE 2026!"));
+            card.appendChild(el('p', 'tv-session__note',
+              minute < scheduleMinutes(SCHEDULE_SLOTS[0].start)
+                ? 'Doors open at ' + clockLower(scheduleMinutes(SCHEDULE_SLOTS[0].start)) + '.'
+                : 'Thank you for coming!'));
+            nowContentEl.appendChild(card);
+          }
+        }
+
+        // -- coming up --
+        if (next) {
+          tickBase = scheduleMinutes(next.start) * 60;
+
+          if (countdown) {
+            // Simply the seconds, pulsing bigger as they run out
+            comingTitleEl.textContent = 'Starting in ';
+            countEl = el('span', 'tv-count');
+            countPulseEl = el('span', 'tv-count__pulse', String(Math.ceil(waitSec)));
+            countEl.appendChild(countPulseEl);
+            comingTitleEl.appendChild(countEl);
+            comingTitleEl.appendChild(document.createTextNode(' seconds!'));
+            comingHoursEl.hidden = true;
+          } else {
+            comingTitleEl.textContent = 'Coming Up...';
+            comingHoursEl.textContent = '';
+            comingHoursEl.appendChild(document.createTextNode(hoursText(next) +
+              (nextBlocks.length && next.label ? ' · ' + next.label : '') +
+              ' · starts in '));
+            tickEl = el('span', 'tick', waitText(tickBase - sec));
+            comingHoursEl.appendChild(tickEl);
+            comingHoursEl.hidden = false;
+          }
+
+          if (!nextBlocks.length) {
+            // Previewed whole: everything the slot will hold at any point,
+            // the speed networking's seven o'clock start included
+            renderLabelSlot(next,
+              fixturesIn(scheduleMinutes(next.start), scheduleMinutes(next.end)),
+              comingContentEl);
+          } else if (nowLite) {
+            renderColumns(nextBlocks, comingContentEl, scheduleMinutes(next.start));
+          } else {
+            renderBrief(nextBlocks, comingContentEl);
+          }
+        } else if (running) {
+          // The after-party: the day's last slot, with the week still to sell
+          comingTitleEl.textContent = "But wait, there's more!";
+          comingHoursEl.hidden = true;
+          renderPromos(comingContentEl);
+        } else {
+          comingTitleEl.textContent = 'See You Next Year!';
+          comingHoursEl.hidden = true;
+        }
+
+        fitScreen();
+      }
+
+      // ---- keeping it inside the frame ----
+      // The rem is a slice of the screen; when a full slot still runs past
+      // its box, the slice narrows until it does not. The stage measurement
+      // alone is not enough: a centred flex section lets tall content spill
+      // out both ends without moving stage.scrollHeight, so each section is
+      // also checked against its own box.
+      function fitScreen() {
+        const root = document.documentElement;
+
+        function overflowing() {
+          if (stage.scrollHeight > window.innerHeight + 2) return true;
+          return [nowContentEl, comingContentEl].some(function(section) {
+            const child = section.firstElementChild;
+            return child &&
+              child.getBoundingClientRect().height > section.clientHeight + 2;
+          });
+        }
+
+        let fit = 1;
+        root.style.setProperty('--fit', fit);
+        let guard = 0;
+        while (overflowing() && fit > 0.45 && guard < 12) {
+          fit -= 0.05;
+          guard += 1;
+          root.style.setProperty('--fit', fit);
+        }
+      }
+
+      // ---- the heartbeat ----
+      function tick() {
+        const sec = daySeconds();
+        if (clockEl) {
+          clockEl.textContent = clockLower(Math.floor(sec / 60));
+        }
+        if (tickEl) {
+          tickEl.textContent = waitText(tickBase - sec);
+        }
+        if (countEl && countPulseEl) {
+          const left = Math.max(1, Math.ceil(tickBase - sec));
+          if (String(left) !== countPulseEl.textContent) {
+            countPulseEl.textContent = String(left);
+            // A shade larger with every second gone...
+            countEl.style.transform =
+              'scale(' + (1 + (120 - left) * 0.006).toFixed(3) + ')';
+            // ...and one pulse per tick on top
+            countPulseEl.classList.remove('is-ticking');
+            void countPulseEl.offsetWidth;
+            countPulseEl.classList.add('is-ticking');
+          }
+        }
+        if (sessions.length) build();
+      }
+
+      window.setInterval(tick, 1000);
+      window.addEventListener('resize', function() {
+        lastKey = null;
+        if (sessions.length) build();
+      });
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(fitScreen);
+      }
+
+      // ---- the sheet, now and every ten minutes ----
+      // A failed fetch changes nothing on screen: the board keeps what it
+      // has and tries again next round. Only the first load retries fast,
+      // since until it lands there is nothing to keep.
+      let fetching = false;
+      let retryTimer = 0;
+
+      function refresh() {
+        if (offlineTest) return;
+        // One fetch at a time: the ten-minute interval and the first-load
+        // retry must not stack chains of requests during a long outage
+        if (fetching) return;
+        fetching = true;
+        window.clearTimeout(retryTimer);
+
+        function tryAgainSoon() {
+          fetching = false;
+          if (!sessions.length) retryTimer = window.setTimeout(refresh, 30000);
+        }
+
+        const loading = loadSpeakers(SCHEDULE_DEFAULTS.speakersSheet, function(speakers) {
+          if (!speakers || !speakers.length) {
+            tryAgainSoon();
+            return;
+          }
+          const inner = loadSessions(SCHEDULE_DEFAULTS.sheet, speakers, function(fresh) {
+            if (!fresh.length) {
+              tryAgainSoon();
+              return;
+            }
+            fetching = false;
+            sessions = fresh;
+            lastKey = null;
+            build();
+          }, { requireSynopsis: false });
+
+          if (inner && typeof inner.catch === 'function') {
+            inner.catch(function(err) {
+              console.error('Could not load the session sheet', err);
+              tryAgainSoon();
+            });
+          }
+        });
+
+        if (loading && typeof loading.catch === 'function') {
+          loading.catch(function(err) {
+            console.error('Could not load the speaker sheet', err);
+            tryAgainSoon();
+          });
+        }
+      }
+
+      refresh();
+      window.setInterval(refresh, 10 * 60 * 1000);
+
+      // ---- the offline fallback ----
+      // The venue's computers may have no internet at all. The sheet gets
+      // ten seconds to answer; past that, the snapshot bundled beside this
+      // page takes the stage - and a live fetch that lands later, or on any
+      // ten-minute round after, still replaces it with the real thing.
+      window.setTimeout(function() {
+        if (sessions.length) return;
+        const snap = window.SCHEDULE_SNAPSHOT;
+        if (!snap || !snap.sessions || !snap.sessions.length) return;
+        sessions = snap.sessions;
+        lastKey = null;
+        build();
+      }, 10000);
+    })();
+  </script>
+</body>
+</html>

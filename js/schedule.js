@@ -187,11 +187,14 @@ const SCHEDULE_LUNCH_FROM =
   'Marion Oliver McCaw Hall, 321 Mercer St, Seattle, WA 98109';
 
 // A place named in a note, as a link that opens the walk there already drawn
-// rather than dropping a pin and leaving the reader to ask the way.
+// rather than dropping a pin and leaving the reader to ask the way. On foot by
+// default - everything the lunch note points at is a few minutes from the
+// door, and driving directions for a four block walk would be a wrong answer.
 function scheduleDirections(name, address) {
   return '<a href="https://www.google.com/maps/dir/?api=1' +
     '&amp;origin=' + encodeURIComponent(SCHEDULE_LUNCH_FROM) +
     '&amp;destination=' + encodeURIComponent(name + ', ' + address) +
+    '&amp;travelmode=walking' +
     '" target="_blank" rel="noopener">' + name + '</a>';
 }
 

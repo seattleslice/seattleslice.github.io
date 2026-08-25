@@ -182,14 +182,36 @@ const SCHEDULE_FIXTURES = [
 // The fixtures gathered under one heading at the foot of a day shown whole
 const SCHEDULE_STANDING = { group: 'standing', heading: 'All Day' };
 
+// Where the walk to lunch starts from, for the directions the note hands out
+const SCHEDULE_LUNCH_FROM =
+  'Marion Oliver McCaw Hall, 321 Mercer St, Seattle, WA 98109';
+
+// A place named in a note, as a link that opens the walk there already drawn
+// rather than dropping a pin and leaving the reader to ask the way.
+function scheduleDirections(name, address) {
+  return '<a href="https://www.google.com/maps/dir/?api=1' +
+    '&amp;origin=' + encodeURIComponent(SCHEDULE_LUNCH_FROM) +
+    '&amp;destination=' + encodeURIComponent(name + ', ' + address) +
+    '" target="_blank" rel="noopener">' + name + '</a>';
+}
+
 // A slot with something to say and nothing on. Page text rather than a card,
-// since there is nothing to open.
+// since there is nothing to open. Written as markup rather than plain text -
+// the places it names carry directions, and the word the hour turns on is
+// worth the emphasis.
 const SCHEDULE_NOTES = [
   {
     start: '12:15 PM',
-    text: 'Lunch is not served within McCaw Hall, so we encourage you to ' +
-      'check out some of the wonderful options nearby! Want a quick bite? ' +
-      'Check out the many food service venues within the Seattle Center Armory.'
+    html: 'Lunch is <strong>not</strong> served within McCaw Hall, so we ' +
+      'encourage you to check out some of the wonderful options nearby! ' +
+      "Mention that you're attending SLICE to " +
+      scheduleDirections('McMenamins', '200 Roy St, Seattle, WA 98109') +
+      ' for a 15% discount or ' +
+      scheduleDirections('Sugar Bakery', '110 Republican St, Seattle, WA 98109') +
+      ' for a 10% discount. Want a quick bite? Check out the many food ' +
+      'service venues within the ' +
+      scheduleDirections('Seattle Center Armory',
+        '305 Harrison St, Seattle, WA 98109') + '.'
   }
 ];
 
@@ -904,7 +926,8 @@ function scheduleRender(sessions, list, legendEl) {
     if (note) {
       const text = document.createElement('p');
       text.className = 'schedule-slot__note';
-      text.textContent = note.text;
+      // Authored copy, written a few lines up rather than read from the sheet
+      text.innerHTML = note.html;
       block.appendChild(text);
     }
 

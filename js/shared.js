@@ -1031,9 +1031,25 @@ revealEls.forEach(el => revealObserver.observe(el));
     return { room: room, place: window.sliceMapPlaceFor(room) };
   }
 
+  // What the session panel is showing right now. A page that has to put the
+  // panel back later - s.html, for the phone's Back button - asks for this
+  // rather than working it out from the title on screen: the day carries
+  // fixtures of its own (Speed Networking, the Creative Clinic) that are
+  // built by the schedule and are in no sheet, so there is nothing to look
+  // a name up in.
+  let sessionShowing = null;
+  window.sliceSessionShowing = function() { return sessionShowing; };
+
   // Fill the session side of the scrim: what it is, then who is on it
   function fillSessionPanel(session) {
     if (!sessionPanel) return;
+
+    sessionShowing = session;
+
+    // Where on the map this one is, if the page carries a map and the map
+    // knows the room. Read once: the place on the line above the title and
+    // the button in the corner are two ways to the same marker.
+    const aim = sessionMapAim(session);
 
     // What it is, when it runs and where - "Panel - 9:30 - 10:15am - Auditorium"
     // for something running the once, "Roundtable - 4:45 - 5:30pm & 5:45 - 6:30pm - Table 5D" for
@@ -1047,8 +1063,16 @@ revealEls.forEach(el => revealObserver.observe(el));
       if (session.format) parts.push({ text: session.format, aside: false });
 
       if (typeof scheduleWhenAndWhere === 'function') {
-        scheduleWhenAndWhere(session).forEach(part => {
-          parts.push({ text: part, aside: true });
+        const where = scheduleWhenAndWhere(session);
+        where.forEach((part, at) => {
+          parts.push({
+            text: part,
+            aside: true,
+            // A pair is the hours and then the place. A single part is a
+            // session that moves rooms between its sittings and carries them
+            // inside its hours, where there is no one place to point at.
+            place: where.length > 1 && at === where.length - 1
+          });
         });
       }
 
@@ -1062,12 +1086,35 @@ revealEls.forEach(el => revealObserver.observe(el));
           sessionFormatEl.appendChild(sep);
         }
 
+        // The place is also the way to it: pressing it opens the venue map on
+        // the room, which is the corner button's whole job. So it is a button
+        // where there is a map with the room on it, and the plain text it has
+        // always been everywhere else.
+        const isWay = part.place && aim.place && sessionMapBtn;
+
         // The format keeps the line's own look. When and where are read rather
         // than glanced at, so they are set in the body face and the quieter
         // blue the times on a schedule row already use.
-        const span = document.createElement('span');
+        const span = document.createElement(isWay ? 'button' : 'span');
         if (part.aside) span.className = 'session-panel__where';
         span.textContent = part.text;
+
+        if (isWay) {
+          span.type = 'button';
+          span.classList.add('session-panel__place');
+          // The words on it lead, so what it is called can be read out loud
+          // and still be the thing somebody sees
+          const label = part.text + ' - show on the venue map';
+          span.setAttribute('aria-label', label);
+          span.title = label;
+          span.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // The corner button, pressed from a second place. The room, the
+            // closing and everything that follows stay where they already are.
+            sessionMapBtn.click();
+          });
+        }
+
         sessionFormatEl.appendChild(span);
       });
 
@@ -1079,7 +1126,6 @@ revealEls.forEach(el => revealObserver.observe(el));
     // a variable out here, so a panel stepped along with the arrows carries its
     // own destination and cannot be left pointing at the session before it.
     if (sessionMapBtn) {
-      const aim = sessionMapAim(session);
       sessionMapBtn.hidden = !aim.place;
       sessionMapBtn.dataset.room = aim.place ? aim.room : '';
 

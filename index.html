@@ -87,11 +87,11 @@
   <!-- Bump ?v= whenever shared.css or shared.js changes. GitHub Pages serves
        both with max-age=600, and a phone holding a stale shared.js next to a
        fresh page is how the speaker and session lists silently come up empty. -->
-  <link rel="stylesheet" href="styles/shared.css?v=2026-08-21">
+  <link rel="stylesheet" href="styles/shared.css?v=2026-08-26">
   <!-- The Sessions section, shared with s.html. See js/sessions.js. -->
-  <link rel="stylesheet" href="styles/sessions.css?v=2026-08-24">
+  <link rel="stylesheet" href="styles/sessions.css?v=2026-08-26">
   <!-- Its Schedule view, shared with schedulepreview.html -->
-  <link rel="stylesheet" href="styles/schedule.css?v=2026-08-25">
+  <link rel="stylesheet" href="styles/schedule.css?v=2026-08-26">
   <style>
     /* ===================== HERO SECTION ===================== */
     .hero {
@@ -2035,7 +2035,10 @@
       .floormap-areas {
         max-height: var(--fm-list-h, 26vh);
         overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
+        /* No -webkit-overflow-scrolling: touch here. iOS has had momentum
+           scrolling by default since 13, and the legacy property makes the
+           programmatic scroll that walks this list to a tapped marker's
+           card land short or not at all. */
         padding-right: 4px;
       }
     }
@@ -2203,6 +2206,131 @@
     @media (max-width: 620px) {
       .venue-map__label--minor {
         display: none;
+      }
+    }
+    /* ===================== VIEW ON MAP =====================
+       A session panel on a phone hands the reader to the venue map from a
+       capsule floating in the corner of the screen, over the scrim, rather
+       than from a button inside the panel - the same button, in the same
+       place, that s.html carries. It grows out of a circle as it arrives.
+
+       The panel's own map button is still what knows the room and does the
+       work; it is pressed by script from here, and holds the corner itself
+       on a desktop, where there is width enough for it. On a phone the
+       corner goes back to being the way out, the same X the speaker panel
+       wears - see the script that puts it there. */
+    .map-cta {
+      position: fixed;
+      right: calc(18px + env(safe-area-inset-right, 0px));
+      bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+      /* Over the scrim, which is the point of it */
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      height: 72px;
+      padding: 0;
+      /* Not 50%: on a square this comes to the same circle, and it is what
+         lets the button keep those ends while the label grows it out into a
+         capsule. The width is left to the content for the same reason. */
+      border-radius: 999px;
+      border: 2px solid #BB3EFD;
+      background: #f5ee1d;
+      color: #00367B;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0, 5, 15, 0.5), 0 0 24px rgba(245, 238, 29, 0.22);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .map-cta:hover {
+      box-shadow: 0 8px 26px rgba(0, 5, 15, 0.55), 0 0 34px rgba(245, 238, 29, 0.35);
+    }
+
+    .map-cta:active {
+      transform: scale(0.92);
+    }
+
+    .map-cta:focus-visible {
+      outline: 2px solid #BB3EFD;
+      outline-offset: 3px;
+    }
+
+    /* The icon's square cell, which is the whole of the button while it is
+       shut - the button's 72px less its border */
+    .map-cta__icons {
+      position: relative;
+      flex: 0 0 auto;
+      width: 68px;
+      height: 68px;
+    }
+
+    .map-cta__icon {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .map-cta__icon svg {
+      display: block;
+      width: 36px;
+      height: 36px;
+    }
+
+    /* Shut, the label is a sliver of nothing and the button is its circle.
+       Open, it grows the button out into a capsule beside the icon - the
+       button's own width is content's to decide, so it follows along. */
+    .map-cta__label {
+      max-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      opacity: 0;
+      font-family: 'Bungee', cursive;
+      font-size: 14px;
+      line-height: 1.2;
+      transition: max-width 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+                  padding-left 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.25s ease;
+    }
+
+    .map-cta.is-wide .map-cta__label {
+      max-width: 10em;
+      padding-left: 24px;
+      opacity: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .map-cta__label {
+        transition: opacity 0.25s ease;
+      }
+    }
+
+    /* Desktop keeps the map in the panel's corner and the scrim as the way
+       out, which is how this page has always read. */
+    #sessionClose {
+      display: none;
+    }
+
+    @media (max-width: 640px) {
+      .map-cta:not([hidden]) {
+        display: flex;
+      }
+
+      .session-panel__map {
+        display: none;
+      }
+
+      #sessionClose {
+        display: flex;
+      }
+
+      /* The corner holds the X now rather than the map, so the when and
+         where line still has to stand clear of it - including for a session
+         the map knows no room for, where the shared sheet would otherwise
+         let the line run the full width. Written to outweigh that rule. */
+      .speaker-overlay__panel--session .session-panel__format,
+      .speaker-overlay__panel--session:has(.session-panel__map[hidden]) .session-panel__format {
+        right: 64px;
       }
     }
   </style>
@@ -3319,12 +3447,107 @@
     </div>
   </a>
 
+  <!-- A session panel's way to the venue map on a phone: it rides over the
+       scrim while a panel is up and presses the panel's own map button,
+       which is where the room and the lookup live. See VIEW ON MAP above. -->
+  <button class="map-cta" id="mapCta" type="button" hidden>
+    <span class="map-cta__label">View on map</span>
+    <span class="map-cta__icons">
+      <span class="map-cta__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" focusable="false"><path d="M3 6.5 L9 4 L15 6.5 L21 4 V17 L15 19.5 L9 17 L3 19.5 Z"/><path d="M9 4 V17"/><path d="M15 6.5 V19.5"/><circle cx="12" cy="11.6" r="1.9" fill="currentColor" stroke="none"/></svg>
+      </span>
+    </span>
+  </button>
+
   <!-- Ahead of shared.js: it puts the Sessions section and the session panel
        in place, and shared.js reads both as it starts. -->
   <script src="js/tabs.js?v=2026-08-21"></script>
-  <script src="js/schedule.js?v=2026-08-25"></script>
-  <script src="js/sessions.js?v=2026-08-21"></script>
-  <script src="js/shared.js?v=2026-08-21"></script>
+  <script src="js/schedule.js?v=2026-08-26"></script>
+  <script src="js/sessions.js?v=2026-08-26"></script>
+  <script>
+    // On a phone the map has left the panel's corner for the capsule that
+    // floats over the scrim, so the corner goes back to holding the way out
+    // - the same X the speaker panel wears. It is put in here, after
+    // js/sessions.js has built the panel and before js/shared.js reads the
+    // page, because shared.js still wires up a #sessionClose when it finds
+    // one. The stylesheet decides which of the two the corner shows.
+    (function() {
+      const panel = document.getElementById('sessionPanel');
+      if (!panel || document.getElementById('sessionClose')) return;
+      const close = document.createElement('button');
+      close.type = 'button';
+      close.className = 'speaker-overlay__close';
+      close.id = 'sessionClose';
+      close.setAttribute('aria-label', 'Close');
+      close.innerHTML = '&times;';
+      panel.appendChild(close);
+    })();
+  </script>
+  <script src="js/shared.js?v=2026-08-26"></script>
+  <script>
+    // ===================== VIEW ON MAP =====================
+    // The capsule in the corner of the screen, for as long as a session
+    // panel is up with a room the map knows. Pressing it presses the
+    // panel's own map button, so the room, the lookup and everything that
+    // follows stay in the one place they already live.
+    (function() {
+      const cta = document.getElementById('mapCta');
+      const overlay = document.getElementById('speakerOverlay');
+      const panel = document.getElementById('sessionPanel');
+      const wired = document.getElementById('sessionMap');
+      if (!cta || !overlay || !panel || !wired) return;
+
+      // A speaker panel has nowhere in particular to send anybody, and
+      // neither has a session the map has no marker for - which is what the
+      // panel's own button being down means.
+      function wanted() {
+        return overlay.classList.contains('is-shown') &&
+          !panel.hidden && !wired.hidden;
+      }
+
+      let on = false;
+
+      function sync() {
+        const want = wanted();
+        if (want === on) return;
+        on = want;
+
+        if (!want) {
+          cta.classList.remove('is-wide');
+          cta.hidden = true;
+          return;
+        }
+
+        // Shown as a circle first and grown a frame later, so the capsule
+        // opens out rather than arriving already open. Two frames: the
+        // first is the one the circle is painted in.
+        cta.hidden = false;
+        window.requestAnimationFrame(function() {
+          window.requestAnimationFrame(function() {
+            if (on) cta.classList.add('is-wide');
+          });
+        });
+      }
+
+      // The panel is filled before the scrim goes up, and stepping along a
+      // run refills it in place, so all three are worth watching
+      const watch = new MutationObserver(sync);
+      watch.observe(overlay, { attributes: true, attributeFilter: ['class'] });
+      watch.observe(panel, { attributes: true, attributeFilter: ['hidden'] });
+      watch.observe(wired, { attributes: true, attributeFilter: ['hidden'] });
+
+      // stopPropagation for the same reason the panel's own button needs it:
+      // the scrim behind takes a click as a close, and the floor map's
+      // document listener takes one landing outside the plan as a dismissal.
+      cta.addEventListener('click', function(e) {
+        e.stopPropagation();
+        wired.click();
+      });
+
+      sync();
+    })();
+  </script>
+
   <script>
     // Show scroll indicator after 5 seconds
     setTimeout(() => {

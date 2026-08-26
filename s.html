@@ -48,9 +48,9 @@
   <!-- Bump ?v= whenever these change. GitHub Pages serves them with
        max-age=600, and a phone holding a stale sessions.js next to a fresh
        page is how the session list silently comes up empty. -->
-  <link rel="stylesheet" href="styles/shared.css?v=2026-08-21">
-  <link rel="stylesheet" href="styles/sessions.css?v=2026-08-24">
-  <link rel="stylesheet" href="styles/schedule.css?v=2026-08-25">
+  <link rel="stylesheet" href="styles/shared.css?v=2026-08-26">
+  <link rel="stylesheet" href="styles/sessions.css?v=2026-08-26">
+  <link rel="stylesheet" href="styles/schedule.css?v=2026-08-26">
 
   <style>
     /* ===================== THE APP FRAME =====================
@@ -86,7 +86,9 @@
 
     .app-pane--schedule {
       overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
+      /* No legacy -webkit-overflow-scrolling: iOS gives momentum on its
+         own, and the old property makes programmatic scrolls - the opening
+         jump to now, the back-to-now button's glide - unreliable there */
       overscroll-behavior: contain;
       /* On a desktop browser a classic scrollbar comes and goes as slots of
          different heights are picked, and each change of width rewraps the
@@ -104,7 +106,6 @@
        move; anywhere else the pane scrolls like a page. */
     .app-pane--map {
       overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
       scrollbar-gutter: stable;
     }
@@ -384,10 +385,14 @@
       right: calc(18px + env(safe-area-inset-right, 0px));
       bottom: calc(18px + env(safe-area-inset-bottom, 0px));
       z-index: 900;
-      width: 72px;
+      display: flex;
+      align-items: center;
       height: 72px;
       padding: 0;
-      border-radius: 50%;
+      /* Not 50%: on a square this comes to the same circle, and it is what
+         lets the button keep those ends while the label grows it out into a
+         capsule. The width is left to the content for the same reason. */
+      border-radius: 999px;
       border: 2px solid #BB3EFD;
       background: #f5ee1d;
       color: #00367B;
@@ -410,7 +415,17 @@
     }
 
     /* The two faces of the button, crossfading with a little turn as the
-       panes trade places under it */
+       panes trade places under it. They share one square cell at the end of
+       the button, which is the whole of the button while it is shut. */
+    .app-fab__icons {
+      position: relative;
+      flex: 0 0 auto;
+      /* The button's 72px less its border, so a button with no label showing
+         is exactly a circle */
+      width: 68px;
+      height: 68px;
+    }
+
     .app-fab__icon {
       position: absolute;
       inset: 0;
@@ -441,6 +456,30 @@
       transform: rotate(90deg) scale(0.6);
     }
 
+    /* Shut, the label is a sliver of nothing and the button is its circle.
+       Open - a session panel is up, and the button is that session's way to
+       the map - it grows the button out into a capsule beside the icon. The
+       button's own width is content's to decide, so it follows this along
+       rather than needing a move of its own. */
+    .app-fab__label {
+      max-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      opacity: 0;
+      font-family: 'Bungee', cursive;
+      font-size: 14px;
+      line-height: 1.2;
+      transition: max-width 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+                  padding-left 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.25s ease;
+    }
+
+    .app-fab.is-wide .app-fab__label {
+      max-width: 10em;
+      padding-left: 24px;
+      opacity: 1;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .app-fab__icon {
         transition: opacity 0.25s ease;
@@ -451,12 +490,41 @@
       .app-fab.is-map .app-fab__icon--map {
         transform: none;
       }
+
+      .app-fab__label {
+        transition: opacity 0.25s ease;
+      }
     }
 
     /* The panel is focused as a whole when it opens (see the OVERLAY FOCUS
        script), and a container is not a control - no ring on it */
     .speaker-overlay__panel:focus {
       outline: none;
+    }
+
+    /* ---- the session panel, s.html style ---- */
+    /* The corner holds the same X the speaker panel wears - injected just
+       after js/sessions.js builds the panel - and the way to the map is the
+       page's own floating button, which rises over the blur while a session
+       panel is up. The shared map wiring stays in the markup, aimed and
+       pressed by script, just never shown. */
+    .session-panel__map {
+      display: none;
+    }
+
+    body.is-session-popup .app-fab {
+      z-index: 10000;
+    }
+
+    @media (max-width: 640px) {
+      /* The corner always holds the close button on this page, so the when
+         and where line always stands clear of it - including for a session
+         the map knows no room for, where the shared sheet would let the
+         line run the full width. Written to outweigh the :has rule there. */
+      .speaker-overlay__panel--session .session-panel__format,
+      .speaker-overlay__panel--session:has(.session-panel__map[hidden]) .session-panel__format {
+        right: 64px;
+      }
     }
 
     /* ===================== VENUE MAP LEGEND (from index.html) ===================== */
@@ -820,7 +888,10 @@
       .floormap-areas {
         max-height: var(--fm-list-h, 26vh);
         overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
+        /* No -webkit-overflow-scrolling: touch here. iOS has had momentum
+           scrolling by default since 13, and the legacy property makes the
+           programmatic scroll that walks this list to a tapped marker's
+           card land short or not at all. */
         padding-right: 4px;
       }
     }
@@ -1062,11 +1133,14 @@
 
   <!-- ============ SCHEDULE / MAP SWITCH ============ -->
   <button class="app-fab" id="appFab" type="button" aria-label="Show the venue map">
-    <span class="app-fab__icon app-fab__icon--map" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" focusable="false"><path d="M3 6.5 L9 4 L15 6.5 L21 4 V17 L15 19.5 L9 17 L3 19.5 Z"/><path d="M9 4 V17"/><path d="M15 6.5 V19.5"/><circle cx="12" cy="11.6" r="1.9" fill="currentColor" stroke="none"/></svg>
-    </span>
-    <span class="app-fab__icon app-fab__icon--sched" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" focusable="false"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5 H20.5"/><path d="M8 2.8 V6.4"/><path d="M16 2.8 V6.4"/><path d="M7.2 13 H12.8"/><path d="M7.2 16.5 H15.5"/></svg>
+    <span class="app-fab__label" aria-hidden="true">View on map</span>
+    <span class="app-fab__icons">
+      <span class="app-fab__icon app-fab__icon--map" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" focusable="false"><path d="M3 6.5 L9 4 L15 6.5 L21 4 V17 L15 19.5 L9 17 L3 19.5 Z"/><path d="M9 4 V17"/><path d="M15 6.5 V19.5"/><circle cx="12" cy="11.6" r="1.9" fill="currentColor" stroke="none"/></svg>
+      </span>
+      <span class="app-fab__icon app-fab__icon--sched" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" focusable="false"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5 H20.5"/><path d="M8 2.8 V6.4"/><path d="M16 2.8 V6.4"/><path d="M7.2 13 H12.8"/><path d="M7.2 16.5 H15.5"/></svg>
+      </span>
     </span>
   </button>
 
@@ -1092,9 +1166,28 @@
        table, the sheet reading and scheduleRender, which the page script
        below builds its two lists with. -->
   <script src="js/tabs.js?v=2026-08-21"></script>
-  <script src="js/schedule.js?v=2026-08-25"></script>
-  <script src="js/sessions.js?v=2026-08-21"></script>
-  <script src="js/shared.js?v=2026-08-21"></script>
+  <script src="js/schedule.js?v=2026-08-26"></script>
+  <script src="js/sessions.js?v=2026-08-26"></script>
+  <script>
+    // On this page the session panel closes with the same corner X the
+    // speaker panel wears, and the map lives on the page's own floating
+    // button instead - see the styles above. The X goes in here, after
+    // js/sessions.js has built the panel and before js/shared.js reads the
+    // page, because shared.js still wires up a #sessionClose when it finds
+    // one.
+    (function() {
+      const panel = document.getElementById('sessionPanel');
+      if (!panel || document.getElementById('sessionClose')) return;
+      const close = document.createElement('button');
+      close.type = 'button';
+      close.className = 'speaker-overlay__close';
+      close.id = 'sessionClose';
+      close.setAttribute('aria-label', 'Close');
+      close.innerHTML = '&times;';
+      panel.appendChild(close);
+    })();
+  </script>
+  <script src="js/shared.js?v=2026-08-26"></script>
 
   <script>
     // ===================== SLICE FLOOR MAP =====================
@@ -1784,6 +1877,12 @@
         // The re-measure moves every marker, so a popup already up is
         // re-anchored the same way the resize handler does it
         if (shownSpot) showPop(shownSpot);
+        // The key list was resized too, so a card revealed against the old
+        // sizing is walked to again - without this, a handoff from a session
+        // panel could leave the card anywhere in the pane, depending on how
+        // much the browser chrome had shifted the window since the last
+        // measure
+        if (pinned) revealCard(pinned);
       };
     })();
   </script>
@@ -1855,12 +1954,18 @@
       }
 
       // ---- the phone's Back button ----
-      // Opening the map or a session panel lays one state over the page, and
-      // Back is how a phone puts a layer away. Each layer holds one history
-      // entry, so Back closes it in place - same close the buttons do, no
-      // reload, no navigation - and from the base page Back leaves as normal.
+      // Opening a session panel, and then the map on top of it, lays states
+      // over the page, and Back is how a phone peels one away. Every layer
+      // holds one history entry naming itself, so Back steps to whatever was
+      // underneath - the same closes and switches the buttons make, no
+      // reload, no navigation - and from the base page Back leaves as
+      // normal. In particular, a map opened from a session panel keeps that
+      // panel's entry beneath it, and Back brings the panel itself back.
       // What is on top right now: 'base', 'overlay' or 'map'.
       let uiTop = 'base';
+      const sessionPanelEl = document.getElementById('sessionPanel');
+      // The session the panel is showing, held so Back can reopen it
+      let stashed = null;
 
       // Back never scrolls anything here; the panes keep their own places
       if ('scrollRestoration' in window.history) {
@@ -1871,15 +1976,76 @@
         return !!(overlay && overlay.classList.contains('is-shown'));
       }
 
-      window.addEventListener('popstate', function() {
-        // Cleared first, so the class watcher below reads these closes as
-        // already accounted for and does not pop a second entry
-        uiTop = 'base';
-        if (overlayShown()) {
-          const close = document.getElementById('speakerClose');
-          if (close) close.click();
+      function sessionPanelUp() {
+        return overlayShown() && !!sessionPanelEl && !sessionPanelEl.hidden;
+      }
+
+      // While a session panel is up, the floating map button rides over the
+      // scrim - see body.is-session-popup in the styles. A speaker panel
+      // gets no map button, so the class stays off for those.
+      function syncPopupClass() {
+        const up = sessionPanelUp();
+        document.body.classList.toggle('is-session-popup', up);
+        // Over a session panel the button is that session's way to the map
+        // and says so, growing out of its circle into a capsule. The name it
+        // is called by follows the words on it.
+        fab.classList.toggle('is-wide', up);
+        fab.setAttribute('aria-label', up ? 'View on map' :
+          (onMap ? 'Show the schedule' : 'Show the venue map'));
+      }
+
+      // Which session the panel is showing right now, asked of the panel
+      // itself so it is right however the reader got here - a row, a
+      // speaker's session list, or the arrows. It hands back the session it
+      // was filled from, which is the only way to answer for the fixtures
+      // the day carries of its own: Speed Networking and the Creative
+      // Clinic are built by the schedule and are in no sheet, so there is no
+      // list holding them to find them by name in.
+      function captureSession() {
+        if (!sessionPanelUp()) return null;
+
+        if (typeof window.sliceSessionShowing === 'function') {
+          const showing = window.sliceSessionShowing();
+          if (showing) return showing;
         }
-        if (onMap) showApp('schedule');
+
+        // A page held in a cache with an older shared.js cannot answer, so
+        // the title is looked up the way it used to be
+        const titleEl = document.getElementById('sessionTitle');
+        const title = titleEl ? titleEl.textContent : '';
+        return (window.sessions || []).filter(function(session) {
+          return session.title === title;
+        })[0] || null;
+      }
+
+      function closeOverlayNow() {
+        if (!overlayShown()) return;
+        const close = document.getElementById('speakerClose');
+        if (close) close.click();
+      }
+
+      // Put the page the way the entry Back (or Forward) landed on says it
+      // was. uiTop moves first, so the watcher below reads every close made
+      // here as already accounted for.
+      window.addEventListener('popstate', function(e) {
+        const slice = e.state && e.state.slice ? e.state.slice : 'base';
+        uiTop = slice;
+
+        if (slice === 'overlay') {
+          if (onMap) showApp('schedule');
+          if (!overlayShown() && stashed &&
+              typeof window.openSessionOverlay === 'function') {
+            window.openSessionOverlay(stashed);
+          }
+        } else if (slice === 'map') {
+          closeOverlayNow();
+          showApp('map');
+        } else {
+          closeOverlayNow();
+          if (onMap) showApp('schedule');
+        }
+
+        syncPopupClass();
       });
 
       // A panel closed by hand - the scrim, Escape, the X - takes the
@@ -1893,22 +2059,65 @@
             window.history.back();
           }
           wasShown = shown;
+          syncPopupClass();
         }).observe(overlay, { attributes: true, attributeFilter: ['class'] });
+      }
+
+      // The panels also trade places inside an open overlay - a session
+      // giving way to a speaker - and the button's ride over the scrim has
+      // to follow which one is up.
+      //
+      // The panel is also refilled in place when the arrows step along a run,
+      // and the place on its top line is a way to the map that does not come
+      // past the button below. So what Back should bring back is read again
+      // whenever the panel changes, rather than only when one is opened.
+      if (sessionPanelEl && typeof MutationObserver === 'function') {
+        new MutationObserver(function() {
+          syncPopupClass();
+          if (sessionPanelUp()) stashed = captureSession() || stashed;
+        }).observe(sessionPanelEl, {
+          attributes: true,
+          attributeFilter: ['hidden'],
+          childList: true,
+          subtree: true,
+          characterData: true
+        });
       }
 
       // The overlay openers say so here as they run - see the wrapping above
       window.sliceAppOverlayOpened = function() {
+        stashed = captureSession() || stashed;
+        syncPopupClass();
         if (uiTop !== 'base') return;
         window.history.pushState({ slice: 'overlay' }, '');
         uiTop = 'overlay';
       };
 
-      fab.addEventListener('click', function() {
-        // The scrim covers the button visually, but the keyboard can still
-        // reach it - flipping panes under an open panel would be a mystery
-        if (overlayShown()) return;
+      fab.addEventListener('click', function(e) {
+        // The map's own document listener reads a tap landing anywhere loose
+        // as putting a pinned popup away. This button is a control, not
+        // loose ground - without this, the very tap that opens the map on a
+        // session's room would bubble on and unpin the marker it just set.
+        e.stopPropagation();
+        if (overlayShown()) {
+          // Under a speaker panel the button sits beneath the scrim and does
+          // nothing. Over a session panel it is that session's way to the
+          // map: the room the panel's hidden map wiring is aimed at, with
+          // the panel's entry kept underneath so Back returns to it.
+          if (!sessionPanelUp()) return;
+          stashed = captureSession() || stashed;
+          const wired = document.getElementById('sessionMap');
+          if (wired && wired.dataset.room) {
+            wired.click();
+          } else {
+            closeOverlayNow();
+            window.sliceAppShowMap();
+          }
+          return;
+        }
         if (onMap) {
-          // Out through history, so this button and the phone's Back agree
+          // Out through history, so this button and the phone's Back agree -
+          // including landing back on a session panel the map was opened from
           if (uiTop === 'map') {
             window.history.back();
             return;
@@ -1922,21 +2131,20 @@
       });
 
       // The session panel's map button asks for this before handing the room
-      // to the floor map, so the pane is up by the time the marker is pinned.
+      // to the floor map, so the pane is up by the time the marker is
+      // pinned. Coming from a panel, the panel's own entry stays beneath the
+      // map's: its close has already run in this same task, and the watcher
+      // above reads the new top and leaves its entry alone.
       window.sliceAppShowMap = function() {
-        if (uiTop === 'overlay') {
-          // The panel is giving way to the map: one Back should undo the
-          // pair, so the map takes over the panel's entry. The panel's own
-          // close has already run, and the watcher above reads the new top
-          // and leaves the entry to the map.
-          window.history.replaceState({ slice: 'map' }, '');
-          uiTop = 'map';
-        } else if (uiTop !== 'map') {
+        if (uiTop !== 'map') {
           window.history.pushState({ slice: 'map' }, '');
           uiTop = 'map';
         }
         showApp('map');
+        syncPopupClass();
       };
+
+      syncPopupClass();
     })();
 
     // ===================== THE LIVE SCHEDULE =====================

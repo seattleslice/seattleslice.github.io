@@ -247,12 +247,6 @@
   color: #8ab4e0;
 }
 
-.session-row__chevron {
-  flex-shrink: 0;
-  font-size: 14px;
-  color: #BB3EFD;
-}
-
 @media (max-width: 520px) {
   .session-row {
     padding: 10px 16px;
@@ -261,13 +255,6 @@
 
   .session-row__text {
     font-size: 14px;
-  }
-
-  /* The whole row opens the panel, and on a phone that is the only thing a tap
-     can do to it. The arrow was pointing out something already obvious and
-     taking width the titles wanted. */
-  .session-row__chevron {
-    display: none;
   }
 }
 
@@ -401,6 +388,40 @@
   color: #4d84c4;
 }
 
+/* The place a session is in is also the way to it - pressing it opens the
+   venue map on the room, the same as the panel's map button does. It keeps
+   the line's own voice and marks itself with an underline rather than a
+   colour of its own, so the line still reads as a line. Built as a real
+   button in js/shared.js, and only where the page has a map with that room
+   on it; everywhere else the place is the plain text it always was. */
+.session-panel__place {
+  /* A line of 13px text is a thin thing to hit with a thumb, so the press
+     reaches a few pixels above and below it. The margin gives back exactly
+     what the padding takes, so the line is laid out as though neither were
+     here. */
+  padding: 5px 0;
+  margin: -5px 0;
+  border: none;
+  background: none;
+  line-height: inherit;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  transition: color 0.2s, text-decoration-color 0.2s;
+}
+
+.session-panel__place:hover,
+.session-panel__place:focus-visible {
+  color: #f5ee1d;
+  text-decoration-style: solid;
+}
+
+.session-panel__place:focus-visible {
+  outline: 2px solid #BB3EFD;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
 /* On a phone the format line was wrapping mid-time beneath the map button.
    It moves up beside the button instead: left-aligned, sharing the corner
    band, with its own centre held on the button circle's centre however many
@@ -409,6 +430,23 @@
    across two. The dashes go; the gaps and the change of face already say
    where one part ends and the next begins. */
 @media (max-width: 640px) {
+  /* The floating map button rides over the scrim while a session panel is
+     up, so the panel keeps its distance rather than running underneath: the
+     button's own 72px, the 18px it sits above the screen's foot, and a
+     dozen more so the two are not touching, less the 10px the overlay
+     already keeps below the panel.
+
+     Held as a margin as well as a ceiling, because the two do different
+     halves of the job. The ceiling is what stops a long panel short of the
+     button; the margin is what the centring counts as part of the panel, so
+     one small enough to be centred is centred in the screen the button
+     leaves rather than sitting low behind it. A speaker panel has no such
+     button and keeps the whole height styles/shared.css gives it. */
+  .speaker-overlay__panel--session {
+    max-height: calc(100% - 92px);
+    margin-bottom: 92px;
+  }
+
   .session-panel__format {
     position: absolute;
     top: 34px;

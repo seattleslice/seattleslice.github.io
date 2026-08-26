@@ -172,6 +172,9 @@ const SCHEDULE_FIXTURES = [
   },
   {
     title: 'Speed Networking',
+    synopsis: 'Get your business cards ready! Speed Networking is an hour of ' +
+      'quick, 3-minute meetings during the after-party. When the bell rings, ' +
+      'move on to the next table. You never know who you might meet!',
     room: '1A',
     place: 'Level 1 Café',
     when: '7:00-8:00pm',
@@ -760,11 +763,6 @@ function scheduleRender(sessions, list, legendEl) {
     }
 
     row.appendChild(text);
-
-    const chevron = document.createElement('span');
-    chevron.className = 'session-row__chevron';
-    chevron.innerHTML = '&#9654;';
-    row.appendChild(chevron);
 
     rowSessions.set(row, session);
 

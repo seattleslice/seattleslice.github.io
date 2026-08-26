@@ -341,11 +341,6 @@ function fillSessionList(sessions) {
 
     row.appendChild(text);
 
-    const chevron = document.createElement('span');
-    chevron.className = 'session-row__chevron';
-    chevron.innerHTML = '&#9654;';
-    row.appendChild(chevron);
-
     rowSessions.set(row, session);
 
     row.addEventListener('click', function() {

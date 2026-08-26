@@ -253,12 +253,6 @@
   align-items: flex-start;
 }
 
-/* Centred down a row that is now as tall as its title needs - it is the way
-   into the whole row, not a mark against the first line of it */
-.schedule-row .session-row__chevron {
-  align-self: center;
-}
-
 /* Which sitting of a repeated session this row is. It leads the block that
    follows the title, with the names after it at a plain word space - blue
    rather than the names' grey, so it reads as a note about the row and not as

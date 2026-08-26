@@ -49,8 +49,8 @@
        max-age=600, and a phone holding a stale sessions.js next to a fresh
        page is how the session list silently comes up empty. -->
   <link rel="stylesheet" href="styles/shared.css?v=2026-08-21">
-  <link rel="stylesheet" href="styles/sessions.css?v=2026-08-24">
-  <link rel="stylesheet" href="styles/schedule.css?v=2026-08-25">
+  <link rel="stylesheet" href="styles/sessions.css?v=2026-08-26">
+  <link rel="stylesheet" href="styles/schedule.css?v=2026-08-26">
 
   <style>
     /* ===================== THE APP FRAME =====================
@@ -1166,8 +1166,8 @@
        table, the sheet reading and scheduleRender, which the page script
        below builds its two lists with. -->
   <script src="js/tabs.js?v=2026-08-21"></script>
-  <script src="js/schedule.js?v=2026-08-25"></script>
-  <script src="js/sessions.js?v=2026-08-21"></script>
+  <script src="js/schedule.js?v=2026-08-26"></script>
+  <script src="js/sessions.js?v=2026-08-26"></script>
   <script>
     // On this page the session panel closes with the same corner X the
     // speaker panel wears, and the map lives on the page's own floating
@@ -1187,7 +1187,7 @@
       panel.appendChild(close);
     })();
   </script>
-  <script src="js/shared.js?v=2026-08-21"></script>
+  <script src="js/shared.js?v=2026-08-26"></script>
 
   <script>
     // ===================== SLICE FLOOR MAP =====================
@@ -1994,11 +1994,23 @@
           (onMap ? 'Show the schedule' : 'Show the venue map'));
       }
 
-      // Which session the panel is showing right now, read off the panel
+      // Which session the panel is showing right now, asked of the panel
       // itself so it is right however the reader got here - a row, a
-      // speaker's session list, or the arrows
+      // speaker's session list, or the arrows. It hands back the session it
+      // was filled from, which is the only way to answer for the fixtures
+      // the day carries of its own: Speed Networking and the Creative
+      // Clinic are built by the schedule and are in no sheet, so there is no
+      // list holding them to find them by name in.
       function captureSession() {
         if (!sessionPanelUp()) return null;
+
+        if (typeof window.sliceSessionShowing === 'function') {
+          const showing = window.sliceSessionShowing();
+          if (showing) return showing;
+        }
+
+        // A page held in a cache with an older shared.js cannot answer, so
+        // the title is looked up the way it used to be
         const titleEl = document.getElementById('sessionTitle');
         const title = titleEl ? titleEl.textContent : '';
         return (window.sessions || []).filter(function(session) {
@@ -2053,10 +2065,23 @@
 
       // The panels also trade places inside an open overlay - a session
       // giving way to a speaker - and the button's ride over the scrim has
-      // to follow which one is up
+      // to follow which one is up.
+      //
+      // The panel is also refilled in place when the arrows step along a run,
+      // and the place on its top line is a way to the map that does not come
+      // past the button below. So what Back should bring back is read again
+      // whenever the panel changes, rather than only when one is opened.
       if (sessionPanelEl && typeof MutationObserver === 'function') {
-        new MutationObserver(syncPopupClass)
-          .observe(sessionPanelEl, { attributes: true, attributeFilter: ['hidden'] });
+        new MutationObserver(function() {
+          syncPopupClass();
+          if (sessionPanelUp()) stashed = captureSession() || stashed;
+        }).observe(sessionPanelEl, {
+          attributes: true,
+          attributeFilter: ['hidden'],
+          childList: true,
+          subtree: true,
+          characterData: true
+        });
       }
 
       // The overlay openers say so here as they run - see the wrapping above

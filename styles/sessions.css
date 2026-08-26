@@ -430,6 +430,23 @@
    across two. The dashes go; the gaps and the change of face already say
    where one part ends and the next begins. */
 @media (max-width: 640px) {
+  /* The floating map button rides over the scrim while a session panel is
+     up, so the panel keeps its distance rather than running underneath: the
+     button's own 72px, the 18px it sits above the screen's foot, and a
+     dozen more so the two are not touching, less the 10px the overlay
+     already keeps below the panel.
+
+     Held as a margin as well as a ceiling, because the two do different
+     halves of the job. The ceiling is what stops a long panel short of the
+     button; the margin is what the centring counts as part of the panel, so
+     one small enough to be centred is centred in the screen the button
+     leaves rather than sitting low behind it. A speaker panel has no such
+     button and keeps the whole height styles/shared.css gives it. */
+  .speaker-overlay__panel--session {
+    max-height: calc(100% - 92px);
+    margin-bottom: 92px;
+  }
+
   .session-panel__format {
     position: absolute;
     top: 34px;

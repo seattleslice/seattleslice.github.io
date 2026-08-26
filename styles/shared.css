@@ -517,6 +517,27 @@ body {
   margin-bottom: 4px;
 }
 
+/* On a phone a panel may take the whole screen rather than the 80% of it a
+   panel is held to elsewhere: a long line-up was scrolling inside a box with
+   a band of scrim wasted above and below it. Panels are still centred, so it
+   is only the ones too tall to be that reach up to the top edge.
+
+   The panel is a flex item, so its 100% is the overlay's content box - the
+   screen less the padding - which also means it follows a phone's browser
+   chrome in and out rather than standing at some fixed fraction of a
+   viewport unit. The session panel keeps room below it for the floating map
+   button: see styles/sessions.css. */
+@media (max-width: 640px) {
+  .speaker-overlay {
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 0
+             calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .speaker-overlay__panel {
+    max-height: 100%;
+  }
+}
+
 /* ===================== SCROLL REVEAL ===================== */
 .reveal {
   opacity: 0;

@@ -1397,14 +1397,15 @@
        tower over a stacked mark like 11 bit studios even at the same tier.
        Gold carries 1.8x the area of the bottom row, which is what keeps it
        reading as larger while sitting in a row with two Diamonds. The supporting
-       tier now runs six then five; the wider of the two (K&L Gates through
-       Miraisens) totals 670px of logo plus 180px of gaps, leaving ~31px of
+       tier now runs two rows of six; the wider of the two (DigiPen through
+       Colburn Law) totals 670px of logo plus 180px of gaps, leaving ~31px of
        slack either side for the float to use.
        Epic is the exception: it is a near-square badge, so equal area would put
        it at 166x193 and it would tower over every wordmark on the page. Its
        height is capped at 130px instead and the width follows from that.
-       Times of Games is deliberately smaller too: it carries 0.7x the area of
-       the rest of its row so it reads as the smallest of the set.
+       Times of Games and Colburn Law are deliberately smaller: each carries
+       0.7x the area of the rest of its row so they read as the smallest of the
+       set.
        Nameless Deep runs on the plain equal-area rule. Their lockup is tall at
        0.88:1, so it stands 99px against rowmates of 42 to 69, but it carries
        two lines of type that need the height to stay legible. */
@@ -1413,17 +1414,18 @@
     .sponsor--xsolla    { --sp-w: 384px; }
     .sponsor--commerce  { --sp-w: 335px; }
     .sponsor--phantom   { --sp-w: 164px; }
-    .sponsor--gin          { --sp-w: 110px; }
-    .sponsor--klgates      { --sp-w: 180px; }
-    .sponsor--aie          { --sp-w: 69px; }
-    .sponsor--namelessdeep { --sp-w: 65px; }
-    .sponsor--elevenbit    { --sp-w: 93px; }
-    .sponsor--premack      { --sp-w: 109px; }
-    .sponsor--miraisens    { --sp-w: 154px; }
-    .sponsor--digipen      { --sp-w: 140px; }
-    .sponsor--discord      { --sp-w: 177px; }
-    .sponsor--sca          { --sp-w: 101px; }
-    .sponsor--timesofgames { --sp-w: 131px; }
+    .sponsor--colburn      { --sp-w: 115px; }
+    .sponsor--gin          { --sp-w: 93px; }
+    .sponsor--klgates      { --sp-w: 151px; }
+    .sponsor--aie          { --sp-w: 58px; }
+    .sponsor--namelessdeep { --sp-w: 54px; }
+    .sponsor--elevenbit    { --sp-w: 78px; }
+    .sponsor--premack      { --sp-w: 92px; }
+    .sponsor--miraisens    { --sp-w: 129px; }
+    .sponsor--digipen      { --sp-w: 118px; }
+    .sponsor--discord      { --sp-w: 149px; }
+    .sponsor--sca          { --sp-w: 85px; }
+    .sponsor--timesofgames { --sp-w: 110px; }
 
     /* Reduced motion: the script parks every logo on its anchor and tags the
        field, so the grow and glow fall back to a plain CSS hover. */
@@ -2811,7 +2813,9 @@
         </div>
 
         <div class="sponsors-row sponsors-row--supporting">
-          <a class="sponsor sponsor--klgates" href="https://www.klgates.com/" target="_blank" rel="noopener noreferrer" aria-label="K&amp;L Gates, sponsor">
+          <!-- K&amp;L Gates, like Xsolla, stays level: drift and the hover
+               reaction still apply, just no rotation. -->
+          <a class="sponsor sponsor--klgates" data-no-tilt href="https://www.klgates.com/" target="_blank" rel="noopener noreferrer" aria-label="K&amp;L Gates, sponsor">
             <img class="sponsor__img" src="images/sponsors/kl-gates.png" width="600" height="88" alt="K&amp;L Gates" loading="lazy">
           </a>
           <a class="sponsor sponsor--aie" href="https://seattle.aie.edu/" target="_blank" rel="noopener noreferrer" aria-label="Academy of Interactive Entertainment, sponsor">
@@ -2846,6 +2850,9 @@
           </a>
           <a class="sponsor sponsor--gin" href="https://gamesindustry.network/" target="_blank" rel="noopener noreferrer" aria-label="Games Industry Network, sponsor">
             <img class="sponsor__img" src="images/sponsors/games-industry-network.png" width="600" height="234" alt="Games Industry Network (GIN)" loading="lazy">
+          </a>
+          <a class="sponsor sponsor--colburn" href="https://www.colburnlaw.com/" target="_blank" rel="noopener noreferrer" aria-label="Colburn Law, sponsor">
+            <img class="sponsor__img" src="images/sponsors/colburn-law.png" width="600" height="107" alt="Colburn Law" loading="lazy">
           </a>
         </div>
       </div>

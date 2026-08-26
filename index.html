@@ -1313,15 +1313,22 @@
       flex-direction: column;
       align-items: center;
       gap: 44px;
-      padding: 12px 0 8px;
-      /* The halo below reaches 14% of each logo's width past its box, which on
-         the widest logo is about 41px, and on a narrow phone that is width the
-         whole page would otherwise inherit. Keep the decoration to the field:
-         clip stops it reaching the document while the clip margin leaves it
-         enough room to finish painting, so nothing visible is trimmed. */
+      padding-top: 12px;
+      padding-bottom: 8px;
+      /* The halo reaches 14% of each logo's width past its box, and a logo can
+         drift 24px and grow 13% on top of that, so the field has to clip or the
+         decoration would widen the whole page. overflow-clip-margin alone is not
+         enough: several browsers ignore it, and then the clip lands exactly on
+         the padding box and shaves the logos sitting flush against the edge.
+         Real padding pushes the clip box out instead, and the matching negative
+         margin puts the row back where it was, so nothing moves. */
       overflow-x: clip;
       overflow-y: visible;
-      overflow-clip-margin: 60px;
+      overflow-clip-margin: 90px;
+      padding-left: 90px;
+      padding-right: 90px;
+      margin-left: -90px;
+      margin-right: -90px;
     }
 
     .sponsors-row {
@@ -1506,6 +1513,30 @@
       display: none;
     }
 
+    /* Phones: the company walls run edge to edge and their logos come down a
+       fifth, which fits noticeably more into the three lines they are capped
+       at. Desktop and the sponsor field are untouched. */
+    @media (max-width: 640px) {
+      .section--companies {
+        padding-left: 0;
+        padding-right: 0;
+      }
+
+      /* the heading keeps its indent even though the logos lose theirs */
+      .section--companies > .section__title {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+
+      .companies-field .sponsor {
+        width: calc(var(--sp-w) * var(--sp-scale) * 0.8);
+      }
+
+      .sponsors-row--companies {
+        gap: 16px 16px;
+      }
+    }
+
     /* Non-linking entries still need to sit in the flex flow and float. */
     span.sponsor {
       cursor: default;
@@ -1562,19 +1593,24 @@
     .co--quantum-tech-partners { --sp-w: 110px; }
     .co--red-nexus-games { --sp-w: 168px; }
     .co--sinclair-digital { --sp-w: 145px; }
-    .co--snowfall-games { --sp-w: 62px; }
+    .co--snowfall-games { --sp-w: 124px; }
     .co--strategic-alternatives { --sp-w: 109px; }
     .co--the-insider-route { --sp-w: 190px; }
     .co--the-npc-guild { --sp-w: 62px; }
     .co--zebra-partners { --sp-w: 113px; }
     .co--apple { --sp-w: 62px; }
+    .co--nintendo { --sp-w: 117px; }
     .co--blizzard-entertainment { --sp-w: 80px; }
+    .co--sony-interactive-entertainment { --sp-w: 96px; }
     .co--bungie { --sp-w: 107px; }
     .co--dolby { --sp-w: 115px; }
     .co--riot-games { --sp-w: 81px; }
     .co--wizards-of-the-coast { --sp-w: 80px; }
+    .co--alibaba-us { --sp-w: 146px; }
     .co--gameloft { --sp-w: 69px; }
+    .co--halo-studios { --sp-w: 95px; }
     .co--big-fish-games { --sp-w: 66px; }
+    .co--netherrealm-studios { --sp-w: 62px; }
     .co--undead-labs { --sp-w: 104px; }
     .co--gravity-well { --sp-w: 62px; }
     .co--immutable { --sp-w: 114px; }
@@ -1588,25 +1624,28 @@
     .co--cyberstate { --sp-w: 62px; }
     .co--danielle-mcmahon-vo { --sp-w: 67px; }
     .co--dark-arts-software { --sp-w: 113px; }
+    .co--delirium-factory { --sp-w: 62px; }
     .co--electrum-labs-llc { --sp-w: 75px; }
     .co--elusive-games { --sp-w: 128px; }
     .co--experiment-7 { --sp-w: 125px; }
     .co--fair-worlds { --sp-w: 124px; }
+    .co--festive-vector { --sp-w: 62px; }
     .co--friend-shaped-games { --sp-w: 68px; }
     .co--gasket-games-corp { --sp-w: 96px; }
     .co--goblins { --sp-w: 106px; }
     .co--hopeless-records { --sp-w: 62px; }
     .co--ideomancer { --sp-w: 152px; }
-    .co--isogon-games { --sp-w: 62px; }
+    .co--inner-shadow-sounds { --sp-w: 98px; }
     .co--kato-8-studios { --sp-w: 62px; }
     .co--lost-cartridge-creations { --sp-w: 190px; }
     .co--low-drag-labs { --sp-w: 107px; }
     .co--manuel-tirado-music { --sp-w: 62px; }
+    .co--merewif { --sp-w: 88px; }
     .co--meta4 { --sp-w: 89px; }
     .co--mystic-interactive { --sp-w: 101px; }
     .co--oddlabs { --sp-w: 62px; }
     .co--pacific-ember-studios { --sp-w: 62px; }
-    .co--piero-ramirez-music { --sp-w: 62px; }
+    .co--piero-ramirez-music { --sp-w: 112px; }
     .co--plawius { --sp-w: 62px; }
     .co--quam-magnum { --sp-w: 62px; }
     .co--red-pepper-games { --sp-w: 66px; }
@@ -1616,12 +1655,11 @@
     .co--short-stax-media { --sp-w: 72px; }
     .co--spontaneous-quirk { --sp-w: 84px; }
     .co--steam-studios-inc { --sp-w: 142px; }
+    .co--studio-nuggies { --sp-w: 62px; }
     .co--sub-pop-records { --sp-w: 75px; }
     .co--the-behemoth { --sp-w: 117px; }
     .co--the-cat-s-eye-studio { --sp-w: 94px; }
     .co--the-olivia-neal-experience { --sp-w: 62px; }
-    .co--theophilus { --sp-w: 62px; }
-    .co--vance-llc { --sp-w: 62px; }
     .co--wb-games { --sp-w: 113px; }
     .co--wolfjaw-studios { --sp-w: 73px; }
     .co--wonderbelly-games { --sp-w: 146px; }
@@ -3153,7 +3191,7 @@
             <img class="sponsor__img" src="images/companies/sinclair-digital.png" width="164" height="26" alt="Sinclair Digital" loading="lazy">
           </a>
           <a class="sponsor sponsor--co co--snowfall-games" href="https://snowfall.games" target="_blank" rel="noopener noreferrer" aria-label="Snowfall Games">
-            <img class="sponsor__img" src="images/companies/snowfall-games.png" width="71" height="74" alt="Snowfall Games" loading="lazy">
+            <img class="sponsor__img" src="images/companies/snowfall-games.png" width="141" height="31" alt="Snowfall Games" loading="lazy">
           </a>
           <a class="sponsor sponsor--co co--strategic-alternatives" href="https://strategicalternatives.com" target="_blank" rel="noopener noreferrer" aria-label="Strategic Alternatives">
             <img class="sponsor__img" src="images/companies/strategic-alternatives.png" width="124" height="35" alt="Strategic Alternatives" loading="lazy">
@@ -3178,8 +3216,14 @@
           <a class="sponsor sponsor--co co--apple" href="https://apple.com" target="_blank" rel="noopener noreferrer" aria-label="Apple">
             <img class="sponsor__img" src="images/companies/apple.png" width="71" height="87" alt="Apple" loading="lazy">
           </a>
+          <a class="sponsor sponsor--co co--nintendo" href="https://nintendo.com" target="_blank" rel="noopener noreferrer" aria-label="Nintendo">
+            <img class="sponsor__img" src="images/companies/nintendo.png" width="133" height="33" alt="Nintendo" loading="lazy">
+          </a>
           <a class="sponsor sponsor--co co--blizzard-entertainment" href="https://blizzardentertainment.com" target="_blank" rel="noopener noreferrer" aria-label="Blizzard Entertainment">
             <img class="sponsor__img" src="images/companies/blizzard-entertainment.png" width="91" height="48" alt="Blizzard Entertainment" loading="lazy">
+          </a>
+          <a class="sponsor sponsor--co co--sony-interactive-entertainment" href="https://sonyinteractive.com" target="_blank" rel="noopener noreferrer" aria-label="Sony Interactive Entertainment">
+            <img class="sponsor__img" src="images/companies/sony-interactive-entertainment.png" width="109" height="40" alt="Sony Interactive Entertainment" loading="lazy">
           </a>
           <a class="sponsor sponsor--co co--bungie" href="https://bungie.com" target="_blank" rel="noopener noreferrer" aria-label="Bungie">
             <img class="sponsor__img" src="images/companies/bungie.png" width="121" height="35" alt="Bungie" loading="lazy">
@@ -3193,11 +3237,20 @@
           <a class="sponsor sponsor--co co--wizards-of-the-coast" href="https://wizards.com" target="_blank" rel="noopener noreferrer" aria-label="Wizards of the Coast">
             <img class="sponsor__img" src="images/companies/wizards-of-the-coast.png" width="91" height="48" alt="Wizards of the Coast" loading="lazy">
           </a>
+          <a class="sponsor sponsor--co co--alibaba-us" href="https://alibabagroup.com" target="_blank" rel="noopener noreferrer" aria-label="Alibaba US">
+            <img class="sponsor__img" src="images/companies/alibaba-us.png" width="165" height="26" alt="Alibaba US" loading="lazy">
+          </a>
           <a class="sponsor sponsor--co co--gameloft" href="https://gameloft.com" target="_blank" rel="noopener noreferrer" aria-label="Gameloft">
             <img class="sponsor__img" src="images/companies/gameloft.png" width="78" height="54" alt="Gameloft" loading="lazy">
           </a>
+          <a class="sponsor sponsor--co co--halo-studios" href="https://halowaypoint.com" target="_blank" rel="noopener noreferrer" aria-label="Halo Studios">
+            <img class="sponsor__img" src="images/companies/halo-studios.png" width="108" height="40" alt="Halo Studios" loading="lazy">
+          </a>
           <a class="sponsor sponsor--co co--big-fish-games" href="https://bigfishgames.com" target="_blank" rel="noopener noreferrer" aria-label="Big Fish Games">
             <img class="sponsor__img" src="images/companies/big-fish-games.png" width="75" height="59" alt="Big Fish Games" loading="lazy">
+          </a>
+          <a class="sponsor sponsor--co co--netherrealm-studios" href="https://netherrealm.com" target="_blank" rel="noopener noreferrer" aria-label="NetherRealm Studios">
+            <img class="sponsor__img" src="images/companies/netherrealm-studios.png" width="71" height="82" alt="NetherRealm Studios" loading="lazy">
           </a>
           <a class="sponsor sponsor--co co--undead-labs" href="https://undeadlabs.com" target="_blank" rel="noopener noreferrer" aria-label="Undead Labs">
             <img class="sponsor__img" src="images/companies/undead-labs.png" width="118" height="37" alt="Undead Labs" loading="lazy">
@@ -3238,6 +3291,9 @@
           <a class="sponsor sponsor--co co--dark-arts-software" href="https://darkartssoftware.com" target="_blank" rel="noopener noreferrer" aria-label="Dark Arts Software">
             <img class="sponsor__img" src="images/companies/dark-arts-software.png" width="128" height="34" alt="Dark Arts Software" loading="lazy">
           </a>
+          <a class="sponsor sponsor--co co--delirium-factory" href="https://deliriumfactory.com" target="_blank" rel="noopener noreferrer" aria-label="Delirium Factory">
+            <img class="sponsor__img" src="images/companies/delirium-factory.png" width="71" height="96" alt="Delirium Factory" loading="lazy">
+          </a>
           <a class="sponsor sponsor--co co--electrum-labs-llc" href="https://electrumlabs.com" target="_blank" rel="noopener noreferrer" aria-label="Electrum Labs LLC">
             <img class="sponsor__img" src="images/companies/electrum-labs-llc.png" width="85" height="51" alt="Electrum Labs LLC" loading="lazy">
           </a>
@@ -3249,6 +3305,9 @@
           </a>
           <a class="sponsor sponsor--co co--fair-worlds" href="https://fairworlds.com" target="_blank" rel="noopener noreferrer" aria-label="Fair Worlds">
             <img class="sponsor__img" src="images/companies/fair-worlds.png" width="141" height="31" alt="Fair Worlds" loading="lazy">
+          </a>
+          <a class="sponsor sponsor--co co--festive-vector" href="https://festivevector.com" target="_blank" rel="noopener noreferrer" aria-label="Festive Vector">
+            <img class="sponsor__img" src="images/companies/festive-vector.png" width="71" height="71" alt="Festive Vector" loading="lazy">
           </a>
           <a class="sponsor sponsor--co co--friend-shaped-games" href="https://friendshapedgames.com" target="_blank" rel="noopener noreferrer" aria-label="Friend Shaped Games">
             <img class="sponsor__img" src="images/companies/friend-shaped-games.png" width="77" height="56" alt="Friend Shaped Games" loading="lazy">
@@ -3265,8 +3324,8 @@
           <a class="sponsor sponsor--co co--ideomancer" href="https://ideomancer.io" target="_blank" rel="noopener noreferrer" aria-label="ideomancer">
             <img class="sponsor__img" src="images/companies/ideomancer.png" width="172" height="25" alt="ideomancer" loading="lazy">
           </a>
-          <a class="sponsor sponsor--co co--isogon-games" href="https://isogongames.com" target="_blank" rel="noopener noreferrer" aria-label="Isogon Games">
-            <img class="sponsor__img" src="images/companies/isogon-games.png" width="71" height="71" alt="Isogon Games" loading="lazy">
+          <a class="sponsor sponsor--co co--inner-shadow-sounds" href="https://innershadowsounds.com" target="_blank" rel="noopener noreferrer" aria-label="Inner Shadow Sounds">
+            <img class="sponsor__img" src="images/companies/inner-shadow-sounds.png" width="111" height="39" alt="Inner Shadow Sounds" loading="lazy">
           </a>
           <a class="sponsor sponsor--co co--kato-8-studios" href="https://kato8studios.com" target="_blank" rel="noopener noreferrer" aria-label="Kato.8 Studios">
             <img class="sponsor__img" src="images/companies/kato-8-studios.png" width="71" height="79" alt="Kato.8 Studios" loading="lazy">
@@ -3279,6 +3338,9 @@
           </a>
           <a class="sponsor sponsor--co co--manuel-tirado-music" href="https://manueltiradomusic.com" target="_blank" rel="noopener noreferrer" aria-label="Manuel Tirado Music">
             <img class="sponsor__img" src="images/companies/manuel-tirado-music.png" width="71" height="64" alt="Manuel Tirado Music" loading="lazy">
+          </a>
+          <a class="sponsor sponsor--co co--merewif" href="https://merewif.com" target="_blank" rel="noopener noreferrer" aria-label="Merewif">
+            <img class="sponsor__img" src="images/companies/merewif.png" width="100" height="43" alt="Merewif" loading="lazy">
           </a>
           <a class="sponsor sponsor--co co--meta4" href="https://meta4.games" target="_blank" rel="noopener noreferrer" aria-label="Meta4">
             <img class="sponsor__img" src="images/companies/meta4.png" width="101" height="43" alt="Meta4" loading="lazy">
@@ -3293,7 +3355,7 @@
             <img class="sponsor__img" src="images/companies/pacific-ember-studios.png" width="71" height="71" alt="Pacific Ember Studios" loading="lazy">
           </a>
           <a class="sponsor sponsor--co co--piero-ramirez-music" href="https://pieroramirezmusic.com" target="_blank" rel="noopener noreferrer" aria-label="Piero Ramirez Music">
-            <img class="sponsor__img" src="images/companies/piero-ramirez-music.png" width="71" height="72" alt="Piero Ramirez Music" loading="lazy">
+            <img class="sponsor__img" src="images/companies/piero-ramirez-music.png" width="127" height="34" alt="Piero Ramirez Music" loading="lazy">
           </a>
           <a class="sponsor sponsor--co co--plawius" href="https://plawius.com" target="_blank" rel="noopener noreferrer" aria-label="Plawius">
             <img class="sponsor__img" src="images/companies/plawius.png" width="71" height="69" alt="Plawius" loading="lazy">
@@ -3322,6 +3384,9 @@
           <a class="sponsor sponsor--co co--steam-studios-inc" href="https://steamstudios.com" target="_blank" rel="noopener noreferrer" aria-label="STEAM Studios Inc">
             <img class="sponsor__img" src="images/companies/steam-studios-inc.png" width="161" height="27" alt="STEAM Studios Inc" loading="lazy">
           </a>
+          <a class="sponsor sponsor--co co--studio-nuggies" href="https://studionuggies.com" target="_blank" rel="noopener noreferrer" aria-label="Studio Nuggies">
+            <img class="sponsor__img" src="images/companies/studio-nuggies.png" width="71" height="69" alt="Studio Nuggies" loading="lazy">
+          </a>
           <a class="sponsor sponsor--co co--sub-pop-records" href="https://subpoprecords.com" target="_blank" rel="noopener noreferrer" aria-label="Sub Pop Records">
             <img class="sponsor__img" src="images/companies/sub-pop-records.png" width="85" height="50" alt="Sub Pop Records" loading="lazy">
           </a>
@@ -3333,12 +3398,6 @@
           </a>
           <a class="sponsor sponsor--co co--the-olivia-neal-experience" href="https://theolivianealexperience.com" target="_blank" rel="noopener noreferrer" aria-label="The Olivia Neal Experience">
             <img class="sponsor__img" src="images/companies/the-olivia-neal-experience.png" width="71" height="81" alt="The Olivia Neal Experience" loading="lazy">
-          </a>
-          <a class="sponsor sponsor--co co--theophilus" href="https://theophilus.io" target="_blank" rel="noopener noreferrer" aria-label="Theophilus">
-            <img class="sponsor__img" src="images/companies/theophilus.png" width="71" height="74" alt="Theophilus" loading="lazy">
-          </a>
-          <a class="sponsor sponsor--co co--vance-llc" href="https://vancellc.com" target="_blank" rel="noopener noreferrer" aria-label="Vance LLC">
-            <img class="sponsor__img" src="images/companies/vance-llc.png" width="71" height="78" alt="Vance LLC" loading="lazy">
           </a>
           <a class="sponsor sponsor--co co--wb-games" href="https://wbgames.com" target="_blank" rel="noopener noreferrer" aria-label="WB Games">
             <img class="sponsor__img" src="images/companies/wb-games.png" width="128" height="34" alt="WB Games" loading="lazy">

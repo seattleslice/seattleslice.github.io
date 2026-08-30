@@ -1075,6 +1075,228 @@
       margin: auto 0;
     }
 
+    /* ===================== PORTFOLIO VIEWER ===================== */
+    /* Full-screen viewer for the Portfolio Alley submissions, styled after the
+       speaker overlay: the same scrim, the same circular arrows and close
+       button. The image sits on its own layer below the controls, so however
+       far it is zoomed it can never cover them. */
+    .portfolio-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+      /* On the whole overlay, not just the stage: a touch drag that begins on
+         an arrow or the close button must not fall back to panning the page
+         behind the scrim. Inert while closed - no pointer events land here. */
+      touch-action: none;
+    }
+
+    .portfolio-overlay.active {
+      pointer-events: auto;
+      opacity: 1;
+    }
+
+    /* Same dance as the speaker overlay: out of the tab order while closed,
+       but still measurable for the reflow the open sequence forces. */
+    .portfolio-overlay:not(.active) {
+      visibility: hidden;
+    }
+
+    .portfolio-overlay::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      backdrop-filter: blur(0px);
+      background: rgba(0, 20, 50, 0);
+      transition: backdrop-filter 0.12s ease, background 0.12s ease;
+    }
+
+    .portfolio-overlay.is-shown::before {
+      backdrop-filter: blur(12px);
+      background: rgba(0, 20, 50, 0.6);
+    }
+
+    /* The stage takes the whole screen and clips the zoomed image. All the
+       pinch, drag and wheel handling lands here. touch-action: none hands
+       every touch gesture to the script instead of scrolling the page. */
+    .portfolio-overlay__stage {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    /* The zoom transform rides on this full-stage wrapper rather than on the
+       image, so the image can keep its own opacity transition for the fade-in
+       when a file arrives. Its origin is the stage centre, which is also the
+       image centre, so the pan clamps in the script stay simple. */
+    .portfolio-overlay__zoom {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      will-change: transform;
+    }
+
+    .portfolio-overlay__img {
+      max-width: calc(100% - 24px);
+      max-height: calc(100% - 120px);
+      border: 2px solid #FFFB10;
+      border-radius: 8px;
+      background: #001a3d;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-user-drag: none;
+      -webkit-touch-callout: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .portfolio-overlay__img.is-loaded {
+      opacity: 1;
+    }
+
+    .portfolio-overlay__spinner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 2;
+      width: 48px;
+      height: 48px;
+      margin: -24px 0 0 -24px;
+      border: 4px solid rgba(160, 196, 232, 0.25);
+      border-top-color: #f5ee1d;
+      border-radius: 50%;
+      animation: portfolioSpin 0.9s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes portfolioSpin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* The controls sit above the stage. The image zooms below them, so they
+       are never covered however far in somebody goes. */
+    .portfolio-overlay__nav {
+      position: absolute;
+      top: 50%;
+      z-index: 4;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 2px solid #a0c4e8;
+      background: rgba(0, 26, 61, 0.85);
+      color: #a0c4e8;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translateY(-50%);
+      opacity: 0;
+      transition: opacity 0.12s ease, transform 0.2s, border-color 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .portfolio-overlay.is-shown .portfolio-overlay__nav {
+      opacity: 1;
+    }
+
+    .portfolio-overlay__nav:hover {
+      border-color: #FFFB10;
+      color: #FFFB10;
+      background: rgba(255, 251, 16, 0.12);
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .portfolio-overlay__nav:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+
+    .portfolio-overlay__nav--prev {
+      left: 24px;
+    }
+
+    .portfolio-overlay__nav--next {
+      right: 24px;
+    }
+
+    .portfolio-overlay__close {
+      position: absolute;
+      top: calc(14px + env(safe-area-inset-top, 0px));
+      right: 14px;
+      z-index: 4;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid #a0c4e8;
+      background: rgba(0, 26, 61, 0.85);
+      color: #a0c4e8;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.12s ease, border-color 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .portfolio-overlay.is-shown .portfolio-overlay__close {
+      opacity: 1;
+    }
+
+    .portfolio-overlay__close:hover {
+      border-color: #FFFB10;
+      color: #FFFB10;
+      background: rgba(255, 251, 16, 0.1);
+    }
+
+    /* Which portfolio of how many. It reads out the position in the shuffled
+       order, not who anybody is - the order is random on purpose. */
+    .portfolio-overlay__count {
+      position: absolute;
+      bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+      left: 50%;
+      z-index: 4;
+      transform: translateX(-50%);
+      font-family: 'Bungee', cursive;
+      font-size: 12px;
+      letter-spacing: 1px;
+      color: #a0c4e8;
+      background: rgba(0, 26, 61, 0.7);
+      padding: 6px 14px;
+      border-radius: 999px;
+      opacity: 0;
+      transition: opacity 0.12s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .portfolio-overlay.is-shown .portfolio-overlay__count {
+      opacity: 1;
+    }
+
+    @media (max-width: 900px) {
+      .portfolio-overlay__nav {
+        width: 44px;
+        height: 44px;
+        font-size: 15px;
+      }
+
+      .portfolio-overlay__nav--prev {
+        left: 6px;
+      }
+
+      .portfolio-overlay__nav--next {
+        right: 6px;
+      }
+    }
+
     /* ===================== SPEAKERS EXPAND / COLLAPSE ===================== */
     /* The wrapper animates between the collapsed and expanded heights. Its
        height is only set while that animation is running - the rest of the
@@ -2606,7 +2828,10 @@
           <div class="event-card" data-index="9">
             <div class="event-card__title">Portfolio Alley</div>
             <div class="event-card__desc">Display your portfolio and see the community's work.</div>
-            <a href="https://forms.gle/ofsQV3obCPsjBdJu5" target="_blank" rel="noopener" class="btn btn--primary event-card__cta">Submit your portfolio</a>
+            <!-- Wired by class, not id: the desktop marquee clones every card,
+                 so this button exists twice and a click on either must count.
+                 See the delegated listener in the PORTFOLIO VIEWER script. -->
+            <button type="button" class="btn btn--primary event-card__cta js-view-portfolios">View Portfolios</button>
           </div>
           <div class="event-card" data-index="10">
             <div class="event-card__title">Speed Networking</div>
@@ -3597,6 +3822,22 @@
       <p class="speaker-overlay__sessions" id="speakerSessions"></p>
     </div>
     <!-- The session side of the same scrim is added here by js/sessions.js -->
+  </div>
+
+  <!-- Portfolio Alley viewer. The image element has no src until the viewer
+       is opened - the portfolios are megabytes each and nobody should pay for
+       them just by loading the page. See PORTFOLIO VIEWER in the script. -->
+  <div class="portfolio-overlay" id="portfolioOverlay" role="dialog" aria-modal="true" aria-label="Portfolio viewer">
+    <div class="portfolio-overlay__stage" id="portfolioStage">
+      <div class="portfolio-overlay__zoom" id="portfolioZoom">
+        <img class="portfolio-overlay__img" id="portfolioImg" alt="" draggable="false">
+      </div>
+    </div>
+    <div class="portfolio-overlay__spinner" id="portfolioSpinner" hidden></div>
+    <button class="portfolio-overlay__nav portfolio-overlay__nav--prev" id="portfolioPrev" type="button" aria-label="Previous portfolio">&#9664;</button>
+    <button class="portfolio-overlay__nav portfolio-overlay__nav--next" id="portfolioNext" type="button" aria-label="Next portfolio">&#9654;</button>
+    <button class="portfolio-overlay__close" id="portfolioClose" type="button" aria-label="Close">&times;</button>
+    <div class="portfolio-overlay__count" id="portfolioCount" aria-live="polite"></div>
   </div>
 
   <div class="bottom-characters" id="bottomCharacters">
@@ -5584,6 +5825,439 @@
         start();
       }
       }
+    })();
+
+    // ===================== PORTFOLIO VIEWER =====================
+    // "View Portfolios" on the Portfolio Alley card opens a full-screen viewer
+    // over the same kind of scrim the speaker panel uses: one portfolio at a
+    // time, arrows to step through with wrap-around, and a fresh shuffle on
+    // every open so nobody is ever anybody's first page. The files are
+    // megabytes each, so nothing is fetched until the viewer actually opens,
+    // and from there only the neighbours of the one on screen are fetched
+    // ahead. Scroll, double-click, double-tap or pinch zooms; the controls
+    // live on a layer above the stage, so a zoomed image cannot cover them,
+    // and stepping to another portfolio starts it back at fit-to-screen.
+    (function() {
+      const overlay = document.getElementById('portfolioOverlay');
+      const stage = document.getElementById('portfolioStage');
+      const zoomEl = document.getElementById('portfolioZoom');
+      const img = document.getElementById('portfolioImg');
+      const spinner = document.getElementById('portfolioSpinner');
+      const prevBtn = document.getElementById('portfolioPrev');
+      const nextBtn = document.getElementById('portfolioNext');
+      const closeBtn = document.getElementById('portfolioClose');
+      const countEl = document.getElementById('portfolioCount');
+      if (!overlay || !stage || !zoomEl || !img) return;
+
+      // GitHub Pages cannot list a directory, so the files are named here.
+      const FILES = [
+        'Aubrey_Pullman.png',
+        'Brandon_Orden.png',
+        'Bree_Wolf.png',
+        'Candice_Kang.png',
+        'J._H._(SAPRO).png',
+        'Kyo_Tagawa.png',
+        'Lahmi_Kim.png',
+        'Lynwood_Montgomery.png',
+        'Pierce_Papke.png',
+        'Preston.png',
+        'Sid_Naik.png',
+        'Tania_Pavlisak.png',
+        'Torren_Broussard.png',
+        'Кирилл_Курлянов.png'
+      ];
+
+      let order = [];
+      let at = -1;
+      const animTimers = [];
+      const preloaded = {};
+
+      function clearAnimTimers() {
+        while (animTimers.length) clearTimeout(animTimers.pop());
+      }
+
+      // ---- zoom and pan ----
+      // The transform is translate then scale about the stage centre, which is
+      // also where the image is centred, so tx and ty stay plain screen pixels
+      // however far in the image is.
+      const MIN_SCALE = 1;
+      const MAX_SCALE = 5;
+      let scale = 1, tx = 0, ty = 0;
+
+      function applyTransform(animated) {
+        zoomEl.style.transition = animated ? 'transform 0.25s ease' : 'none';
+        zoomEl.style.transform =
+          'translate(' + tx + 'px, ' + ty + 'px) scale(' + scale + ')';
+      }
+
+      // The image may pan just far enough to bring its edges to the screen
+      // edges and no further. On an axis where it still fits, it stays centred.
+      function clampPan() {
+        const mx = Math.max(0, (img.offsetWidth * scale - stage.clientWidth) / 2);
+        const my = Math.max(0, (img.offsetHeight * scale - stage.clientHeight) / 2);
+        tx = Math.max(-mx, Math.min(mx, tx));
+        ty = Math.max(-my, Math.min(my, ty));
+      }
+
+      function resetZoom(animated) {
+        scale = 1; tx = 0; ty = 0;
+        applyTransform(animated);
+      }
+
+      // Zoom about a point given relative to the stage centre, so whatever sat
+      // under the cursor or between the fingers stays put.
+      function zoomAt(cx, cy, next, animated) {
+        next = Math.max(MIN_SCALE, Math.min(MAX_SCALE, next));
+        const k = next / scale;
+        tx = cx - (cx - tx) * k;
+        ty = cy - (cy - ty) * k;
+        scale = next;
+        clampPan();
+        applyTransform(!!animated);
+      }
+
+      function stagePoint(e) {
+        const r = stage.getBoundingClientRect();
+        return {
+          x: e.clientX - (r.left + r.width / 2),
+          y: e.clientY - (r.top + r.height / 2)
+        };
+      }
+
+      // ---- showing a portfolio ----
+      function preload(i) {
+        const file = order[(i + order.length) % order.length];
+        if (!file || preloaded[file]) return;
+        preloaded[file] = true;
+        new Image().src = 'images/portfolios/' + file;
+      }
+
+      function show(i) {
+        at = (i + order.length) % order.length;
+        resetZoom(false);
+        // A step can land in the middle of a swipe - the arrows and the keys
+        // do not go through the pointer machine - and the leftover travel
+        // would both shove the new image sideways and step again on release.
+        swipeDx = 0;
+        countEl.textContent = (at + 1) + ' / ' + order.length;
+        img.classList.remove('is-loaded');
+        spinner.hidden = false;
+
+        const file = order[at];
+        img.alt = 'Portfolio - ' + file.replace(/\.[^.]+$/, '').replace(/_/g, ' ');
+        // onload rather than addEventListener: stepping on while a file is
+        // still on its way replaces the handler along with the src, so a late
+        // arrival cannot mark the wrong portfolio as loaded.
+        img.onload = function() {
+          spinner.hidden = true;
+          img.classList.add('is-loaded');
+          // Only once the one on screen is in, so these never race it.
+          preload(at + 1);
+          preload(at - 1);
+        };
+        img.onerror = function() {
+          spinner.hidden = true;
+        };
+        img.src = 'images/portfolios/' + file;
+        // A cached file re-set as the same src does not reliably fire load
+        // again, and the spinner would sit on a picture that is already there.
+        if (img.complete && img.naturalWidth) img.onload();
+      }
+
+      function step(delta) {
+        if (order.length < 2) return;
+        show(at + delta);
+      }
+
+      // ---- open and close ----
+      function shuffled() {
+        const a = FILES.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const t = a[i]; a[i] = a[j]; a[j] = t;
+        }
+        return a;
+      }
+
+      // Where to hand focus back on close. Without this the opener button
+      // keeps focus behind the scrim, where Enter or Space would quietly
+      // reopen the viewer and throw away the visitor's place in the order.
+      let lastTrigger = null;
+
+      function openViewer() {
+        if (overlay.classList.contains('is-shown')) return;
+        clearAnimTimers();
+        pointers.clear();
+        order = shuffled();
+        show(0);
+        // Same two beats as the speaker overlay: let the closed state be
+        // computed once, then raise the scrim so the fade actually plays.
+        void overlay.offsetWidth;
+        overlay.classList.add('active');
+        overlay.classList.add('is-shown');
+        // The overlay says aria-modal, so focus has to actually enter it.
+        // This is also what makes a screen reader announce the dialog.
+        closeBtn.focus({ preventScroll: true });
+      }
+
+      function closeViewer() {
+        if (!overlay.classList.contains('is-shown')) return;
+        clearAnimTimers();
+        overlay.classList.remove('is-shown');
+        animTimers.push(setTimeout(function() {
+          overlay.classList.remove('active');
+        }, 120));
+        // preventScroll matters: the opener may be a marquee clone that has
+        // drifted, and focusing it must not yank the page along.
+        if (lastTrigger && document.contains(lastTrigger)) {
+          lastTrigger.focus({ preventScroll: true });
+        }
+        lastTrigger = null;
+      }
+
+      // The desktop marquee clones the whole card, button included, so the
+      // opener is found from whichever copy was clicked rather than by id.
+      // The carousel's own drag handling already swallows the click when a
+      // press was really a drag, so this only sees deliberate presses.
+      document.addEventListener('click', function(e) {
+        const btn = e.target.closest ? e.target.closest('.js-view-portfolios') : null;
+        if (!btn) return;
+        e.preventDefault();
+        if (overlay.classList.contains('is-shown')) return;
+        lastTrigger = btn;
+        openViewer();
+      });
+
+      prevBtn.addEventListener('click', function() { step(-1); });
+      nextBtn.addEventListener('click', function() { step(1); });
+      closeBtn.addEventListener('click', closeViewer);
+
+      // Capture phase with the press consumed, for the same reason the
+      // speaker overlay does it: the carousels listen for arrow keys on the
+      // document and must not step things behind the scrim.
+      document.addEventListener('keydown', function(e) {
+        if (!overlay.classList.contains('is-shown')) return;
+        // Wheel and touch are already kept off the page behind the scrim, so
+        // the scrolling keys have to be swallowed too, or Space and PageDown
+        // would quietly carry the page somewhere else under the viewer.
+        if ([' ', 'PageUp', 'PageDown', 'ArrowUp', 'ArrowDown', 'Home', 'End'].indexOf(e.key) !== -1) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        const by = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0;
+        const closing = e.key === 'Escape' || e.key === 'Backspace';
+        if (!by && !closing) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (closing) closeViewer();
+        else step(by);
+      }, true);
+
+      // Wheel anywhere over the viewer zooms about the cursor, and never
+      // scrolls the page behind the scrim.
+      overlay.addEventListener('wheel', function(e) {
+        if (!overlay.classList.contains('is-shown')) return;
+        e.preventDefault();
+        const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 120 : 1;
+        const p = stagePoint(e);
+        zoomAt(p.x, p.y, scale * Math.exp(-e.deltaY * unit * 0.002));
+      }, { passive: false });
+
+      stage.addEventListener('dblclick', function(e) {
+        // Mouse only. A double tap is handled in pointerup below, and Chrome
+        // then synthesizes a dblclick from the same taps - letting it through
+        // here would toggle the zoom straight back again.
+        if (lastPointerType !== 'mouse') return;
+        const p = stagePoint(e);
+        if (scale > 1.01) resetZoom(true);
+        else zoomAt(p.x, p.y, 2.5, true);
+      });
+
+      // ---- fingers and the mouse on the stage ----
+      // One pointer pans when zoomed in and swipes between portfolios when
+      // not; a second pointer turns the gesture into a pinch. Taps are told
+      // apart from drags by how far the gesture travelled in total.
+      const pointers = new Map();
+      let gestureMoved = 0;     // px travelled since the first pointer landed
+      let pinched = false;      // a second pointer joined this gesture
+      let downTarget = null;    // what the first pointer actually landed on
+      let lastMid = null;       // pinch midpoint, stage-centre coordinates
+      let lastDist = 0;         // distance between the two pointers
+      let lastX = 0, lastY = 0; // where the single pointer last was
+      let swipeDx = 0;          // horizontal travel while unzoomed
+      let lastTapTime = 0, lastTapX = 0, lastTapY = 0;
+      let lastPointerType = 'mouse';
+
+      // The pinch works from the last measured spread and midpoint of the two
+      // fingers. Measured fresh whenever which two fingers changes - a third
+      // finger joining then one of the pair lifting must not zoom against the
+      // old pair's spread, which would slam the picture without a gesture.
+      function baselinePinch() {
+        const pts = Array.from(pointers.values());
+        lastDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        const r = stage.getBoundingClientRect();
+        lastMid = {
+          x: (pts[0].x + pts[1].x) / 2 - (r.left + r.width / 2),
+          y: (pts[0].y + pts[1].y) / 2 - (r.top + r.height / 2)
+        };
+      }
+
+      stage.addEventListener('pointerdown', function(e) {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        lastPointerType = e.pointerType || 'mouse';
+        // A primary pointer is the first of its kind in a new interaction, so
+        // anything still in the map is a leak - an up or cancel the page never
+        // got - and would make every gesture after it read as a pinch.
+        if (e.isPrimary) pointers.clear();
+        if (pointers.size === 0) {
+          gestureMoved = 0;
+          pinched = false;
+          swipeDx = 0;
+          downTarget = e.target;
+          lastX = e.clientX;
+          lastY = e.clientY;
+        }
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pointers.size === 2) {
+          pinched = true;
+          baselinePinch();
+          // A pinch takes over from a half-made swipe cleanly
+          if (swipeDx) {
+            swipeDx = 0;
+            tx = 0; ty = 0;
+            applyTransform(false);
+          }
+        }
+        if (stage.setPointerCapture) {
+          try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+        }
+      });
+
+      stage.addEventListener('pointermove', function(e) {
+        const p = pointers.get(e.pointerId);
+        if (!p) return;
+        gestureMoved += Math.hypot(e.clientX - p.x, e.clientY - p.y);
+        p.x = e.clientX;
+        p.y = e.clientY;
+
+        if (pointers.size === 2) {
+          const pts = Array.from(pointers.values());
+          const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+          const r = stage.getBoundingClientRect();
+          const mid = {
+            x: (pts[0].x + pts[1].x) / 2 - (r.left + r.width / 2),
+            y: (pts[0].y + pts[1].y) / 2 - (r.top + r.height / 2)
+          };
+          if (lastDist > 0) {
+            zoomAt(mid.x, mid.y, scale * (dist / lastDist));
+            // The fingers dragging together pan what they are holding
+            tx += mid.x - lastMid.x;
+            ty += mid.y - lastMid.y;
+            clampPan();
+            applyTransform(false);
+          }
+          lastDist = dist;
+          lastMid = mid;
+          return;
+        }
+
+        if (pointers.size === 1 && !pinched) {
+          const dx = e.clientX - lastX;
+          const dy = e.clientY - lastY;
+          lastX = e.clientX;
+          lastY = e.clientY;
+          if (scale > 1) {
+            tx += dx;
+            ty += dy;
+            clampPan();
+            applyTransform(false);
+          } else if (e.pointerType !== 'mouse') {
+            // Unzoomed, a finger drags the picture sideways as a peek at the
+            // step it will take on release. Held back to feel like rubber.
+            swipeDx += dx;
+            tx = swipeDx * 0.55;
+            ty = 0;
+            applyTransform(false);
+          }
+        }
+      });
+
+      function endPointer(e) {
+        if (!pointers.has(e.pointerId)) return;
+        pointers.delete(e.pointerId);
+        if (pointers.size > 0) {
+          // Still mid-gesture. If exactly two fingers remain they are the
+          // pinch now, whichever two they are, and it must not be measured
+          // against the pair that existed before this one lifted.
+          if (pointers.size === 2) baselinePinch();
+          return;
+        }
+
+        if (pinched) {
+          // Both fingers up: settle whatever the pinch left behind
+          if (scale <= 1.01) resetZoom(true);
+          return;
+        }
+
+        if (scale === 1 && swipeDx !== 0 && gestureMoved > 8) {
+          const past = Math.abs(swipeDx) > 60;
+          const dir = swipeDx < 0 ? 1 : -1; // dragged left asks for the next
+          swipeDx = 0;
+          if (past) step(dir);
+          else {
+            tx = 0; ty = 0;
+            applyTransform(true);
+          }
+          return;
+        }
+
+        if (gestureMoved > 8) return;
+
+        // A clean tap. On the image a second tap close behind the first
+        // toggles the zoom; anywhere off it closes the viewer, the same as
+        // clicking off the speaker panel. The mouse is left out of the
+        // double-tap dance because it already has dblclick.
+        if (downTarget === img) {
+          if (e.pointerType !== 'mouse') {
+            const near = Math.hypot(e.clientX - lastTapX, e.clientY - lastTapY) < 40;
+            if (e.timeStamp - lastTapTime < 300 && near) {
+              lastTapTime = 0;
+              const p = stagePoint(e);
+              if (scale > 1.01) resetZoom(true);
+              else zoomAt(p.x, p.y, 2.5, true);
+            } else {
+              lastTapTime = e.timeStamp;
+              lastTapX = e.clientX;
+              lastTapY = e.clientY;
+            }
+          }
+        } else {
+          closeViewer();
+        }
+      }
+      stage.addEventListener('pointerup', endPointer);
+
+      stage.addEventListener('pointercancel', function(e) {
+        pointers.delete(e.pointerId);
+        if (pointers.size === 2) baselinePinch();
+        if (pointers.size === 0) {
+          swipeDx = 0;
+          if (scale <= 1.01) resetZoom(false);
+        }
+      });
+
+      // The image being fit-to-screen is worked out from the window, so a
+      // resize or rotation can leave a zoomed pan pointing off the picture.
+      window.addEventListener('resize', function() {
+        if (!overlay.classList.contains('is-shown')) return;
+        clampPan();
+        applyTransform(false);
+      });
+
+      // Older iOS Safari runs its own page pinch unless told not to; the
+      // stage's touch-action already opts newer browsers out of that.
+      overlay.addEventListener('gesturestart', function(e) { e.preventDefault(); });
     })();
   </script>
 

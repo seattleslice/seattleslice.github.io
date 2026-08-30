@@ -92,6 +92,24 @@
   <link rel="stylesheet" href="styles/sessions.css?v=2026-08-26">
   <!-- Its Schedule view, shared with schedulepreview.html -->
   <link rel="stylesheet" href="styles/schedule.css?v=2026-08-26">
+  <!-- Conference day. The badge QR points phones at s.html, but on the day
+       plenty will type the address they know and land here. September 2,
+       2026 on the reader's own clock - the show is in Seattle and so is the
+       phone in hand - marks the root before first paint, and the EVENT DAY
+       BAR styles below take it from there. ?eventday in the address bar
+       previews the bar on any other day; ?eventday=0 holds it off on the
+       day itself. -->
+  <script>
+    (function() {
+      var asked = window.location.search.match(/[?&]eventday(?:=([^&#]*))?/);
+      var now = new Date();
+      var isDay = now.getFullYear() === 2026 &&
+        now.getMonth() === 8 && now.getDate() === 2;  // months count from 0
+      if (asked ? asked[1] !== '0' : isDay) {
+        document.documentElement.classList.add('is-event-day');
+      }
+    })();
+  </script>
   <style>
     /* ===================== HERO SECTION ===================== */
     .hero {
@@ -2622,6 +2640,94 @@
         right: 64px;
       }
     }
+
+    /* ===================== EVENT DAY BAR =====================
+       For September 2, 2026 alone - the date script in the head decides -
+       a phone gives the bottom of its screen to a standing way over to
+       s.html, the schedule and map page the badge QR points at. The bar
+       takes real room rather than floating over things: the body grows
+       matching padding so the page ends above it, and everything else
+       pinned to the bottom edge - the characters, the skyline, the map
+       capsule, the panel overlay - steps up by the same height. The page
+       is simply that much shorter for the day, and nothing sits under
+       the bar no matter how far the reader scrolls. */
+    .event-day-bar {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      html.is-event-day {
+        /* The one height the bar and every riser below share */
+        --event-day-inset: calc(74px + env(safe-area-inset-bottom, 0px));
+      }
+
+      html.is-event-day .event-day-bar {
+        display: flex;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: var(--event-day-inset);
+        /* Over the panel overlay (9999) and the map capsule (10000):
+           being always reachable is the whole of the job. */
+        z-index: 10500;
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+        background: #001a3d;
+        box-shadow: 0 -6px 20px rgba(0, 5, 15, 0.45);
+      }
+
+      html.is-event-day .event-day-bar__btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Bungee', cursive;
+        font-size: 21px;
+        line-height: 1.1;
+        text-align: center;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 10px;
+        /* The same shimmer the Get Tickets buttons wear (shared.css) */
+        background: linear-gradient(135deg, #BB3EFD 0%, #f5ee1d 50%, #BB3EFD 100%);
+        background-size: 200% 200%;
+        animation: shimmer 3s ease-in-out infinite;
+        box-shadow: 0 2px 14px rgba(187, 62, 253, 0.5), 0 0 28px rgba(245, 238, 29, 0.2);
+        transition: transform 0.15s;
+      }
+
+      html.is-event-day .event-day-bar__btn:active {
+        transform: scale(0.97);
+      }
+
+      /* The page ends above the bar rather than running under it */
+      html.is-event-day body {
+        padding-bottom: var(--event-day-inset);
+      }
+
+      /* Everyone pinned to the bottom edge stands on the bar instead */
+      html.is-event-day .bottom-characters,
+      html.is-event-day .skyline,
+      html.is-event-day .jimothy-mascot {
+        bottom: var(--event-day-inset);
+      }
+
+      html.is-event-day .robot-mascot {
+        bottom: calc(-3% + var(--event-day-inset));
+      }
+
+      /* The bar's own height already covers the safe area, so the capsule
+         keeps only its usual 18px of clearance above the bar */
+      html.is-event-day .map-cta {
+        bottom: calc(18px + var(--event-day-inset));
+      }
+
+      /* The speaker and session panels centre in what is left above the
+         bar, so a tall panel is never cut off behind it */
+      html.is-event-day .speaker-overlay {
+        bottom: var(--event-day-inset);
+      }
+    }
   </style>
 </head>
 <body>
@@ -3878,6 +3984,15 @@
     </span>
   </button>
 
+  <!-- The event day bar: one day only, phones only. See EVENT DAY BAR in
+       the styles and the date script in the head. The venue map sizing
+       below measures this element's height while the bar is up, so it
+       stands in the markup ahead of the scripts. /s is the short address
+       the badge QR uses for s.html. -->
+  <div class="event-day-bar" id="eventDayBar">
+    <a class="event-day-bar__btn" href="/s">Mobile Schedule & Map</a>
+  </div>
+
   <!-- Ahead of shared.js: it puts the Sessions section and the session panel
        in place, and shared.js reads both as it starts. -->
   <script src="js/tabs.js?v=2026-08-21"></script>
@@ -4391,6 +4506,16 @@
       // Width the current portrait sizing was built for; null means unsized
       let sizedForWidth = null;
 
+      // The event day bar (see EVENT DAY BAR in the styles) takes the bottom
+      // of a phone's screen for the one day it is up, so every fit against
+      // the window height here works from what the bar leaves. Measured live
+      // rather than latched: on every other day the bar is display none and
+      // measures zero, and this costs one layout read per fit.
+      function eventBarInset() {
+        const bar = document.getElementById('eventDayBar');
+        return bar ? bar.offsetHeight : 0;
+      }
+
       function layoutPortrait(force) {
         if (!portraitQuery || !portraitQuery.matches) {
           FM_VARS.forEach(function(v) { panel.style.removeProperty(v); });
@@ -4420,7 +4545,7 @@
         const listBox = areasEl.getBoundingClientRect();
         const above = mapBox.top - panelBox.top;
         const below = panelBox.bottom - listBox.bottom;
-        const usable = Math.max(320, window.innerHeight - above - below - 24);
+        const usable = Math.max(320, window.innerHeight - eventBarInset() - above - below - 24);
         // The map is the centrepiece, so it takes the bulk of the height; the
         // list keeps a couple of rows visible and scrolls for the rest.
         const mapH = Math.round(Math.max(240, Math.min(usable * 0.74, usable - 148)));
@@ -4476,8 +4601,9 @@
       }
 
       function framedScrollTop() {
-        // Any height the panel leaves over is split above and below it
-        const slack = Math.max(0, window.innerHeight - panel.offsetHeight);
+        // Any height the panel leaves over is split above and below it -
+        // within what the event day bar leaves, on the day it is up
+        const slack = Math.max(0, window.innerHeight - eventBarInset() - panel.offsetHeight);
         const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
         return Math.max(0, Math.min(panelPageTop() - Math.round(slack / 2), max));
       }
@@ -4485,7 +4611,7 @@
       // Share of the screen the panel covers right now: 1 when it fills it
       function framedFraction() {
         const r = panel.getBoundingClientRect();
-        const vh = window.innerHeight;
+        const vh = window.innerHeight - eventBarInset();
         const span = Math.min(r.height, vh);
         if (span <= 0) return 0;
         return (Math.min(r.bottom, vh) - Math.max(r.top, 0)) / span;
@@ -4496,7 +4622,7 @@
       // would otherwise be measured in flight and bake in a false floor.
       function restingFraction(target) {
         const top = panelPageTop() - target;
-        const vh = window.innerHeight;
+        const vh = window.innerHeight - eventBarInset();
         const span = Math.min(panel.offsetHeight, vh);
         if (span <= 0) return 0;
         return (Math.min(top + panel.offsetHeight, vh) - Math.max(top, 0)) / span;
@@ -4597,12 +4723,13 @@
         // The tabs say which level is up, so they belong in the frame with it
         const top = panelPageTop();
         const span = pageTop(inner) + inner.offsetHeight - top;
-        const vh = window.innerHeight;
+        const vh = window.innerHeight - eventBarInset();
         // Centre what fits; anything taller than the screen leads with the tabs
         const target = span <= vh - 24
           ? top - Math.round((vh - span) / 2)
           : top - 16;
-        const max = Math.max(0, document.documentElement.scrollHeight - vh);
+        // How far the page can actually scroll, which the bar does not change
+        const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
         scrollPageTo(Math.max(0, Math.min(target, max)));
       }
 

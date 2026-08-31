@@ -4,7 +4,7 @@
 // no internet at all. live.html gives the sheet ten seconds to answer and
 // then falls back to this; a live fetch that lands later still wins.
 //
-// Saved 2026-08-25. To refresh it before zipping the site: load live.html
+// Saved 2026-08-30. To refresh it before zipping the site: load live.html
 // in a browser while online, run this in the console, and paste the result
 // over the sessions array below:
 //
@@ -12,7 +12,7 @@
 //     format: s.format, time: s.time, room: s.room,
 //     speakers: s.speakers.map(function(p) { return { name: p.name }; }) }; }))
 window.SCHEDULE_SNAPSHOT = {
-  savedAt: '2026-08-25',
+  savedAt: '2026-08-30',
   sessions: [
     {
       "title": "Fireside Chat with the Creators of Among Us",
@@ -73,6 +73,9 @@ window.SCHEDULE_SNAPSHOT = {
         },
         {
           "name": "Zoë Curnoe"
+        },
+        {
+          "name": "Jason Robar"
         }
       ]
     },
@@ -90,6 +93,9 @@ window.SCHEDULE_SNAPSHOT = {
         },
         {
           "name": "Alejandro Rodriguez"
+        },
+        {
+          "name": "Christeen Mackey"
         }
       ]
     },
@@ -174,17 +180,6 @@ window.SCHEDULE_SNAPSHOT = {
         },
         {
           "name": "Veronica Peshterianu"
-        }
-      ]
-    },
-    {
-      "title": "The Industry Is Better, Maybe: Tales from the Game Industry, 1990s & Early 2000s",
-      "format": "Micro-talk",
-      "time": "5:56:00 PM",
-      "room": "NR",
-      "speakers": [
-        {
-          "name": "Theresa Pudenz"
         }
       ]
     },
@@ -325,10 +320,10 @@ window.SCHEDULE_SNAPSHOT = {
           "name": "Justin Woodward"
         },
         {
-          "name": "Stephanie Barish"
+          "name": "Paul Scherer"
         },
         {
-          "name": "Paul Scherer"
+          "name": "Guy 'Yug' Blomberg"
         }
       ]
     },
@@ -656,28 +651,6 @@ window.SCHEDULE_SNAPSHOT = {
       ]
     },
     {
-      "title": "Ask Tencent Anything",
-      "format": "Roundtable",
-      "time": "9:30 AM, 10:30 AM",
-      "room": "5B",
-      "speakers": [
-        {
-          "name": "John Polson"
-        }
-      ]
-    },
-    {
-      "title": "Before You Build: Early Decisions That Set Games Up for Success",
-      "format": "Roundtable",
-      "time": "1:45 PM, 2:45 PM",
-      "room": "5B",
-      "speakers": [
-        {
-          "name": "Geoffrey Zatkin"
-        }
-      ]
-    },
-    {
       "title": "Career Resilience in Games: What Developers Can Do When the Market Gets Hard",
       "format": "Roundtable",
       "time": "9:30 AM, 2:45 PM",
@@ -685,119 +658,6 @@ window.SCHEDULE_SNAPSHOT = {
       "speakers": [
         {
           "name": "Alejandro Rodriguez"
-        }
-      ]
-    },
-    {
-      "title": "Connecting Design to Business Outcomes",
-      "format": "Roundtable",
-      "time": "1:45 PM, 2:45 PM",
-      "room": "5F",
-      "speakers": [
-        {
-          "name": "Leif Johansen"
-        }
-      ]
-    },
-    {
-      "title": "Creating Better Pathways into Games & Creative Careers",
-      "format": "Roundtable",
-      "time": "10:30 AM, 11:30 AM",
-      "room": "5E",
-      "speakers": [
-        {
-          "name": "Darlene Mortel Edouard, PhD"
-        },
-        {
-          "name": "Nicole Hendrix"
-        }
-      ]
-    },
-    {
-      "title": "From Solo Dev to Studio: Surviving the Transition",
-      "format": "Roundtable",
-      "time": "3:45 PM, 4:45 PM",
-      "room": "5E",
-      "speakers": [
-        {
-          "name": "Sai Narayan Natarajan"
-        }
-      ]
-    },
-    {
-      "title": "Funding Options for Indie Developers",
-      "format": "Roundtable",
-      "time": "9:30 AM, 10:30 AM",
-      "room": "5A",
-      "speakers": [
-        {
-          "name": "Ed Fries"
-        }
-      ]
-    },
-    {
-      "title": "Hello Chat: Working with Content Creators",
-      "format": "Roundtable",
-      "time": "10:30 AM, 11:30 AM",
-      "room": "5C",
-      "speakers": [
-        {
-          "name": "Kevin M Williams"
-        }
-      ]
-    },
-    {
-      "title": "How Can a Small Team Keep Supporting One Game While Building the Next?",
-      "format": "Roundtable",
-      "time": "4:45 PM, 5:45 PM",
-      "room": "5C",
-      "speakers": [
-        {
-          "name": "Michael Silverwood"
-        }
-      ]
-    },
-    {
-      "title": "I Went Indie, Now What?",
-      "format": "Roundtable",
-      "time": "1:45 PM, 2:45 PM",
-      "room": "5A",
-      "speakers": [
-        {
-          "name": "Christian Allen"
-        }
-      ]
-    },
-    {
-      "title": "It's Not About The Code - How I Learned To Stop Worrying And Love Open Source",
-      "format": "Roundtable",
-      "time": "3:45 PM, 4:45 PM",
-      "room": "5B",
-      "speakers": [
-        {
-          "name": "Mason Remaley"
-        }
-      ]
-    },
-    {
-      "title": "Leading from Anywhere - Leadership Isn’t a Job Title",
-      "format": "Roundtable",
-      "time": "4:45 PM, 5:45 PM",
-      "room": "5A",
-      "speakers": [
-        {
-          "name": "Joshua Howard"
-        }
-      ]
-    },
-    {
-      "title": "Lessons Learned from an Indie Studio",
-      "format": "Roundtable",
-      "time": "4:45 PM, 5:45 PM",
-      "room": "5D",
-      "speakers": [
-        {
-          "name": "Jen MacLean"
         }
       ]
     },
@@ -813,46 +673,13 @@ window.SCHEDULE_SNAPSHOT = {
       ]
     },
     {
-      "title": "Power Without Permission: Leading, Creating, and Belonging as Women in Games",
+      "title": "The State of Co-Development",
       "format": "Roundtable",
-      "time": "8:00:00 AM",
-      "room": "1C",
+      "time": "1:45 PM, 2:45 PM",
+      "room": "5C",
       "speakers": [
         {
-          "name": "Elaine Gómez"
-        }
-      ]
-    },
-    {
-      "title": "Pragmatic Game Analytics for Indie Studios",
-      "format": "Roundtable",
-      "time": "10:30 AM, 11:30 AM",
-      "room": "5D",
-      "speakers": [
-        {
-          "name": "Shikha Tarware"
-        }
-      ]
-    },
-    {
-      "title": "Reinventing Yourself While the Game Industry Gets Reinvented Around You",
-      "format": "Roundtable",
-      "time": "3:45 PM, 4:45 PM",
-      "room": "5F",
-      "speakers": [
-        {
-          "name": "Kurt Busch"
-        }
-      ]
-    },
-    {
-      "title": "Ship Your Game! A Roundtable About Finishing and (Finally) Launching",
-      "format": "Roundtable",
-      "time": "11:30 AM, 5:45 PM",
-      "room": "5B",
-      "speakers": [
-        {
-          "name": "Richard Rouse III"
+          "name": "Caroline Calaway"
         }
       ]
     },
@@ -871,24 +698,71 @@ window.SCHEDULE_SNAPSHOT = {
       ]
     },
     {
-      "title": "The Minimum Viable GDD: Build One Together",
+      "title": "I Went Indie, Now What?",
       "format": "Roundtable",
-      "time": "2:45 PM, 3:45 PM",
-      "room": "5D",
+      "time": "1:45 PM, 2:45 PM",
+      "room": "5A",
       "speakers": [
         {
-          "name": "Joe Belousek"
+          "name": "Christian Allen"
         }
       ]
     },
     {
-      "title": "The State of Co-Development",
+      "title": "Creating Better Pathways into Games & Creative Careers",
       "format": "Roundtable",
-      "time": "1:45 PM, 2:45 PM",
-      "room": "5C",
+      "time": "10:30 AM, 11:30 AM",
+      "room": "5E",
       "speakers": [
         {
-          "name": "Caroline Calaway"
+          "name": "Darlene Mortel Edouard, PhD"
+        },
+        {
+          "name": "Nicole Hendrix"
+        }
+      ]
+    },
+    {
+      "title": "Funding Options for Indie Developers",
+      "format": "Roundtable",
+      "time": "9:30 AM, 10:30 AM",
+      "room": "5A",
+      "speakers": [
+        {
+          "name": "Ed Fries"
+        }
+      ]
+    },
+    {
+      "title": "Power Without Permission: Leading, Creating, and Belonging as Women in Games",
+      "format": "Roundtable",
+      "time": "8:00:00 AM",
+      "room": "1C",
+      "speakers": [
+        {
+          "name": "Elaine Gómez"
+        }
+      ]
+    },
+    {
+      "title": "Your Voice, Your Value, Your Next Move",
+      "format": "Roundtable",
+      "time": "8:00:00 AM",
+      "room": "1B",
+      "speakers": [
+        {
+          "name": "Faith Price"
+        }
+      ]
+    },
+    {
+      "title": "Before You Build: Early Decisions That Set Games Up for Success",
+      "format": "Roundtable",
+      "time": "1:45 PM, 2:45 PM",
+      "room": "5B",
+      "speakers": [
+        {
+          "name": "Geoffrey Zatkin"
         }
       ]
     },
@@ -904,13 +778,134 @@ window.SCHEDULE_SNAPSHOT = {
       ]
     },
     {
-      "title": "Your Voice, Your Value, Your Next Move",
+      "title": "Lessons Learned from an Indie Studio",
       "format": "Roundtable",
-      "time": "8:00:00 AM",
-      "room": "1B",
+      "time": "4:45 PM, 5:45 PM",
+      "room": "5D",
       "speakers": [
         {
-          "name": "Faith Price"
+          "name": "Jen MacLean"
+        }
+      ]
+    },
+    {
+      "title": "The Minimum Viable GDD: Build One Together",
+      "format": "Roundtable",
+      "time": "2:45 PM, 3:45 PM",
+      "room": "5D",
+      "speakers": [
+        {
+          "name": "Joe Belousek"
+        }
+      ]
+    },
+    {
+      "title": "Ask Tencent Anything",
+      "format": "Roundtable",
+      "time": "9:30 AM, 10:30 AM",
+      "room": "5B",
+      "speakers": [
+        {
+          "name": "John Polson"
+        }
+      ]
+    },
+    {
+      "title": "Leading from Anywhere - Leadership Isn’t a Job Title",
+      "format": "Roundtable",
+      "time": "4:45 PM, 5:45 PM",
+      "room": "5A",
+      "speakers": [
+        {
+          "name": "Joshua Howard"
+        }
+      ]
+    },
+    {
+      "title": "Hello Chat: Working with Content Creators",
+      "format": "Roundtable",
+      "time": "10:30 AM, 11:30 AM",
+      "room": "5C",
+      "speakers": [
+        {
+          "name": "Kevin M Williams"
+        }
+      ]
+    },
+    {
+      "title": "Reinventing Yourself While the Game Industry Gets Reinvented Around You",
+      "format": "Roundtable",
+      "time": "3:45 PM, 4:45 PM",
+      "room": "5F",
+      "speakers": [
+        {
+          "name": "Kurt Busch"
+        }
+      ]
+    },
+    {
+      "title": "Connecting Design to Business Outcomes",
+      "format": "Roundtable",
+      "time": "1:45 PM, 2:45 PM",
+      "room": "5F",
+      "speakers": [
+        {
+          "name": "Leif Johansen"
+        }
+      ]
+    },
+    {
+      "title": "It's Not About The Code - How I Learned To Stop Worrying And Love Open Source",
+      "format": "Roundtable",
+      "time": "3:45 PM, 4:45 PM",
+      "room": "5B",
+      "speakers": [
+        {
+          "name": "Mason Remaley"
+        }
+      ]
+    },
+    {
+      "title": "How Can a Small Team Keep Supporting One Game While Building the Next?",
+      "format": "Roundtable",
+      "time": "4:45 PM, 5:45 PM",
+      "room": "5C",
+      "speakers": [
+        {
+          "name": "Michael Silverwood"
+        }
+      ]
+    },
+    {
+      "title": "Ship Your Game! A Roundtable About Finishing and (Finally) Launching",
+      "format": "Roundtable",
+      "time": "11:30 AM, 5:45 PM",
+      "room": "5B",
+      "speakers": [
+        {
+          "name": "Richard Rouse III"
+        }
+      ]
+    },
+    {
+      "title": "From Solo Dev to Studio: Surviving the Transition",
+      "format": "Roundtable",
+      "time": "3:45 PM, 4:45 PM",
+      "room": "5E",
+      "speakers": [
+        {
+          "name": "Sai Narayan Natarajan"
+        }
+      ]
+    },
+    {
+      "title": "Pragmatic Game Analytics for Indie Studios",
+      "format": "Roundtable",
+      "time": "10:30 AM, 11:30 AM",
+      "room": "5D",
+      "speakers": [
+        {
+          "name": "Shikha Tarware"
         }
       ]
     }

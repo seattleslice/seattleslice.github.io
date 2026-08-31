@@ -464,12 +464,16 @@
     }
 
     /* The note's restaurant names arrive as links. Nobody can click a
-       hallway TV, so they read as highlighted places instead. */
+       hallway TV, so they read as highlighted places instead - and since
+       the fullscreen hint tells whoever sets the TV up to click anywhere,
+       they are made inert outright: a click on one must ask for the
+       screen, not put Google Maps up over the board. */
     .tv-session__note a,
     .tv-lunch__note a {
       color: #f5ee1d;
       font-weight: 700;
       text-decoration: none;
+      pointer-events: none;
     }
 
     /* The goodnight line, once the hall has emptied */
@@ -496,6 +500,43 @@
       0%, 100% { opacity: 0.45; }
       50% { opacity: 1; }
     }
+
+    /* ---- the fullscreen hint ---- */
+    /* Up only while the browser's chrome is still on screen - see the
+       FULLSCREEN module at the end of the page. Small enough to ignore
+       from the hallway, plain enough to follow from the AV cart. */
+    .tv-fullscreen-hint {
+      position: fixed;
+      right: 1rem;
+      bottom: 1rem;
+      /* Above the robot, which wheels into this same corner for the
+         two minutes before a block and would paint over the words */
+      z-index: 11;
+      padding: 0.55rem 0.9rem;
+      background: #001a3d;
+      border: 0.09rem solid #8ab4e0;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #a0c4e8;
+      animation: tvPulse 1.4s ease-in-out infinite;
+    }
+
+    .tv-fullscreen-hint[hidden] {
+      display: none;
+    }
+
+    /* It has pulsed long enough to be noticed by anybody setting the TV
+       up; after that it just sits quietly for whoever walks past later */
+    .tv-fullscreen-hint.is-settled {
+      animation: none;
+      opacity: 0.75;
+    }
+
+    /* The pointer comes back while somebody may need to aim a click */
+    body.tv-windowed {
+      cursor: default;
+    }
   </style>
 </head>
 <body>
@@ -516,6 +557,10 @@
     <section class="tv-coming" id="comingContent"></section>
   </main>
 
+  <!-- Up while the page is windowed - see the FULLSCREEN module below -->
+  <div class="tv-fullscreen-hint" id="fullscreenHint" hidden>
+    Click anywhere or press any key for full screen</div>
+
   <!-- The website's hero robot, wheeling in for the last two minutes before
        a session block starts -->
   <div class="tv-robot" id="tvRobot" aria-hidden="true">
@@ -531,7 +576,7 @@
   <script src="js/schedule.js?v=2026-08-26"></script>
   <script src="js/shared.js?v=2026-08-30"></script>
   <!-- The day frozen to disk, for a venue computer with no internet -->
-  <script src="js/schedule-snapshot.js?v=2026-08-25"></script>
+  <script src="js/schedule-snapshot.js?v=2026-08-30"></script>
 
   <script>
     // ===================== THE LIVE BOARD =====================
@@ -1293,6 +1338,75 @@
         lastKey = null;
         build();
       }, 10000);
+    })();
+  </script>
+
+  <script>
+    // ===================== FULLSCREEN =====================
+    // The hallway TVs are set up by the venue's AV crew, who open the page
+    // and walk away - nobody thinks to press F11, and the browser's header
+    // has no place on a schedule board. So the board asks for the screen
+    // itself: once outright on load, which a browser normally refuses
+    // without a person behind the request, and then again on the first
+    // click or key press, which it honours. Until one of those lands, the
+    // corner hint says what to press.
+    //
+    // F11 is not the fullscreen API and sets no fullscreenElement, so
+    // being full screen is also read off the window filling the display -
+    // a TV already set up right, by F11 or a kiosk shell, never shows the
+    // hint at all.
+    (function() {
+      const hint = document.getElementById('fullscreenHint');
+      const root = document.documentElement;
+
+      function isFullscreen() {
+        if (document.fullscreenElement) return true;
+        // A window that has no size yet answers 0 for everything, and 0 of
+        // 0 must not read as filling the screen
+        return window.innerWidth > 0 && window.innerHeight > 0 &&
+          window.innerWidth >= screen.width - 2 &&
+          window.innerHeight >= screen.height - 2;
+      }
+
+      function askForScreen() {
+        if (isFullscreen()) return;
+        if (root.requestFullscreen) {
+          const asking = root.requestFullscreen({ navigationUI: 'hide' });
+          // Refusal is the expected answer until somebody presses something
+          if (asking && asking.catch) asking.catch(function() {});
+        } else if (root.webkitRequestFullscreen) {
+          root.webkitRequestFullscreen();
+        }
+      }
+
+      function updateHint() {
+        const up = isFullscreen();
+        if (hint) hint.hidden = up;
+        // The pointer is hidden on this page - nobody points at a TV - but
+        // somebody who has to click wants to see what they are aiming
+        document.body.classList.toggle('tv-windowed', !up);
+      }
+
+      askForScreen();
+
+      // Any press will do. Escape is how somebody leaves fullscreen on
+      // purpose, so it alone never asks for the screen back.
+      document.addEventListener('click', askForScreen);
+      document.addEventListener('keydown', function(e) {
+        if (e.key !== 'Escape') askForScreen();
+      });
+
+      document.addEventListener('fullscreenchange', updateHint);
+      window.addEventListener('resize', updateHint);
+      updateHint();
+
+      // Pulsing all day would make the corner the loudest thing on the
+      // board; two minutes is plenty to catch the eye of whoever set it up
+      if (hint) {
+        window.setTimeout(function() {
+          hint.classList.add('is-settled');
+        }, 2 * 60 * 1000);
+      }
     })();
   </script>
 </body>

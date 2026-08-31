@@ -107,6 +107,107 @@ function gsheetProcessor(options, callback, onError) {
 const SPEAKERS_SHEET_ID = "1idfs0hL8dM0vwXtdph3Md1EIlc4__sClZyYjpAIyGBQ";
 const SPEAKERS_API_KEY = "AIzaSyD4ZoTrXMfF7mhAMVNNiensNsWL5XC6Sqo";
 
+// ===================== SHEET BACKUP FALLBACK =====================
+// The sheet is edited by hand while the site is live, and one bad edit can
+// take the speakers and sessions down with it. So a live read runs against a
+// deadline: it gets this long to come back with something that amounts to
+// more than one item, and past that - or on an error, or on a response that
+// boils down to one item or none - the copy of the sheet saved in
+// js/sheet-backup.js stands in.
+//
+// The backup holds each tab's raw value grid, exactly as the Sheets API
+// returns it, so a fallback runs through the same parsing as a live read.
+// Only pages that include js/sheet-backup.js get any of this; on the rest
+// (live.html carries an offline snapshot of its own) a failed read fails
+// the way it always has.
+const SHEET_BACKUP_TIMEOUT_MS = 7000;
+
+// A test hook in the spirit of live.html's ?offline: &sheetdown makes the
+// live read hang forever, so the fallback can be watched without having to
+// break the real sheet.
+const sheetDownTest = /[?&]sheetdown\b/.test(window.location.search);
+
+function sheetBackupValues(sheetName) {
+  const backup = window.SHEET_BACKUP;
+  const values = backup && backup.tabs && backup.tabs[sheetName];
+  return values && values.length ? values : null;
+}
+
+// Reads one tab and hands the parsed rows to `process`, which turns them
+// into the items the page wants and is thereby also the judge of the read:
+// more than one item means the sheet answered properly. `deliver` gets the
+// items exactly once - from the live sheet when it holds up, from the
+// backup when it does not. A live answer landing after the backup has
+// already taken the page is let go rather than rendered on top of it.
+//
+// The returned promise rejects only when the live read failed and there is
+// no backup to stand in - the one shape the callers' catch handlers have
+// ever had to deal with. A read that fell back resolves, and the page
+// carries on none the wiser.
+function readSheetTab(sheetName, process, deliver) {
+  return new Promise(function(resolve, reject) {
+    let settled = false;
+    let timer = 0;
+
+    function settleWith(items) {
+      settled = true;
+      window.clearTimeout(timer);
+      deliver(items);
+      resolve();
+    }
+
+    // The backup answering instead. False means there is nothing saved for
+    // this tab, and whatever the live read does is all there is.
+    function fallBack(why) {
+      const values = sheetBackupValues(sheetName);
+      if (!values) return false;
+      console.warn('The "' + sheetName + '" sheet ' + why + ' - showing the copy saved ' +
+        (window.SHEET_BACKUP.savedAt || 'earlier') + ' instead');
+      settleWith(process(processGSheetResults({ values: values }, true, false, undefined, 1)));
+      return true;
+    }
+
+    // No backup on this page means no deadline either: the read takes as
+    // long as it takes, the way it always did.
+    if (sheetBackupValues(sheetName)) {
+      timer = window.setTimeout(function() {
+        if (!settled) fallBack('took more than ' + (SHEET_BACKUP_TIMEOUT_MS / 1000) + ' seconds');
+      }, SHEET_BACKUP_TIMEOUT_MS);
+    }
+
+    if (sheetDownTest) return;
+
+    gsheetProcessor(
+      {
+        sheetId: SPEAKERS_SHEET_ID,
+        sheetName: sheetName,
+        sheetNumber: 1,
+        returnAllResults: true,
+        apiKey: SPEAKERS_API_KEY,
+        startRow: 1
+      },
+      function(results) {
+        if (settled) return;
+
+        const items = process(results);
+
+        // One item or none out of a sheet that holds dozens is not the sheet
+        // answering - it is the sheet broken in some new way. Falling back on
+        // a small answer also self-heals a mixed read: sessions matched
+        // against backup speakers whose names have all drifted would come out
+        // empty, and land here on the backup's own consistent pair.
+        if (items.length < 2 && fallBack('came back nearly empty')) return;
+
+        settleWith(items);
+      }
+    ).catch(function(err) {
+      if (settled) return;
+      if (fallBack('failed to load')) return;
+      reject(err);
+    });
+  });
+}
+
 var speakers = [];
 
 // Setting a background image inline replaces the gradient placeholder even
@@ -130,20 +231,13 @@ function setHeadshot(el, url) {
   probe.src = url;
 }
 
-// Takes the tab to read, and returns the fetch promise so callers can react
-// when the sheet is unreachable.
+// Takes the tab to read, and returns a promise that rejects only when the
+// sheet is unreachable and no backup could stand in - see readSheetTab.
 function loadSpeakers(sheetName, callback) {
   const year = (String(sheetName).match(/\d{4}/) || [''])[0];
 
-  return gsheetProcessor(
-    {
-      sheetId: SPEAKERS_SHEET_ID,
-      sheetName: sheetName,
-      sheetNumber: 1,
-      returnAllResults: true,
-      apiKey: SPEAKERS_API_KEY,
-      startRow: 1
-    },
+  return readSheetTab(
+    sheetName,
     (results) => {
       const loaded = [];
 
@@ -171,6 +265,9 @@ function loadSpeakers(sheetName, callback) {
         }
       });
 
+      return loaded;
+    },
+    (loaded) => {
       speakers = loaded;
       if (callback) callback(loaded);
     }
@@ -208,15 +305,8 @@ function loadSessions(sheetName, speakerList, callback, options) {
   const bySpeakerName = new Map();
   (speakerList || []).forEach(speaker => bySpeakerName.set(speaker.name.trim(), speaker));
 
-  return gsheetProcessor(
-    {
-      sheetId: SPEAKERS_SHEET_ID,
-      sheetName: sheetName,
-      sheetNumber: 1,
-      returnAllResults: true,
-      apiKey: SPEAKERS_API_KEY,
-      startRow: 1
-    },
+  return readSheetTab(
+    sheetName,
     (results) => {
       const loaded = [];
 
@@ -251,6 +341,9 @@ function loadSessions(sheetName, speakerList, callback, options) {
         });
       });
 
+      return loaded;
+    },
+    (loaded) => {
       sessions = loaded;
       if (callback) callback(loaded);
     }

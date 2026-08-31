@@ -4017,7 +4017,10 @@
       panel.appendChild(close);
     })();
   </script>
-  <script src="js/shared.js?v=2026-08-26"></script>
+  <!-- A frozen copy of the sheet, in case the live one breaks or stalls.
+       shared.js only reaches for it when a read goes wrong. -->
+  <script src="js/sheet-backup.js?v=2026-08-30"></script>
+  <script src="js/shared.js?v=2026-08-30"></script>
   <script>
     // ===================== VIEW ON MAP =====================
     // The capsule in the corner of the screen, for as long as a session

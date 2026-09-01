@@ -1498,13 +1498,15 @@
 
   <script>
     // ===================== AUDIO =====================
-    // The day's soundtrack. Two folders sit beside this page - music and
-    // announcements - and every file in them is named for the moment it
-    // should start: 19_14_22.mp3 begins at 7:14:22 pm, 24-hour clock, and
-    // plays through. Announcements land on the schedule the same way, and
-    // the Volume tab of the schedule spreadsheet is the day-of remote
-    // control over all of it - levels, and fired-off test clips - for a
-    // computer nobody can reach once the doors open. See REMOTE below.
+    // The day's soundtrack, from two folders beside this page. Every
+    // announcement is named for the moment it plays - 08_57_00.wav at
+    // 8:57:00 am, 24-hour clock - and fires right then. The music is a
+    // playlist: 00.mp3 starts at 6:33 pm, each track follows the one
+    // before it the moment it ends - never on top of it - and when the
+    // last track finishes, the evening's music is done. The Volume tab of
+    // the schedule spreadsheet is the day-of remote control over all of
+    // it - levels, and fired-off test clips - for a computer nobody can
+    // reach once the doors open. See REMOTE below.
     //
     // Each clip is fetched whole ahead of its start, so a slow venue
     // connection can never stutter mid-song: the bytes are already here
@@ -1514,27 +1516,54 @@
     (function() {
       // ---- the clips, by name ----
       // Hard-coded rather than listed live: a static page cannot read a
-      // folder, and these files are settled. Update by hand if they change.
-      const AUDIO_MUSIC = [
-        '18_33_00.mp3', '18_36_07.mp3', '18_38_49.mp3', '18_44_12.mp3',
-        '18_51_12.mp3', '18_54_49.mp3', '18_57_46.mp3', '19_00_13.mp3',
-        '19_03_14.mp3', '19_10_14.mp3', '19_14_22.mp3', '19_16_20.mp3',
-        '19_18_49.mp3', '19_22_39.mp3', '19_23_58.mp3', '19_30_04.mp3',
-        '19_32_24.mp3', '19_35_27.mp3', '19_40_27.mp3', '19_45_19.mp3',
-        '19_46_43.mp3', '19_49_42.mp3', '19_52_31.mp3', '19_54_00.mp3',
-        '19_57_16.mp3', '20_01_29.mp3', '20_03_56.mp3', '20_06_28.mp3',
-        '20_09_29.mp3', '20_13_18.mp3', '20_16_02.mp3', '20_19_00.mp3',
-        '20_22_22.mp3', '20_25_41.mp3', '20_29_19.mp3', '20_30_32.mp3',
-        '20_31_42.mp3', '20_35_12.mp3', '20_40_33.mp3', '20_43_26.mp3',
-        '20_46_41.mp3', '20_49_36.mp3', '20_55_21.mp3', '20_57_55.mp3',
-        '21_04_59.mp3', '21_08_47.mp3', '21_15_28.mp3', '21_18_56.mp3',
-        '21_23_04.mp3', '21_27_45.wav'
+      // folder, and these files are settled. Update by hand if they
+      // change. Each playlist track carries its length in seconds - not
+      // for the playing, which simply runs the file out, but so a page
+      // opened mid-evening can add them up and find which track the
+      // party is up to.
+      const AUDIO_PLAYLIST = [
+        ['00.mp3', 186.1], ['01.mp3', 161.3], ['02.mp3', 419.3],
+        ['03.mp3', 216.0], ['04.mp3', 176.6], ['05.mp3', 146.4],
+        ['06.mp3', 180.7], ['07.mp3', 419.7], ['08.mp3', 247.5],
+        ['09.mp3', 117.0], ['10.mp3', 148.8], ['11.mp3', 229.3],
+        ['12.mp3', 78.0], ['13.mp3', 365.2], ['14.mp3', 139.6],
+        ['15.mp3', 182.1], ['16.mp3', 299.6], ['17.mp3', 291.2],
+        ['18.mp3', 83.2], ['19.mp3', 178.7], ['20.mp3', 168.3],
+        ['21.mp3', 88.6], ['22.mp3', 195.6], ['23.mp3', 252.3],
+        ['24.mp3', 146.6], ['25.mp3', 151.9], ['26.mp3', 180.0],
+        ['27.mp3', 228.6], ['28.mp3', 163.1], ['29.mp3', 177.4],
+        ['30.mp3', 201.4], ['31.mp3', 198.6], ['32.mp3', 217.0],
+        ['33.mp3', 72.4], ['34.mp3', 69.3], ['35.mp3', 209.4],
+        ['36.mp3', 320.3], ['37.mp3', 172.2], ['38.mp3', 194.7],
+        ['39.mp3', 174.8], ['40.mp3', 344.5], ['41.mp3', 153.1],
+        ['42.mp3', 423.8], ['43.mp3', 227.8], ['44.mp3', 400.9],
+        ['45.mp3', 208.0], ['46.mp3', 247.2], ['47.mp3', 241.1]
       ];
       const AUDIO_ANNOUNCEMENTS = [
         '08_00_00.wav', '08_57_00.wav', '09_27_00.wav', '10_27_00.wav',
         '11_27_00.wav', '12_18_00.wav', '13_42_00.wav', '14_42_00.wav',
-        '15_42_00.wav', '16_42_00.wav', '17_42_00.wav', '21_27_15.wav'
+        '15_42_00.wav', '16_42_00.wav', '17_42_00.wav', '21_27_15.wav',
+        '21_27_45.wav'
       ];
+
+      // The playlist's opening note
+      const PLAYLIST_START = 18 * 3600 + 33 * 60;
+
+      // The ideal first note of every track - PLAYLIST_START plus the
+      // lengths of everything before it - and one mark past the end for
+      // when the music is over. The real chain drifts a touch behind
+      // these (each handover costs a breath), which is fine: the marks
+      // only steer the big jumps - a page opened or unlocked late, a
+      // stalled track - never the normal song-to-song step.
+      const PLAYLIST_MARKS = [];
+      {
+        let mark = PLAYLIST_START;
+        AUDIO_PLAYLIST.forEach(function(track) {
+          PLAYLIST_MARKS.push(mark);
+          mark += track[1];
+        });
+        PLAYLIST_MARKS.push(mark);
+      }
 
       // How long before its mark a clip starts downloading
       const FETCH_AHEAD = 180;
@@ -1601,7 +1630,12 @@
       // The one test clip allowed at a time - see killTest
       let testOnAir = null;
 
+      // The 9:27:45 closer rides the announcement schedule but is really
+      // a piece of music, so the music lever is the one that moves it
+      const SOUNDS_LIKE_MUSIC = 'audio/announcements/21_27_45.wav';
+
       function levelFor(src) {
+        if (src === SOUNDS_LIKE_MUSIC) return musicLevel;
         return src.indexOf('audio/music/') === 0 ? musicLevel : announcementLevel;
       }
 
@@ -1623,8 +1657,14 @@
       // Plays the clip filed under src. A clip with a mark that has gone
       // by joins in progress - or stays quiet once its own end has passed.
       // Announcements are kept for the remote's tests; a song's memory is
-      // let go the moment it has played.
-      function playClip(src, at, keep, test) {
+      // let go the moment it has played. `after`, if given, hears exactly
+      // once that this play is over and done with - however it ends - and
+      // is how the playlist below strings its tracks together. `still`,
+      // if given, is asked at the last moment whether this play is even
+      // wanted any more: a fetch that took an age, or a refused clip
+      // replayed from the queue, must not land on top of whatever the
+      // playlist has moved on to.
+      function playClip(src, at, keep, test, after, still) {
         clipReady(src).then(function(loaded) {
           // A test never borrows the shared fallback element: were it to
           // draw the very clip the schedule has playing through it, it
@@ -1632,7 +1672,14 @@
           const audio = loaded.local ? new Audio(loaded.url)
             : test ? new Audio(src)
             : loaded.audio;
-          const aired = { audio: audio, src: src };
+          const aired = { audio: audio, src: src, test: test };
+
+          let moved = false;
+          function fireAfter() {
+            if (moved) return;
+            moved = true;
+            if (after) after();
+          }
 
           function done() {
             audio.removeEventListener('ended', done);
@@ -1643,9 +1690,14 @@
               URL.revokeObjectURL(loaded.url);
               clips.delete(src);
             }
+            fireAfter();
           }
 
           function begin() {
+            if (still && !still()) {
+              done();
+              return;
+            }
             const behind = at == null ? 0 : Math.max(0, daySeconds() - at);
             if (behind > JOIN_SLACK) {
               if (!isFinite(audio.duration) || behind >= audio.duration - 0.25) {
@@ -1691,9 +1743,14 @@
                 // Only the browser wanting a person to touch the page
                 // first is worth holding the clip for: the first click or
                 // key press replays it from wherever the clock has moved
-                // to by then. Any other failure just stands down.
-                if (!err || err.name !== 'NotAllowedError') return;
-                refused.push({ src: src, at: at, keep: keep, test: test });
+                // to by then. Any other failure just stands down - though
+                // whoever is waiting on this play still hears it is over.
+                if (!err || err.name !== 'NotAllowedError') {
+                  fireAfter();
+                  return;
+                }
+                refused.push({ src: src, at: at, keep: keep, test: test,
+                  after: after, still: still });
                 if (soundHint) soundHint.hidden = false;
               });
             }
@@ -1704,6 +1761,12 @@
           } else {
             audio.addEventListener('loadedmetadata', begin, { once: true });
             audio.addEventListener('error', done, { once: true });
+            // A fallback element fetched ahead of time may have already
+            // failed, ages before these listeners could hear it. One more
+            // try now that the clip is actually wanted - and failing
+            // again lands on the fresh listener, so the page moves on
+            // rather than waiting forever on an element gone quiet.
+            if (audio.error) audio.load();
           }
         });
       }
@@ -1716,17 +1779,17 @@
         refused = [];
         if (soundHint) soundHint.hidden = true;
         retry.forEach(function(held) {
-          playClip(held.src, held.at, held.keep, held.test);
+          playClip(held.src, held.at, held.keep, held.test, held.after,
+            held.still);
         });
       }
       document.addEventListener('click', unlock);
       document.addEventListener('keydown', unlock);
 
-      // ---- the schedule ----
+      // ---- the announcement schedule ----
+      // Untouched by the playlist below: every announcement still fires
+      // at the exact moment its own name spells out
       const slate = [];
-      AUDIO_MUSIC.forEach(function(name) {
-        slate.push({ src: 'audio/music/' + name, at: clipSeconds(name), keep: false });
-      });
       AUDIO_ANNOUNCEMENTS.forEach(function(name) {
         slate.push({ src: 'audio/announcements/' + name, at: clipSeconds(name), keep: true });
       });
@@ -1745,6 +1808,117 @@
       });
       if (rejoin) rejoin.played = false;
 
+      // ---- the playlist ----
+      // One song after another from 6:33 pm, each starting the moment the
+      // one before it runs out - never on top of it - and no encore: when
+      // the last track ends, the evening's music is over. A page opened
+      // or reloaded mid-evening adds up the track lengths to find which
+      // song the party is up to, and joins it partway through as if it
+      // had been playing all along.
+      let playlistOn = false;
+      // Which deal of the chain is current: every playTrack bumps this,
+      // and anything still holding an older number - a stale callback, a
+      // fetch that finally landed, a refused play out of the queue -
+      // stands down instead of playing over the newer deal
+      let playlistGen = 0;
+      // When the playing track has had its whole length and then some;
+      // past this, the watchdog below calls the track lost and re-deals
+      let playlistDue = 0;
+
+      function playTrack(i, at) {
+        if (i >= AUDIO_PLAYLIST.length) {
+          playlistDue = 0;
+          return;
+        }
+        playlistGen += 1;
+        const gen = playlistGen;
+        playlistDue = daySeconds() + AUDIO_PLAYLIST[i][1] + 90;
+        // The next two songs download while this one plays: two, because
+        // one short track may not give a slow connection long enough
+        for (let ahead = i + 1;
+          ahead <= i + 2 && ahead < AUDIO_PLAYLIST.length; ahead++) {
+          clipReady('audio/music/' + AUDIO_PLAYLIST[ahead][0]);
+        }
+        playClip('audio/music/' + AUDIO_PLAYLIST[i][0], at, false, false,
+          function() {
+            if (gen !== playlistGen) return;
+            chainFrom(i + 1);
+          },
+          function() {
+            return gen === playlistGen;
+          });
+      }
+
+      // The step between songs. Near the clock - the normal night - the
+      // next track simply follows, whole, from the top. Left more than a
+      // whole track behind it - a stall, a page unlocked hours late - the
+      // chain leaps to the track the marks say the party is up to and
+      // joins it partway, the way a fresh page would; and past the last
+      // mark, nothing: the evening does not run over.
+      function chainFrom(next) {
+        const now = daySeconds();
+        if (next >= AUDIO_PLAYLIST.length) {
+          playlistDue = 0;
+          return;
+        }
+        if (now < PLAYLIST_MARKS[next + 1]) {
+          playTrack(next, null);
+          return;
+        }
+        for (let j = next + 1; j < AUDIO_PLAYLIST.length; j++) {
+          if (now < PLAYLIST_MARKS[j + 1]) {
+            playTrack(j, PLAYLIST_MARKS[j]);
+            return;
+          }
+        }
+        playlistDue = 0;
+      }
+
+      function playlistTick(now) {
+        if (playlistOn) {
+          // The watchdog. A track gone quiet without ever ending - a
+          // stream that stalled, a fetch that hung - must not park the
+          // music for the night. Whatever of the chain's is still
+          // notionally on the air is silenced first, so a stream that
+          // recovers late cannot come back over the re-deal. A page
+          // waiting on its first touch is left alone: everything is
+          // queued behind the gesture there, and re-dealing would only
+          // pile the queue higher.
+          if (playlistDue && now > playlistDue && !refused.length) {
+            playlistDue = 0;
+            const stalled = [];
+            onAir.forEach(function(aired) {
+              if (aired.src.indexOf('audio/music/') === 0 && !aired.test) {
+                stalled.push(aired);
+              }
+            });
+            stalled.forEach(function(aired) {
+              aired.killed = true;
+              aired.audio.pause();
+              onAir.delete(aired);
+            });
+            playlistGen += 1;
+            chainFrom(0);
+          }
+          return;
+        }
+        if (now < PLAYLIST_START) {
+          // The opener downloads ahead of the first note
+          if (now >= PLAYLIST_START - FETCH_AHEAD) {
+            clipReady('audio/music/' + AUDIO_PLAYLIST[0][0]);
+          }
+          return;
+        }
+        playlistOn = true;
+        for (let i = 0; i < AUDIO_PLAYLIST.length; i++) {
+          if (now < PLAYLIST_MARKS[i + 1]) {
+            playTrack(i, PLAYLIST_MARKS[i]);
+            return;
+          }
+        }
+        // Opened after the last track's end: the music is already over
+      }
+
       function audioTick() {
         const now = daySeconds();
         slate.forEach(function(entry) {
@@ -1756,6 +1930,7 @@
             clipReady(entry.src);
           }
         });
+        playlistTick(now);
       }
       window.setInterval(audioTick, 1000);
       audioTick();
@@ -1799,12 +1974,14 @@
           null, true, true);
       }
 
-      // Kept, not let go: a tested song may still have its own scheduled
-      // turn to come, and the shared bytes must not be revoked out from
-      // under that later play. A handful of tested songs held in memory
-      // is nothing next to the film.
+      // Kept, not let go: a tested song may still have its playlist turn
+      // to come, and the shared bytes must not be revoked out from under
+      // that later play. A handful of tested songs held in memory is
+      // nothing next to the film.
       function playTestMusic() {
-        playClip(pickTest('audio/music/', AUDIO_MUSIC), null, true, true);
+        playClip(pickTest('audio/music/', AUDIO_PLAYLIST.map(function(track) {
+          return track[0];
+        })), null, true, true);
       }
 
       // The hash cells as last seen. The first successful poll only files

@@ -1668,6 +1668,7 @@
     .sponsor--dames        { --sp-w: 120px; }
     .sponsor--lxig         { --sp-w: 85px; }
     .sponsor--bvig         { --sp-w: 89px; }
+    .sponsor--qag          { --sp-w: 94px; }
     .sponsor--gin          { --sp-w: 93px; }
     .sponsor--klgates      { --sp-w: 151px; }
     .sponsor--aie          { --sp-w: 58px; }
@@ -1718,14 +1719,29 @@
     /* The two company walls get half again the width of a normal section on
        desktop, plus deeper side padding: a logo can drift 24px and grow 13% at
        the same time, and without that buffer the ones on the outside edge got
-       clipped. The sponsors section is deliberately NOT widened - its rows are
-       fixed-width and centred, so extra width moved the left-aligned heading
-       without moving a single logo. */
+       clipped. */
     @media (min-width: 1000px) {
       .section--wide {
         max-width: 1440px;
         padding-left: 48px;
         padding-right: 48px;
+      }
+
+      /* The sponsor section itself stays at its normal width so the left-aligned
+         heading does not move - only the logo field reaches wider, by growing
+         symmetrically past the section on both sides. That buys enough room for
+         the supporting tier to sit in two rows instead of four. */
+      #sponsors .sponsors-field {
+        --sp-widen: max(0px, min(210px, (100vw - 984px) / 2));
+        margin-left: calc(-90px - var(--sp-widen));
+        margin-right: calc(-90px - var(--sp-widen));
+      }
+
+      /* Ten logos on the second supporting line only just fitted at the 36px
+         gap, so it is tightened here - a few pixels off each gap is invisible
+         but it is the difference between one line and two. */
+      #sponsors .sponsors-row--supporting {
+        gap: 30px;
       }
     }
 
@@ -1813,7 +1829,6 @@
     .co--probablymonsters { --sp-w: 125px; }
     .co--hidden-path-entertainment { --sp-w: 143px; }
     .co--spry-fox { --sp-w: 62px; }
-    .co--the-quantum-astrophysicists-guild { --sp-w: 77px; }
     .co--system-era-softworks { --sp-w: 111px; }
     .co--the-indie-stone { --sp-w: 62px; }
     .co--blumhouse-games { --sp-w: 111px; }
@@ -3381,8 +3396,6 @@
         </div>
 
         <div class="sponsors-row sponsors-row--supporting">
-          <!-- K&amp;L Gates, like Xsolla, stays level: drift and the hover
-               reaction still apply, just no rotation. -->
           <a class="sponsor sponsor--klgates" data-no-tilt href="https://www.klgates.com/" target="_blank" rel="noopener noreferrer" aria-label="K&amp;L Gates, sponsor">
             <img class="sponsor__img" src="images/sponsors/kl-gates.png" width="600" height="88" alt="K&amp;L Gates" loading="lazy">
           </a>
@@ -3401,12 +3414,12 @@
           <a class="sponsor sponsor--miraisens" href="https://www.miraisens.com/" target="_blank" rel="noopener noreferrer" aria-label="Miraisens, Inc., sponsor">
             <img class="sponsor__img" src="images/sponsors/miraisens.png" width="600" height="121" alt="Miraisens, Inc." loading="lazy">
           </a>
-        </div>
-
-        <div class="sponsors-row sponsors-row--supporting">
           <a class="sponsor sponsor--digipen" href="https://www.digipen.edu/" target="_blank" rel="noopener noreferrer" aria-label="DigiPen Institute of Technology, sponsor">
             <img class="sponsor__img" src="images/sponsors/digipen.png" width="600" height="145" alt="DigiPen Institute of Technology" loading="lazy">
           </a>
+        </div>
+
+        <div class="sponsors-row sponsors-row--supporting">
           <a class="sponsor sponsor--discord" href="https://discord.com/" target="_blank" rel="noopener noreferrer" aria-label="Discord, sponsor">
             <img class="sponsor__img" src="images/sponsors/discord.png" width="600" height="91" alt="Discord" loading="lazy">
           </a>
@@ -3416,24 +3429,24 @@
           <a class="sponsor sponsor--timesofgames" href="https://www.timesofgames.com/" target="_blank" rel="noopener noreferrer" aria-label="Times of Games, sponsor">
             <img class="sponsor__img" src="images/sponsors/times-of-games.png" width="600" height="117" alt="Times of Games" loading="lazy">
           </a>
-        </div>
-
-        <div class="sponsors-row sponsors-row--supporting">
+          <a class="sponsor sponsor--qag" href="https://qag.io/" target="_blank" rel="noopener noreferrer" aria-label="The Quantum Astrophysicists Guild, sponsor">
+            <img class="sponsor__img" src="images/sponsors/quantum-astrophysicists-guild.png" width="600" height="342" alt="The Quantum Astrophysicists Guild" loading="lazy">
+          </a>
           <a class="sponsor sponsor--gin" href="https://gamesindustry.network/" target="_blank" rel="noopener noreferrer" aria-label="Games Industry Network, sponsor">
             <img class="sponsor__img" src="images/sponsors/games-industry-network.png" width="600" height="234" alt="Games Industry Network (GIN)" loading="lazy">
           </a>
           <a class="sponsor sponsor--colburn" href="https://washingtondogbitelawyer.com/" target="_blank" rel="noopener noreferrer" aria-label="Colburn Law, The Dog Bite Lawyer, sponsor">
             <img class="sponsor__img" src="images/sponsors/colburn-law.png" width="600" height="384" alt="Colburn Law, The Dog Bite Lawyer" loading="lazy">
           </a>
+        </div>
+
+        <div class="sponsors-row sponsors-row--supporting">
           <a class="sponsor sponsor--epam" href="https://www.epam.com/gaming" target="_blank" rel="noopener noreferrer" aria-label="EPAM, sponsor">
             <img class="sponsor__img" src="images/sponsors/epam.png" width="600" height="225" alt="EPAM" loading="lazy">
           </a>
           <a class="sponsor sponsor--ladybug" href="https://www.ladybugventures.com/" target="_blank" rel="noopener noreferrer" aria-label="Ladybug Ventures, sponsor">
             <img class="sponsor__img" src="images/sponsors/ladybug-ventures.png" width="600" height="148" alt="Ladybug Ventures" loading="lazy">
           </a>
-        </div>
-
-        <div class="sponsors-row sponsors-row--supporting">
           <a class="sponsor sponsor--igda" href="https://igda.org/" target="_blank" rel="noopener noreferrer" aria-label="IGDA, International Game Developers Association, sponsor">
             <img class="sponsor__img" src="images/sponsors/igda.png" width="238" height="96" alt="IGDA" loading="lazy">
           </a>
@@ -3499,9 +3512,6 @@
           </a>
           <a class="sponsor sponsor--co co--spry-fox" href="https://spryfox.com" target="_blank" rel="noopener noreferrer" aria-label="Spry Fox">
             <img class="sponsor__img" src="images/companies/spry-fox.png" width="71" height="74" alt="Spry Fox" loading="lazy">
-          </a>
-          <a class="sponsor sponsor--co co--the-quantum-astrophysicists-guild" href="https://qag.io" target="_blank" rel="noopener noreferrer" aria-label="The Quantum Astrophysicists Guild">
-            <img class="sponsor__img" src="images/companies/the-quantum-astrophysicists-guild.png" width="88" height="50" alt="The Quantum Astrophysicists Guild" loading="lazy">
           </a>
           <a class="sponsor sponsor--co co--system-era-softworks" href="https://systemera.net" target="_blank" rel="noopener noreferrer" aria-label="System Era Softworks">
             <img class="sponsor__img" src="images/companies/system-era-softworks.png" width="126" height="34" alt="System Era Softworks" loading="lazy">

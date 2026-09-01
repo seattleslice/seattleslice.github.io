@@ -1,0 +1,129 @@
+/* ===================== THE ROOM SCREEN =====================
+   One slide, full screen, on the display at a room's door: see
+   js/room-screen.js, which every room page shares. Drawn for a 1920x1080
+   output, which every slide in images/rooms matches pixel for pixel; a
+   screen of any other shape gets the slide whole, letterboxed in the
+   slides' own blue. Sized like live.html, with the rem a slice of the
+   screen's height, so the corner hint reads the same on both. */
+
+/* The one face the page has words in, bundled beside the page rather
+   than fetched from Google: the room's computer may have no internet */
+@font-face {
+  font-family: 'Lato';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/lato-700-latin.woff2') format('woff2');
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 1.9vh;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: 'Lato', sans-serif;
+  /* The blue at the edge of every slide, so a letterbox reads as more slide */
+  background: #0068a4;
+  overflow: hidden;
+  /* Nobody is pointing at a door screen */
+  cursor: none;
+}
+
+.room {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Every slide of the day is in the page from the start, so a swap is a
+   toggle rather than a fetch; only the one whose minute has come shows */
+.room-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+
+.room-slide[hidden] {
+  display: none;
+}
+
+/* ---- the fullscreen hint ---- */
+/* The corner hint live.html carries, word for word: up only while the
+   browser's chrome is still on screen, see the FULLSCREEN module in
+   js/room-screen.js. Small enough to ignore from the doorway, plain
+   enough to follow from the AV cart. */
+.tv-fullscreen-hint {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 11;
+  padding: 0.55rem 0.9rem;
+  background: #001a3d;
+  border: 0.09rem solid #8ab4e0;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #a0c4e8;
+  animation: tvPulse 1.4s ease-in-out infinite;
+}
+
+.tv-fullscreen-hint[hidden] {
+  display: none;
+}
+
+/* It has pulsed long enough to be noticed by anybody setting the screen
+   up; after that it just sits quietly for whoever walks past later */
+.tv-fullscreen-hint.is-settled {
+  animation: none;
+  opacity: 0.75;
+}
+
+@keyframes tvPulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+/* The pointer comes back while somebody may need to aim a click */
+body.tv-windowed {
+  cursor: default;
+}
+
+/* ---- the rehearsal tag ---- */
+/* Up only under ?t=: the clock the page is pretending and the slide it
+   chose for it, in the corner opposite the fullscreen hint */
+.room-test {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 11;
+  padding: 0.55rem 0.9rem;
+  background: rgba(0, 26, 61, 0.85);
+  border: 0.09rem solid #8ab4e0;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #a0c4e8;
+}
+
+.room-test[hidden] {
+  display: none;
+}

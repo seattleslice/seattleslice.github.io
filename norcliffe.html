@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>SLICE 2026 Norcliffe Room</title>
+  <meta name="description" content="The door screen for the Norcliffe Room (Level 4) at SLICE 2026: the session in the room now or next.">
+  <!-- A room fixture, not a destination -->
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0068A4">
+
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <!-- Shared by the four room pages, along with js/room-screen.js -->
+  <link rel="stylesheet" href="styles/room-screen.css?v=2026-09-01">
+</head>
+<body>
+
+  <!-- The day's slides, one img each, are built in here by js/room-screen.js -->
+  <main class="room" id="stage"></main>
+
+  <!-- Up while the page is windowed - see the FULLSCREEN module in js/room-screen.js -->
+  <div class="tv-fullscreen-hint" id="fullscreenHint" hidden>
+    Click anywhere or press any key for full screen</div>
+
+  <!-- Up only under ?t=HH:MM, naming the pretend clock and the slide chosen for it -->
+  <div class="room-test" id="testTag" hidden></div>
+
+  <script>
+    // The slides in images/rooms/norcliffe, each named for the minute it takes the
+    // screen on a 24-hour clock, with 00_00 opening the day. A browser
+    // cannot list a folder, so a slide added there needs its name added
+    // here as well. Order does not matter; the script sorts them.
+    window.ROOM_SCREEN = {
+      room: 'Norcliffe Room',
+      folder: 'images/rooms/norcliffe',
+      slides: [
+        '00_00', '10_18', '11_18', '12_18', '13_33',
+        '14_33', '15_33', '16_33', '17_33', '18_33'
+      ]
+    };
+  </script>
+  <script src="js/room-screen.js?v=2026-09-01"></script>
+</body>
+</html>

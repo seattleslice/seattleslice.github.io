@@ -693,8 +693,9 @@
     // Reads the clock, shows the slot that is running in full and the next
     // one small - or the other way round between slots, when the standing
     // fixtures hold the fort and the next slot gets the room. Refetches the
-    // sheet every ten minutes so a mid-day edit reaches the hallways, and
-    // keeps whatever it already has when a fetch fails.
+    // sheet every five minutes so a dropped speaker or a moved session
+    // reaches the hallways mid-day, and keeps whatever it already has when
+    // a fetch fails.
     (function() {
       const stage = document.getElementById('stage');
       const nowBandEl = document.getElementById('nowBand');
@@ -793,6 +794,9 @@
 
       let sessions = [];
       let lastKey = null;
+      // What the sheet last amounted to, so an unchanged answer redraws
+      // nothing - see refresh
+      let sessionsStamp = null;
       let tickEl = null;
       let tickBase = 0;
       // The two halves of the takeover countdown's number
@@ -1384,16 +1388,19 @@
         document.fonts.ready.then(fitScreen);
       }
 
-      // ---- the sheet, now and every ten minutes ----
+      // ---- the sheet, now and every five minutes ----
       // A failed fetch changes nothing on screen: the board keeps what it
       // has and tries again next round. Only the first load retries fast,
-      // since until it lands there is nothing to keep.
+      // since until it lands there is nothing to keep. An answer that says
+      // what the board already shows redraws nothing at all - the screens
+      // rebuild in place only when the day has actually changed, and the
+      // page itself never reloads, so fullscreen and the audio hold.
       let fetching = false;
       let retryTimer = 0;
 
       function refresh() {
         if (offlineTest) return;
-        // One fetch at a time: the ten-minute interval and the first-load
+        // One fetch at a time: the five-minute interval and the first-load
         // retry must not stack chains of requests during a long outage
         if (fetching) return;
         fetching = true;
@@ -1415,6 +1422,12 @@
               return;
             }
             fetching = false;
+            const stamp = JSON.stringify(fresh.map(function(session) {
+              return [session.title, session.time, session.room, session.format,
+                session.speakers.map(function(speaker) { return speaker.name; })];
+            }));
+            if (stamp === sessionsStamp) return;
+            sessionsStamp = stamp;
             sessions = fresh;
             lastKey = null;
             build();
@@ -1437,13 +1450,13 @@
       }
 
       refresh();
-      window.setInterval(refresh, 10 * 60 * 1000);
+      window.setInterval(refresh, 5 * 60 * 1000);
 
       // ---- the offline fallback ----
       // The venue's computers may have no internet at all. The sheet gets
       // ten seconds to answer; past that, the snapshot bundled beside this
       // page takes the stage - and a live fetch that lands later, or on any
-      // ten-minute round after, still replaces it with the real thing.
+      // five-minute round after, still replaces it with the real thing.
       window.setTimeout(function() {
         if (sessions.length) return;
         const snap = window.SCHEDULE_SNAPSHOT;
@@ -1461,7 +1474,9 @@
     // announcements - and every file in them is named for the moment it
     // should start: 19_14_22.mp3 begins at 7:14:22 pm, 24-hour clock, and
     // plays through. Announcements land on the schedule the same way, and
-    // the T key also fires a random one immediately.
+    // the Volume tab of the schedule spreadsheet is the day-of remote
+    // control over all of it - levels, and fired-off test clips - for a
+    // computer nobody can reach once the doors open. See REMOTE below.
     //
     // Each clip is fetched whole ahead of its start, so a slow venue
     // connection can never stutter mid-song: the bytes are already here
@@ -1546,16 +1561,56 @@
       // Clips the browser refused pending a touch - see the unlock below
       let refused = [];
 
+      // ---- the remote's levers ----
+      // Set from the Volume tab of the schedule spreadsheet - see the
+      // REMOTE poll below. Levels are 0..1 and land on the clips already
+      // playing as well as on everything played after, so a level pulled
+      // down on the sheet quiets the song mid-note.
+      let announcementLevel = 1;
+      let musicLevel = 1;
+      // Every clip on the air right now
+      const onAir = new Set();
+      // The one test clip allowed at a time - see killTest
+      let testOnAir = null;
+
+      function levelFor(src) {
+        return src.indexOf('audio/music/') === 0 ? musicLevel : announcementLevel;
+      }
+
+      function applyLevels() {
+        onAir.forEach(function(aired) {
+          aired.audio.volume = levelFor(aired.src);
+        });
+      }
+
+      // A test is a guest on the air: the moment any other clip starts -
+      // the schedule's own, or the next test - it is taken straight off
+      function killTest() {
+        if (!testOnAir) return;
+        const held = testOnAir;
+        testOnAir = null;
+        held.stop();
+      }
+
       // Plays the clip filed under src. A clip with a mark that has gone
       // by joins in progress - or stays quiet once its own end has passed.
-      // Announcements are kept for the T key; a song's memory is let go
-      // the moment it has played.
-      function playClip(src, at, keep) {
+      // Announcements are kept for the remote's tests; a song's memory is
+      // let go the moment it has played.
+      function playClip(src, at, keep, test) {
         clipReady(src).then(function(loaded) {
-          const audio = loaded.local ? new Audio(loaded.url) : loaded.audio;
+          // A test never borrows the shared fallback element: were it to
+          // draw the very clip the schedule has playing through it, it
+          // would restart the live clip and mark it killable
+          const audio = loaded.local ? new Audio(loaded.url)
+            : test ? new Audio(src)
+            : loaded.audio;
+          const aired = { audio: audio, src: src };
 
           function done() {
             audio.removeEventListener('ended', done);
+            audio.removeEventListener('error', done);
+            onAir.delete(aired);
+            if (testOnAir && testOnAir.audio === audio) testOnAir = null;
             if (loaded.local && !keep) {
               URL.revokeObjectURL(loaded.url);
               clips.delete(src);
@@ -1575,16 +1630,42 @@
               // starts over rather than resuming at its end
               audio.currentTime = 0;
             }
+            audio.volume = levelFor(src);
+            // Any clip starting bumps the test on air - and a test takes
+            // the vacated spot
+            killTest();
+            if (test) {
+              testOnAir = {
+                audio: audio,
+                stop: function() {
+                  // Marked before the pause: a play() still settling
+                  // rejects when paused, and that must read as the kill
+                  // doing its job, not as the browser refusing sound
+                  aired.killed = true;
+                  audio.pause();
+                  done();
+                }
+              };
+            }
             audio.addEventListener('ended', done);
+            // A mid-play error must clear the air too, or the clip would
+            // haunt the level bookkeeping all day
+            audio.addEventListener('error', done);
+            onAir.add(aired);
             const playing = audio.play();
             if (playing && playing.catch) {
-              playing.catch(function() {
-                // The browser wants a person to touch the page before it
-                // makes a sound. Hold the clip and its mark; the first
-                // click or key press replays it from wherever the clock
-                // has moved to by then.
+              playing.catch(function(err) {
+                if (aired.killed) return;
                 audio.removeEventListener('ended', done);
-                refused.push({ src: src, at: at, keep: keep });
+                audio.removeEventListener('error', done);
+                onAir.delete(aired);
+                if (testOnAir && testOnAir.audio === audio) testOnAir = null;
+                // Only the browser wanting a person to touch the page
+                // first is worth holding the clip for: the first click or
+                // key press replays it from wherever the clock has moved
+                // to by then. Any other failure just stands down.
+                if (!err || err.name !== 'NotAllowedError') return;
+                refused.push({ src: src, at: at, keep: keep, test: test });
                 if (soundHint) soundHint.hidden = false;
               });
             }
@@ -1607,7 +1688,7 @@
         refused = [];
         if (soundHint) soundHint.hidden = true;
         retry.forEach(function(held) {
-          playClip(held.src, held.at, held.keep);
+          playClip(held.src, held.at, held.keep, held.test);
         });
       }
       document.addEventListener('click', unlock);
@@ -1651,10 +1732,10 @@
       window.setInterval(audioTick, 1000);
       audioTick();
 
-      // ---- the announcement pool, and the T key ----
+      // ---- the announcement pool ----
       // Every announcement downloads from the start, one after another so
       // the fetches queue politely behind the page's own: one must be
-      // ready the moment T is pressed, whenever that is
+      // ready the moment the remote calls for a test, whenever that is
       (function warm(i) {
         if (i >= AUDIO_ANNOUNCEMENTS.length) return;
         clipReady('audio/announcements/' + AUDIO_ANNOUNCEMENTS[i]).then(function() {
@@ -1662,12 +1743,105 @@
         });
       })(0);
 
-      document.addEventListener('keydown', function(e) {
-        if (e.key !== 't' && e.key !== 'T') return;
-        const name = AUDIO_ANNOUNCEMENTS[
-          Math.floor(Math.random() * AUDIO_ANNOUNCEMENTS.length)];
-        playClip('audio/announcements/' + name, null, true);
-      });
+      // ---- REMOTE ----
+      // The Volume tab of the schedule spreadsheet, read through the same
+      // Sheets API the session tabs use (GSheetsapi and the key sit in
+      // js/shared.js). Key-value rows: AnnouncementVolume and MusicVolume
+      // hold 0..100, and AnnouncementTestHash and MusicTestHash fire a
+      // random test clip whenever their value changes. Polled every twenty
+      // seconds; an unreachable sheet changes nothing at all, so the board
+      // sails on at its last known settings.
+      // Never the clip that is on the air right now: a test drawing a
+      // playing clip's name would share its bytes, and stopping the one
+      // could take the other down with it
+      function pickTest(folder, names) {
+        const clear = names.filter(function(name) {
+          let taken = false;
+          onAir.forEach(function(aired) {
+            if (aired.src === folder + name) taken = true;
+          });
+          return !taken;
+        });
+        const pool = clear.length ? clear : names;
+        return folder + pool[Math.floor(Math.random() * pool.length)];
+      }
+
+      function playTestAnnouncement() {
+        playClip(pickTest('audio/announcements/', AUDIO_ANNOUNCEMENTS),
+          null, true, true);
+      }
+
+      // Kept, not let go: a tested song may still have its own scheduled
+      // turn to come, and the shared bytes must not be revoked out from
+      // under that later play. A handful of tested songs held in memory
+      // is nothing next to the film.
+      function playTestMusic() {
+        playClip(pickTest('audio/music/', AUDIO_MUSIC), null, true, true);
+      }
+
+      // The hash cells as last seen. The first successful poll only files
+      // them away - a page opened mid-day must not replay the morning's
+      // test - and every change after that fires one.
+      const seenHashes = {};
+
+      function heedHash(name, value, fire) {
+        if (value === undefined) return;
+        if (!(name in seenHashes)) {
+          seenHashes[name] = value;
+          return;
+        }
+        if (seenHashes[name] === value) return;
+        seenHashes[name] = value;
+        fire();
+      }
+
+      // "50" to 0.5, shrugging off anything that is not a number
+      function heedLevel(value) {
+        const asked = parseFloat(value);
+        if (!isFinite(asked)) return null;
+        return Math.min(100, Math.max(0, asked)) / 100;
+      }
+
+      // One poll at a time, the way the board's refresh guards itself: a
+      // stalled answer landing after a later one would roll the levels
+      // and the hash baselines backwards and fire tests that were never
+      // asked for, and a black-holed connection must not stack requests
+      let polling = false;
+
+      function pollRemote() {
+        if (polling) return;
+        polling = true;
+        GSheetsapi({
+          apiKey: SPEAKERS_API_KEY,
+          sheetId: SPEAKERS_SHEET_ID,
+          sheetName: 'Volume'
+        }).then(function(data) {
+          polling = false;
+          const rows = (data && data.values) || [];
+          const said = {};
+          rows.forEach(function(row) {
+            if (row && row.length >= 2) {
+              said[String(row[0]).trim()] = String(row[1]).trim();
+            }
+          });
+
+          const announcement = heedLevel(said.AnnouncementVolume);
+          if (announcement !== null) announcementLevel = announcement;
+          const music = heedLevel(said.MusicVolume);
+          if (music !== null) musicLevel = music;
+          applyLevels();
+
+          heedHash('AnnouncementTestHash', said.AnnouncementTestHash,
+            playTestAnnouncement);
+          heedHash('MusicTestHash', said.MusicTestHash, playTestMusic);
+        }).catch(function() {
+          // A failed poll changes nothing: levels hold, no test fires
+          polling = false;
+        });
+      }
+
+      window.setInterval(pollRemote, 20000);
+      pollRemote();
     })();
   </script>
 

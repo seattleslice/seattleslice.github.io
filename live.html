@@ -501,6 +501,96 @@
       50% { opacity: 1; }
     }
 
+    /* ---- the evening: the sponsor ribbon and the supercut film ---- */
+    /* Through the after-party the bottom 15% of the screen is a ribbon of
+       sponsor logos looping past a thank-you, and the board above gives up
+       the room - see body.tv-evening and the EVENING module. */
+    .tv-marquee {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 15vh;
+      background: #001a3d;
+      overflow: hidden;
+      /* Under the corner hints, which somebody may still need to read,
+         and under the robot, who is welcome to stand in front */
+      z-index: 9;
+    }
+
+    .tv-marquee[hidden] {
+      display: none;
+    }
+
+    /* Two identical reels ride one track; the animation slides the track
+       exactly one reel to the left and starts over, so the seam between
+       the copies never shows. The EVENING module sets --mq-secs from the
+       reel's real width, keeping the pace steady on any screen. */
+    .tv-marquee__track {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      width: max-content;
+      will-change: transform;
+      animation: tvMarquee var(--mq-secs, 60s) linear infinite;
+    }
+
+    @keyframes tvMarquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    .tv-marquee__reel {
+      display: flex;
+      align-items: center;
+    }
+
+    /* Sized off the screen rather than the board's rem: the ribbon holds
+       its scale however far the fit loop shrinks a crowded slot */
+    .tv-marquee__thanks {
+      font-family: 'Bungee', cursive;
+      font-size: 5vh;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      color: #f5ee1d;
+      text-shadow: 0.25vh -0.25vh 0 #BB3EFD;
+      margin: 0 7vh;
+    }
+
+    /* The logos keep the main page's widths - settled there for equal
+       optical area per tier - scaled so the tallest still clears the band.
+       Same floating treatment as the sponsor wall: transparent art over
+       the navy, held by a soft shadow. */
+    .tv-marquee__logo {
+      width: calc(var(--w) * 0.09vh);
+      margin: 0 3vh;
+      filter: drop-shadow(0 0.4vh 1vh rgba(0, 0, 0, 0.45));
+    }
+
+    /* The board hands the ribbon its 15% and reflows into the rest */
+    body.tv-evening .tv {
+      height: 85vh;
+    }
+
+    /* ---- the supercut film, every five evening minutes ---- */
+    /* Over everything, hints included: the screen is the film's while it
+       runs. The board keeps ticking underneath - the music, the clocks -
+       and is simply revealed again when the film ends. */
+    .tv-film {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: #000000;
+      object-fit: contain;
+      z-index: 30;
+    }
+
+    .tv-film[hidden] {
+      display: none;
+    }
+
     /* ---- the fullscreen hint ---- */
     /* Up only while the browser's chrome is still on screen - see the
        FULLSCREEN module at the end of the page. Small enough to ignore
@@ -533,6 +623,14 @@
       opacity: 0.75;
     }
 
+    /* The sound twin of the hint above, in the opposite corner: up only
+       when the browser refuses to play a clip until somebody touches the
+       page - see the AUDIO module below */
+    .tv-sound-hint {
+      right: auto;
+      left: 1rem;
+    }
+
     /* The pointer comes back while somebody may need to aim a click */
     body.tv-windowed {
       cursor: default;
@@ -561,6 +659,11 @@
   <div class="tv-fullscreen-hint" id="fullscreenHint" hidden>
     Click anywhere or press any key for full screen</div>
 
+  <!-- Up only if a clip came due while the browser still refuses to make
+       a sound - see the AUDIO module below -->
+  <div class="tv-fullscreen-hint tv-sound-hint" id="soundHint" hidden>
+    Click anywhere or press any key to enable sound</div>
+
   <!-- The website's hero robot, wheeling in for the last two minutes before
        a session block starts -->
   <div class="tv-robot" id="tvRobot" aria-hidden="true">
@@ -569,6 +672,13 @@
       <img class="tv-robot__arm" id="tvRobotArm" src="images/robot/v1/arm.png" alt="" draggable="false">
     </div>
   </div>
+
+  <!-- The evening's fixtures: the sponsor thank-you ribbon and the SIX
+       supercut film - see the EVENING module below -->
+  <div class="tv-marquee" id="tvMarquee" aria-hidden="true" hidden>
+    <div class="tv-marquee__track" id="tvMarqueeTrack"></div>
+  </div>
+  <video class="tv-film" id="tvFilm" muted playsinline hidden></video>
 
   <!-- schedule.js for the slot table, the sheet parsing and the room names;
        shared.js for the sheet loaders. Neither builds anything here - this
@@ -616,6 +726,10 @@
         const now = new Date();
         return now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
       }
+
+      // The audio and evening modules further down read this same clock,
+      // pretend time and all
+      window.tvDaySeconds = daySeconds;
 
       // "2:45 pm", the way the posters wrote it
       function clockLower(minutes) {
@@ -1338,6 +1452,479 @@
         lastKey = null;
         build();
       }, 10000);
+    })();
+  </script>
+
+  <script>
+    // ===================== AUDIO =====================
+    // The day's soundtrack. Two folders sit beside this page - music and
+    // announcements - and every file in them is named for the moment it
+    // should start: 19_14_22.mp3 begins at 7:14:22 pm, 24-hour clock, and
+    // plays through. Announcements land on the schedule the same way, and
+    // the T key also fires a random one immediately.
+    //
+    // Each clip is fetched whole ahead of its start, so a slow venue
+    // connection can never stutter mid-song: the bytes are already here
+    // by the time they are due. Where fetching is impossible - the page
+    // opened straight off the disk - a plain audio element told to buffer
+    // early stands in, which a local disk serves without hiccups anyway.
+    (function() {
+      // ---- the clips, by name ----
+      // Hard-coded rather than listed live: a static page cannot read a
+      // folder, and these files are settled. Update by hand if they change.
+      const AUDIO_MUSIC = [
+        '18_33_00.mp3', '18_36_07.mp3', '18_38_49.mp3', '18_44_12.mp3',
+        '18_51_12.mp3', '18_54_49.mp3', '18_57_46.mp3', '19_00_13.mp3',
+        '19_03_14.mp3', '19_10_14.mp3', '19_14_22.mp3', '19_16_20.mp3',
+        '19_18_49.mp3', '19_22_39.mp3', '19_23_58.mp3', '19_30_04.mp3',
+        '19_32_24.mp3', '19_35_27.mp3', '19_40_27.mp3', '19_45_19.mp3',
+        '19_46_43.mp3', '19_49_42.mp3', '19_52_31.mp3', '19_54_00.mp3',
+        '19_57_16.mp3', '20_01_29.mp3', '20_03_56.mp3', '20_06_28.mp3',
+        '20_09_29.mp3', '20_13_18.mp3', '20_16_02.mp3', '20_19_00.mp3',
+        '20_22_22.mp3', '20_25_41.mp3', '20_29_19.mp3', '20_30_32.mp3',
+        '20_31_42.mp3', '20_35_12.mp3', '20_40_33.mp3', '20_43_26.mp3',
+        '20_46_41.mp3', '20_49_36.mp3', '20_55_21.mp3', '20_57_55.mp3',
+        '21_04_59.mp3', '21_08_47.mp3', '21_15_28.mp3', '21_18_56.mp3',
+        '21_23_04.mp3', '21_27_45.wav'
+      ];
+      const AUDIO_ANNOUNCEMENTS = [
+        '08_00_00.wav', '08_57_00.wav', '09_27_00.wav', '10_27_00.wav',
+        '11_27_00.wav', '12_18_00.wav', '13_42_00.wav', '14_42_00.wav',
+        '15_42_00.wav', '16_42_00.wav', '17_42_00.wav', '21_27_15.wav'
+      ];
+
+      // How long before its mark a clip starts downloading
+      const FETCH_AHEAD = 180;
+      // Fired this close to its mark, a clip still plays from the top
+      const JOIN_SLACK = 2;
+      // A page opened mid-clip - a reload, a late setup - rejoins anything
+      // that started this recently, partway through, rather than replaying
+      // it from the top or skipping it
+      const REJOIN_WINDOW = 10 * 60;
+
+      function clipSeconds(name) {
+        return parseInt(name.slice(0, 2), 10) * 3600 +
+          parseInt(name.slice(3, 5), 10) * 60 +
+          parseInt(name.slice(6, 8), 10);
+      }
+
+      // The same pretend clock the board reads: ?t=19:14 rehearses the
+      // soundtrack the way it rehearses the screens
+      const daySeconds = window.tvDaySeconds;
+
+      // ---- fetching ----
+      // A clip arrives whole, as a blob, and plays from memory. If the
+      // fetch fails - the page came off the disk, or the server said no -
+      // an audio element buffering from the src is the fallback.
+      function loadClip(src) {
+        return fetch(src).then(function(res) {
+          if (!res.ok) throw new Error(src + ' answered ' + res.status);
+          return res.blob();
+        }).then(function(blob) {
+          return { url: URL.createObjectURL(blob), local: true };
+        }).catch(function() {
+          const audio = new Audio(src);
+          audio.preload = 'auto';
+          audio.load();
+          return { audio: audio, local: false };
+        });
+      }
+
+      // One download per file, however many hands reach for it
+      const clips = new Map();
+      function clipReady(src) {
+        let ready = clips.get(src);
+        if (!ready) {
+          ready = loadClip(src);
+          clips.set(src, ready);
+        }
+        return ready;
+      }
+
+      // ---- playing ----
+      const soundHint = document.getElementById('soundHint');
+      // Clips the browser refused pending a touch - see the unlock below
+      let refused = [];
+
+      // Plays the clip filed under src. A clip with a mark that has gone
+      // by joins in progress - or stays quiet once its own end has passed.
+      // Announcements are kept for the T key; a song's memory is let go
+      // the moment it has played.
+      function playClip(src, at, keep) {
+        clipReady(src).then(function(loaded) {
+          const audio = loaded.local ? new Audio(loaded.url) : loaded.audio;
+
+          function done() {
+            audio.removeEventListener('ended', done);
+            if (loaded.local && !keep) {
+              URL.revokeObjectURL(loaded.url);
+              clips.delete(src);
+            }
+          }
+
+          function begin() {
+            const behind = at == null ? 0 : Math.max(0, daySeconds() - at);
+            if (behind > JOIN_SLACK) {
+              if (!isFinite(audio.duration) || behind >= audio.duration - 0.25) {
+                done();
+                return;
+              }
+              audio.currentTime = behind;
+            } else if (audio.currentTime) {
+              // The fallback elements are reused; a second play of one
+              // starts over rather than resuming at its end
+              audio.currentTime = 0;
+            }
+            audio.addEventListener('ended', done);
+            const playing = audio.play();
+            if (playing && playing.catch) {
+              playing.catch(function() {
+                // The browser wants a person to touch the page before it
+                // makes a sound. Hold the clip and its mark; the first
+                // click or key press replays it from wherever the clock
+                // has moved to by then.
+                audio.removeEventListener('ended', done);
+                refused.push({ src: src, at: at, keep: keep });
+                if (soundHint) soundHint.hidden = false;
+              });
+            }
+          }
+
+          if (audio.readyState >= 1) {
+            begin();
+          } else {
+            audio.addEventListener('loadedmetadata', begin, { once: true });
+            audio.addEventListener('error', done, { once: true });
+          }
+        });
+      }
+
+      // The first touch retries whatever the browser refused; anything
+      // whose end has passed by now drops out inside playClip
+      function unlock() {
+        if (!refused.length) return;
+        const retry = refused;
+        refused = [];
+        if (soundHint) soundHint.hidden = true;
+        retry.forEach(function(held) {
+          playClip(held.src, held.at, held.keep);
+        });
+      }
+      document.addEventListener('click', unlock);
+      document.addEventListener('keydown', unlock);
+
+      // ---- the schedule ----
+      const slate = [];
+      AUDIO_MUSIC.forEach(function(name) {
+        slate.push({ src: 'audio/music/' + name, at: clipSeconds(name), keep: false });
+      });
+      AUDIO_ANNOUNCEMENTS.forEach(function(name) {
+        slate.push({ src: 'audio/announcements/' + name, at: clipSeconds(name), keep: true });
+      });
+
+      // Anything already gone when the page opens stays gone - a board
+      // turned on at 8 pm must not replay the day - except the most recent
+      // clip, young enough to maybe still be running: that one rejoins
+      const opened = daySeconds();
+      let rejoin = null;
+      slate.forEach(function(entry) {
+        if (entry.at >= opened) return;
+        entry.played = true;
+        if (opened - entry.at < REJOIN_WINDOW && (!rejoin || entry.at > rejoin.at)) {
+          rejoin = entry;
+        }
+      });
+      if (rejoin) rejoin.played = false;
+
+      function audioTick() {
+        const now = daySeconds();
+        slate.forEach(function(entry) {
+          if (entry.played) return;
+          if (now >= entry.at) {
+            entry.played = true;
+            playClip(entry.src, entry.at, entry.keep);
+          } else if (now >= entry.at - FETCH_AHEAD) {
+            clipReady(entry.src);
+          }
+        });
+      }
+      window.setInterval(audioTick, 1000);
+      audioTick();
+
+      // ---- the announcement pool, and the T key ----
+      // Every announcement downloads from the start, one after another so
+      // the fetches queue politely behind the page's own: one must be
+      // ready the moment T is pressed, whenever that is
+      (function warm(i) {
+        if (i >= AUDIO_ANNOUNCEMENTS.length) return;
+        clipReady('audio/announcements/' + AUDIO_ANNOUNCEMENTS[i]).then(function() {
+          warm(i + 1);
+        });
+      })(0);
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key !== 't' && e.key !== 'T') return;
+        const name = AUDIO_ANNOUNCEMENTS[
+          Math.floor(Math.random() * AUDIO_ANNOUNCEMENTS.length)];
+        playClip('audio/announcements/' + name, null, true);
+      });
+    })();
+  </script>
+
+  <script>
+    // ===================== EVENING =====================
+    // Two after-party fixtures, both on the clock. From 6:30 to 9:30 the
+    // bottom 15% of the screen is a ribbon of sponsor logos looping past a
+    // thank-you, and the board squeezes up to make the room. From 6:40 to
+    // 9:20, on every five-minute mark, the SIX supercut takes the whole
+    // screen - it is silent, so the music underneath plays on - and hands
+    // the screen back when it ends.
+    (function() {
+      const daySeconds = window.tvDaySeconds;
+
+      // ---- the sponsor ribbon ----
+      // The logos in the main page's order, at the widths its sponsor wall
+      // settled on - equal optical area per tier. Kept in step with
+      // index.html by hand, the way the fixtures are.
+      const TV_SPONSORS = [
+        ['unity.png', 295],
+        ['wa-dept-of-commerce.png', 335],
+        ['epic-games.png', 112],
+        ['xsolla.png', 384],
+        ['phantom-friends.png', 164],
+        ['kl-gates.png', 151],
+        ['aie.png', 58],
+        ['nameless-deep.png', 54],
+        ['11-bit-studios.png', 78],
+        ['premack-rogers-downs.png', 92],
+        ['miraisens.png', 129],
+        ['digipen.png', 118],
+        ['discord.png', 149],
+        ['seattle-composers-alliance.png', 87],
+        ['times-of-games.png', 110],
+        ['games-industry-network.png', 93],
+        ['colburn-law.png', 89],
+        ['epam.png', 95],
+        ['ladybug-ventures.png', 117]
+      ];
+
+      const RIBBON_FROM = 18 * 3600 + 30 * 60;
+      const RIBBON_UNTIL = 21 * 3600 + 30 * 60;
+      // How fast the ribbon rides, in screen-heights per second
+      const RIBBON_SPEED = 0.10;
+
+      const marqueeEl = document.getElementById('tvMarquee');
+      const trackEl = document.getElementById('tvMarqueeTrack');
+
+      // Plain images, deliberately not links: nobody clicks a hallway TV
+      function buildReel() {
+        const reel = document.createElement('div');
+        reel.className = 'tv-marquee__reel';
+        const thanks = document.createElement('span');
+        thanks.className = 'tv-marquee__thanks';
+        thanks.textContent = 'Thank you sponsors!';
+        reel.appendChild(thanks);
+        TV_SPONSORS.forEach(function(sponsor) {
+          const img = document.createElement('img');
+          img.className = 'tv-marquee__logo';
+          img.src = 'images/sponsors/' + sponsor[0];
+          img.alt = '';
+          img.draggable = false;
+          img.style.setProperty('--w', sponsor[1]);
+          reel.appendChild(img);
+        });
+        return reel;
+      }
+
+      trackEl.appendChild(buildReel());
+      trackEl.appendChild(buildReel());
+
+      // One reel's width sets the pace: the same slide takes longer the
+      // wider the reel, so the speed reads the same on any screen and
+      // however the logos land
+      function paceRibbon() {
+        const width = trackEl.scrollWidth / 2;
+        const speed = window.innerHeight * RIBBON_SPEED;
+        if (width > 0 && speed > 0) {
+          trackEl.style.setProperty('--mq-secs', (width / speed).toFixed(1) + 's');
+        }
+      }
+
+      // Paced once every logo has arrived - the widths settle late when
+      // the page opens mid-evening - and again whenever the screen changes
+      let logosComing = 0;
+      Array.prototype.forEach.call(
+        trackEl.querySelectorAll('img'), function(img) {
+          if (img.complete) return;
+          logosComing += 1;
+          function landed() {
+            logosComing -= 1;
+            if (!logosComing) paceRibbon();
+          }
+          img.addEventListener('load', landed, { once: true });
+          img.addEventListener('error', landed, { once: true });
+        });
+      window.addEventListener('resize', paceRibbon);
+      paceRibbon();
+
+      // The thank-you spans measure in the fallback face until Bungee
+      // arrives, so the pace is set once more when the fonts settle -
+      // the same care the board takes with its own layout
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(paceRibbon);
+      }
+
+      let ribbonUp = false;
+
+      function ribbonTick(now) {
+        const up = now >= RIBBON_FROM && now < RIBBON_UNTIL;
+        if (up === ribbonUp) return;
+        ribbonUp = up;
+        marqueeEl.hidden = !up;
+        document.body.classList.toggle('tv-evening', up);
+        if (up) paceRibbon();
+        // The board reads a resize as "measure the room again", which is
+        // exactly what losing or regaining the bottom band calls for
+        window.dispatchEvent(new Event('resize'));
+      }
+
+      // ---- the supercut film ----
+      const FILM_SRC = 'videos/six_supercut.mp4';
+      const FILM_FIRST = 18 * 3600 + 40 * 60;
+      const FILM_LAST = 21 * 3600 + 20 * 60;
+      const FILM_EVERY = 5 * 60;
+      // The film is ~100MB: it starts downloading half an hour before its
+      // first showing, so even slow venue wifi has it whole in time
+      const FILM_FETCH_AHEAD = 30 * 60;
+      const FILM_JOIN_SLACK = 2;
+
+      const filmEl = document.getElementById('tvFilm');
+      // Belt and braces with the muted attribute: a muted film is allowed
+      // to start without anybody having touched the page
+      filmEl.muted = true;
+      filmEl.preload = 'auto';
+      // When the showing on screen began, for the stall watchdog below
+      let filmShowingAt = null;
+
+      filmEl.addEventListener('ended', function() {
+        filmEl.hidden = true;
+      });
+      filmEl.addEventListener('error', function() {
+        filmEl.hidden = true;
+      });
+
+      // Fetched whole like the audio clips and then kept - it shows every
+      // five minutes all evening. While the blob is still out of reach the
+      // element streams from the src instead, and the fetch keeps retrying
+      // quietly in the background until it lands.
+      let filmBlobUrl = null;
+      let filmFetching = false;
+      let filmNextTry = 0;
+
+      function fetchFilm() {
+        if (filmBlobUrl || filmFetching) return;
+        if (Date.now() < filmNextTry) return;
+        filmFetching = true;
+        fetch(FILM_SRC).then(function(res) {
+          if (!res.ok) throw new Error(FILM_SRC + ' answered ' + res.status);
+          return res.blob();
+        }).then(function(blob) {
+          filmFetching = false;
+          filmBlobUrl = URL.createObjectURL(blob);
+          // Never yank the src out from under a showing in progress; the
+          // next playFilm swaps over between showings
+          if (filmEl.hidden) filmEl.src = filmBlobUrl;
+        }).catch(function() {
+          filmFetching = false;
+          filmNextTry = Date.now() + 60000;
+          if (!filmEl.src) filmEl.src = FILM_SRC;
+        });
+      }
+
+      function playFilm(at) {
+        // The best source to hand: the whole file if the fetch has
+        // landed, the stream if not
+        if (filmBlobUrl) {
+          if (filmEl.src !== filmBlobUrl) filmEl.src = filmBlobUrl;
+        } else if (!filmEl.src) {
+          filmEl.src = FILM_SRC;
+        }
+
+        function begin() {
+          // Behind its mark - a reload, a stalled load - the film joins
+          // in progress, and past its own end it stays away
+          const behind = Math.max(0, daySeconds() - at);
+          if (behind > FILM_JOIN_SLACK) {
+            if (!isFinite(filmEl.duration) ||
+                behind >= filmEl.duration - 0.25) return;
+            filmEl.currentTime = behind;
+          } else {
+            filmEl.currentTime = 0;
+          }
+          filmShowingAt = at;
+          filmEl.hidden = false;
+          const showing = filmEl.play();
+          if (showing && showing.catch) {
+            showing.catch(function() {
+              filmEl.hidden = true;
+            });
+          }
+        }
+
+        if (filmEl.readyState >= 1) begin();
+        else filmEl.addEventListener('loadedmetadata', begin, { once: true });
+      }
+
+      // A page opened mid-evening rejoins the showing in progress partway
+      // through, rather than restarting or skipping it; playFilm drops it
+      // on its own if that showing is already over
+      let filmNextAt = FILM_FIRST;
+      {
+        const now = daySeconds();
+        if (now >= FILM_FIRST) {
+          const last = FILM_FIRST +
+            Math.floor((now - FILM_FIRST) / FILM_EVERY) * FILM_EVERY;
+          filmNextAt = last + FILM_EVERY;
+          if (last <= FILM_LAST) playFilm(last);
+        }
+      }
+
+      function eveningTick() {
+        const now = daySeconds();
+        ribbonTick(now);
+        // Retries never launch during a showing - a fresh 97MB fetch must
+        // not fight the stream on screen for bandwidth. One already in
+        // flight keeps going: it is the swap-to-blob rescue.
+        if (filmEl.hidden &&
+            now >= FILM_FIRST - FILM_FETCH_AHEAD && now <= FILM_LAST) {
+          fetchFilm();
+        }
+        // The stall watchdog. A showing that freezes - a stream on wifi
+        // that gave out - fires no ended and no error, and would sit
+        // covering the board; once the clock is past the film's own end,
+        // the screen goes back to the schedule.
+        if (!filmEl.hidden && filmShowingAt !== null) {
+          const over = filmShowingAt +
+            (isFinite(filmEl.duration) ? filmEl.duration : FILM_EVERY) + 5;
+          if (now > over) {
+            filmEl.pause();
+            filmEl.hidden = true;
+          }
+        }
+        if (filmNextAt <= FILM_LAST && now >= filmNextAt) {
+          let at = filmNextAt;
+          // Should the clock have jumped a few marks - a long throttle, a
+          // stall - only the latest due showing is worth joining
+          while (filmNextAt + FILM_EVERY <= now && filmNextAt < FILM_LAST) {
+            filmNextAt += FILM_EVERY;
+            at = filmNextAt;
+          }
+          filmNextAt += FILM_EVERY;
+          playFilm(at);
+        }
+      }
+      window.setInterval(eveningTick, 1000);
+      eveningTick();
     })();
   </script>
 

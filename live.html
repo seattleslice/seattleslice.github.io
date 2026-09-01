@@ -217,6 +217,17 @@
       text-shadow: 0 0.12rem 0.35rem rgba(0, 10, 30, 0.45);
     }
 
+    /* A fixture the Now section is already showing but that has not opened
+       its doors yet - the speed networking, up from half past six for its
+       seven o'clock start. Yellow, small, and gone the moment it begins. */
+    .tv-session__soon {
+      margin-left: 0.4rem;
+      font-size: 0.62em;
+      font-weight: 700;
+      color: #f5ee1d;
+      white-space: nowrap;
+    }
+
     .tv-session__room {
       margin-top: 0.15rem;
       font-size: 1.2rem;
@@ -965,9 +976,19 @@
         return card;
       }
 
-      function fixtureCard(fixture) {
+      // `nowMinute` is the clock the card is being shown against, and only
+      // the Now section passes it: a label slot lists every fixture its whole
+      // stretch will see, so one can go up before it has started. That one
+      // says "(soon)" until it does. The Coming Up preview leaves the minute
+      // out - everything there is soon.
+      function fixtureCard(fixture, nowMinute) {
         const card = el('article', 'tv-session');
-        card.appendChild(el('h3', 'tv-session__title', fixture.title));
+        const title = el('h3', 'tv-session__title', fixture.title);
+        if (typeof nowMinute === 'number' &&
+            nowMinute < scheduleMinutes(fixture.from)) {
+          title.appendChild(el('span', 'tv-session__soon', '(soon)'));
+        }
+        card.appendChild(title);
         card.appendChild(el('p', 'tv-session__room', fixture.place));
         card.appendChild(el('p', 'tv-session__names',
           clockLower(scheduleMinutes(fixture.from)) + ' - ' +
@@ -1074,7 +1095,7 @@
 
       // A slot with nothing on the sheet still has a name and a story -
       // Lunch, the after-party - and the fixtures keep it company
-      function renderLabelSlot(def, fixtures, host) {
+      function renderLabelSlot(def, fixtures, host, nowMinute) {
         const row = el('div', 'tv-row');
 
         const card = el('article', 'tv-session');
@@ -1087,7 +1108,7 @@
         row.appendChild(card);
 
         fixtures.forEach(function(fixture) {
-          row.appendChild(fixtureCard(fixture));
+          row.appendChild(fixtureCard(fixture, nowMinute));
         });
 
         host.appendChild(row);
@@ -1217,7 +1238,12 @@
           countdown,
           lunchPrime,
           sessions.length,
-          nowFixtures.map(function(f) { return f.title; }).join('+')
+          // The "(soon)" marker rides the key: the fixture list itself does
+          // not change at seven o'clock, so without this the word would stay
+          // up on an otherwise still board
+          nowFixtures.map(function(f) {
+            return f.title + (minute < scheduleMinutes(f.from) ? ' (soon)' : '');
+          }).join('+')
         ].join('|');
         if (key === lastKey) return;
         lastKey = key;
@@ -1246,18 +1272,20 @@
             // The standing fixtures are real events too: they join the
             // columns billed like sessions, after the slot's own blocks
             renderColumns(runningBlocks, nowContentEl, scheduleMinutes(running.start),
-              nowFixtures.map(fixtureCard));
+              nowFixtures.map(function(fixture) {
+                return fixtureCard(fixture, minute);
+              }));
           } else if (lunchPrime) {
             renderLunchPrime(running, nowContentEl);
           } else {
-            renderLabelSlot(running, nowFixtures, nowContentEl);
+            renderLabelSlot(running, nowFixtures, nowContentEl, minute);
           }
         } else {
           nowHoursEl.hidden = true;
           if (nowFixtures.length) {
             const row = el('div', 'tv-row');
             nowFixtures.forEach(function(fixture) {
-              row.appendChild(fixtureCard(fixture));
+              row.appendChild(fixtureCard(fixture, minute));
             });
             nowContentEl.appendChild(row);
           } else {
@@ -1879,7 +1907,10 @@
         ['games-industry-network.png', 93],
         ['colburn-law.png', 89],
         ['epam.png', 95],
-        ['ladybug-ventures.png', 117]
+        ['ladybug-ventures.png', 117],
+        ['igda.png', 91],
+        ['dames-4-games.png', 120],
+        ['latinx-in-gaming.png', 85]
       ];
 
       const RIBBON_FROM = 18 * 3600 + 30 * 60;

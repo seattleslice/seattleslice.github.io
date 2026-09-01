@@ -2,9 +2,11 @@
 // The display at a room's door, or on its lectern: one slide, full screen,
 // for the session in the room now or next. The slides live in the room's
 // folder under images/rooms, each named for the minute it takes the screen
-// on a 24-hour clock (HH_MM.png), and 00_00.png opens the day. The page
-// reads the clock twice a second and puts up the latest slide whose minute
-// has come, so it is opened at the start of the day and left alone.
+// on a 24-hour clock (HH_MM.png), and 00_00.png opens the day. A slide may
+// be a short clip instead (HH_MM.mp4), which loops silently for as long as
+// it is up. The page reads the clock twice a second and puts up the latest
+// slide whose minute has come, so it is opened at the start of the day and
+// left alone.
 // Nothing here fetches anything but the slides beside the page: a room's
 // computer may be showing a copy of the site from its own disk, with no
 // internet at all.
@@ -61,11 +63,11 @@
   // Each name becomes the second of the day its slide starts, in clock
   // order. A name that is not HH_MM is reported and skipped rather than
   // left to miss quietly; the .png is optional, so a folder listing pastes
-  // straight in, and a repeat is folded away.
+  // straight in, a clip keeps its .mp4, and a repeat is folded away.
   const slides = [];
   const seen = {};
   names.forEach(function(name) {
-    const m = String(name).trim().match(/^(\d{2})_(\d{2})(\.png)?$/i);
+    const m = String(name).trim().match(/^(\d{2})_(\d{2})(\.png|\.mp4|\.webm)?$/i);
     if (!m || parseInt(m[1], 10) > 23 || parseInt(m[2], 10) > 59) {
       console.error('Not a slide time, expected HH_MM: ' + name);
       return;
@@ -76,6 +78,7 @@
     slides.push({
       file: file,
       at: (parseInt(m[1], 10) * 60 + parseInt(m[2], 10)) * 60,
+      video: /\.(mp4|webm)$/i.test(file),
       el: null,
       loaded: false,
       failed: false,
@@ -114,8 +117,10 @@
     if (slide === pending) return;
     if (slide === showing) {
       // Asked for the slide already up, so whatever else was on its way
-      // up is no longer wanted: its paint has to land as a no-op
+      // up is no longer wanted: its paint has to land as a no-op, and a
+      // clip already set going is stopped
       if (pending) {
+        if (pending.video) pending.el.pause();
         revealToken++;
         pending = null;
       }
@@ -127,22 +132,31 @@
     function paint() {
       if (painted) return;
       painted = true;
-      // The clock moved on while this one was decoding
-      if (token !== revealToken) return;
+      // The clock moved on while this one was getting ready
+      if (token !== revealToken) {
+        if (slide.video && slide !== pending && slide !== showing) slide.el.pause();
+        return;
+      }
       slides.forEach(function(other) {
         other.el.hidden = other !== slide;
+        // A clip off screen has no business running
+        if (other.video && other !== slide && !other.el.paused) other.el.pause();
       });
       showing = slide;
       pending = null;
     }
-    // Decoded before it goes up, so the swap is one clean frame rather
-    // than a blank one while the browser unpacks the file. A browser
-    // holds the decode of a page it is not showing until the page is
-    // back on screen, so the wait is capped: past it the slide goes up
-    // regardless, and the sync decoding flag below keeps even that swap
-    // whole.
-    if (slide.el.decode) {
-      window.setTimeout(paint, 1500);
+    // Made ready before it goes up, so the swap is one clean frame rather
+    // than a blank one: a picture is decoded first, a clip is wound back
+    // to its first frame and set going first. A browser holds both for a
+    // page it is not showing until the page is back on screen, so the
+    // wait is capped: past it the slide goes up regardless, and the sync
+    // decoding flag below keeps even that swap whole for a picture.
+    window.setTimeout(paint, 1500);
+    if (slide.video) {
+      try { slide.el.currentTime = 0; } catch (e) {}
+      const starting = slide.el.play();
+      if (starting && starting.then) starting.then(paint, paint); else paint();
+    } else if (slide.el.decode) {
       slide.el.decode().then(paint, paint);
     } else {
       paint();
@@ -166,6 +180,12 @@
       const standIn = standInFor(wanted);
       if (standIn) reveal(standIn);
     }
+    // A clip on screen that has stopped, as a browser does to save power
+    // while the page was hidden, is set going again
+    if (showing && showing.video && showing.el.paused) {
+      const again = showing.el.play();
+      if (again && again.catch) again.catch(function() {});
+    }
     if (tag && asked) {
       tag.textContent = '?t= clock ' + clockText(seconds) + '  showing ' +
         (showing ? showing.file : 'nothing yet') +
@@ -175,24 +195,38 @@
     }
   }
 
-  // Every slide of the day is an img in the page from the start, hidden
-  // until its minute: the browser fetches them all up front, so a swap
-  // later in the day is a toggle rather than a request that could stall.
+  // Every slide of the day is in the page from the start, hidden until
+  // its minute: an img, or for a clip a video. The browser fetches them
+  // all up front, so a swap later in the day is a toggle rather than a
+  // request that could stall.
   slides.forEach(function(slide) {
-    const img = document.createElement('img');
-    img.className = 'room-slide';
-    img.alt = '';
-    img.draggable = false;
-    // Painted only once it is unpacked, never as a blank frame first
-    img.decoding = 'sync';
-    img.hidden = true;
-    img.addEventListener('load', function() {
+    const el = document.createElement(slide.video ? 'video' : 'img');
+    el.className = 'room-slide';
+    el.draggable = false;
+    el.hidden = true;
+    if (slide.video) {
+      // Silent, which is what lets a browser start it with nobody behind
+      // the request, and looping; it is set going only when it goes up
+      el.muted = true;
+      el.defaultMuted = true;
+      el.loop = true;
+      el.playsInline = true;
+      el.preload = 'auto';
+      el.disablePictureInPicture = true;
+      el.setAttribute('disableremoteplayback', '');
+    } else {
+      el.alt = '';
+      // Painted only once it is unpacked, never as a blank frame first
+      el.decoding = 'sync';
+    }
+    // A picture is ready once it has landed whole, a clip once it can play
+    el.addEventListener(slide.video ? 'canplay' : 'load', function() {
       slide.loaded = true;
       slide.failed = false;
       slide.retryIn = 0;
       if (slide === wanted) reveal(slide);
     });
-    img.addEventListener('error', function() {
+    el.addEventListener('error', function() {
       // A miss is a name that matches no file, which never mends, or a
       // server hiccup, which usually does: try again, less and less often
       slide.loaded = false;
@@ -201,12 +235,13 @@
       console.error('Could not load ' + folder + '/' + slide.file +
         ', trying again in ' + Math.round(slide.retryIn / 1000) + 's');
       window.setTimeout(function() {
-        img.removeAttribute('src');
-        img.src = folder + '/' + slide.file;
+        el.removeAttribute('src');
+        el.src = folder + '/' + slide.file;
+        if (slide.video) el.load();
       }, slide.retryIn);
     });
-    slide.el = img;
-    if (stage) stage.appendChild(img);
+    slide.el = el;
+    if (stage) stage.appendChild(el);
   });
 
   // The slide the clock wants right now is asked for first, and marked

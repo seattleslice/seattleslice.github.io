@@ -48,8 +48,9 @@ body {
   height: 100%;
 }
 
-/* Every slide of the day is in the page from the start, so a swap is a
-   toggle rather than a fetch; only the one whose minute has come shows */
+/* Every slide of the day is in the page from the start, a picture as an
+   img and a clip as a muted looping video, so a swap is a toggle rather
+   than a fetch; only the one whose minute has come shows */
 .room-slide {
   position: absolute;
   top: 0;

@@ -12,11 +12,12 @@
 
   <link rel="icon" href="favicon.ico" sizes="any">
   <!-- Shared by the four room pages, along with js/room-screen.js -->
-  <link rel="stylesheet" href="styles/room-screen.css?v=2026-09-01">
+  <link rel="stylesheet" href="styles/room-screen.css?v=2026-09-01b">
 </head>
 <body>
 
-  <!-- The day's slides, one img each, are built in here by js/room-screen.js -->
+  <!-- The day's slides, an img each or a video for a clip, are built in here
+       by js/room-screen.js -->
   <main class="room" id="stage"></main>
 
   <!-- Up while the page is windowed - see the FULLSCREEN module in js/room-screen.js -->
@@ -27,10 +28,12 @@
   <div class="room-test" id="testTag" hidden></div>
 
   <script>
-    // The slides in images/rooms/allen, each named for the minute it takes the
-    // screen on a 24-hour clock, with 00_00 opening the day. A browser
-    // cannot list a folder, so a slide added there needs its name added
-    // here as well. Order does not matter; the script sorts them.
+    // The slides in images/rooms/allen, each named for the minute it takes
+    // the screen on a 24-hour clock, with 00_00 opening the day. A plain
+    // name is a .png; a short looping clip keeps its extension, as in
+    // '09_27.mp4'. A browser cannot list a folder, so a slide added there
+    // needs its name added here as well. Order does not matter; the
+    // script sorts them.
     window.ROOM_SCREEN = {
       room: 'Allen Room',
       folder: 'images/rooms/allen',
@@ -40,6 +43,6 @@
       ]
     };
   </script>
-  <script src="js/room-screen.js?v=2026-09-01"></script>
+  <script src="js/room-screen.js?v=2026-09-01b"></script>
 </body>
 </html>

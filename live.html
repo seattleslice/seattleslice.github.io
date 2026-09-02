@@ -1569,6 +1569,12 @@
       const FETCH_AHEAD = 180;
       // Fired this close to its mark, a clip still plays from the top
       const JOIN_SLACK = 2;
+      // A slate announcement caught late - the tab throttled, the timer
+      // held up - still plays whole, from the top, this far past its
+      // moment. A twenty-second announcement must not be swallowed by a
+      // sleepy timer; only past this grace (the machine was suspended
+      // outright) is the stale backlog left to the join-or-drop rules.
+      const ANNOUNCE_GRACE = 180;
       // A page opened mid-clip - a reload, a late setup - rejoins anything
       // that started this recently, partway through, rather than replaying
       // it from the top or skipping it
@@ -1806,7 +1812,13 @@
           rejoin = entry;
         }
       });
-      if (rejoin) rejoin.played = false;
+      if (rejoin) {
+        rejoin.played = false;
+        // Marked so the first tick joins it partway - the room already
+        // heard its opening - rather than starting it over under the
+        // running-page grace below
+        rejoin.rejoin = true;
+      }
 
       // ---- the playlist ----
       // One song after another from 6:33 pm, each starting the moment the
@@ -1925,7 +1937,13 @@
           if (entry.played) return;
           if (now >= entry.at) {
             entry.played = true;
-            playClip(entry.src, entry.at, entry.keep);
+            // Within the grace it plays in full no matter how late the
+            // tick ran (see ANNOUNCE_GRACE) - except the page-open
+            // rejoin, which picks up partway by design
+            playClip(entry.src,
+              !entry.rejoin && now - entry.at <= ANNOUNCE_GRACE
+                ? null : entry.at,
+              entry.keep);
           } else if (now >= entry.at - FETCH_AHEAD) {
             clipReady(entry.src);
           }
